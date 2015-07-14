@@ -1,0 +1,34 @@
+{
+  "name": "pgSandbox",
+  "version": "0.0.0",
+  "description": "a first attempt at a database wrapper app over postgres",
+  "scripts": {
+    "start": "nodejs main.js",
+    "test": "nodejs test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RobertWarrenGilmore/pgSandbox.git"
+  },
+  "keywords": [
+    "postgres",
+    "express",
+    "nodejs",
+    "node"
+  ],
+  "author": "Robert Warren Gilmore (Robert.Warren.Gilmore@gmail.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/RobertWarrenGilmore/pgSandbox/issues"
+  },
+  "devDependencies": {
+    "eslint": "^0.24.0",
+    "eslint-plugin-react": "^2.6.4"
+  },
+  "dependencies": {
+    "bookshelf": "^0.8.1",
+    "knex": "^0.8.6",
+    "pg": "^4.4.0",
+    "sync-prompt": "^0.4.2"
+  }
+}
