@@ -4,7 +4,8 @@
   "description": "a first attempt at a database wrapper app over postgres",
   "scripts": {
     "start": "nodejs main.js",
-    "test": "nodejs test.js"
+    "test": "nodejs test.js",
+    "postinstall": "sudo dbSetup.sh"
   },
   "repository": {
     "type": "git",
@@ -28,7 +29,6 @@
   "dependencies": {
     "bookshelf": "^0.8.1",
     "knex": "^0.8.6",
-    "pg": "^4.4.0",
-    "sync-prompt": "^0.4.2"
+    "pg": "^4.4.0"
   }
 }

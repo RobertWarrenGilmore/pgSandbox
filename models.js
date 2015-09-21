@@ -1,9 +1,11 @@
+var dbPassword = require('./dbPassword');
+
 var knex = require('knex')({
   client: 'pg',
   connection: {
     host: 'localhost',
     user: 'sandboxUser',
-    password: process.env.sandboxDbPassword,
+    password: dbPassword,
     database: 'sandbox',
     charset: 'utf8'
   }
