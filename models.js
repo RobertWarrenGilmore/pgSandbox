@@ -1,5 +1,7 @@
-var dbPassword = require('./dbPassword');
+var fs = require('fs');
+var path = require('path');
 
+var dbPassword = fs.readFileSync(path.join(__dirname, '/dbPassword'));
 var knex = require('knex')({
   client: 'pg',
   connection: {
