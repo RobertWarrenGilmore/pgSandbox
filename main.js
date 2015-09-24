@@ -1,1 +1,3 @@
-var models = require('./models.js');
+/**
+ * This script starts the application server.
+ */
