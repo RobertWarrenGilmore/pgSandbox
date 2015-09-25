@@ -15,30 +15,40 @@ var User = bookshelf.Model.extend({
     this.on('saving', this.validateSave);
   },
 
-  validateSave: function (/*model, attrs, options*/) {
-    validationRules.run(this.attributes);
-    if (this.hasChanged('password')) {
-      // TODO Check the password reset key and reset the password within a transaction. This might require that we check whether the current save action is in a transaction. If there is no transaction (in options.transacting), then fail the password change. If there is, then add the check of the password reset key onto the same transaction.
-      var self = this;
-      return bcrypt.hashAsync(this.get('password'), 10).then(function (hash) {
-        self.set('passwordHash', hash);
-        self.unset('password'); // We don't store the actual password.
-      });
-    }
+  validateSave: function ( /*model, attrs, options*/ ) {
+    var self = this;
+    return validationRules.run(this.attributes).then(function () {
+      if (self.hasChanged('password')) {
+        // TODO Check the password reset key and reset the password within a transaction. This might require that we check whether the current save action is in a transaction. If there is no transaction (in options.transacting), then fail the password change. If there is, then add the check of the password reset key onto the same transaction.
+        return bcrypt.hashAsync(self.get('password'), 8).then(function (hash) {
+          self.set('passwordHash', hash);
+          self.unset('password'); // We don't store the actual password.
+        });
+      }
+    });
   }
 
 }, {
 
-  login: Promise.method(function (email, password) {
-    if (!email || !password) {
-      throw new Error('Email and password are both required.');
+  authenticate: Promise.method(function (emailAddress, password) {
+    if (!emailAddress || !password) {
+      throw new Error('Email address and password are both required.');
     }
     return new this({
-      email: email.toLowerCase().trim()
+      emailAddress: emailAddress.toLowerCase().trim()
     }).fetch({
       require: true // Reject if there is no such user.
-    }).tap(function (user) { // Reject if the password doesn't match.
-      return bcrypt.compareAsync(password, user.get('passwordHash'));
+    }).then(function (user) {
+      // Reject if the password doesn't match.
+      return new Promise(function (resolve, reject) {
+        bcrypt.compareAsync(password, user.get('passwordHash')).then(function (valid) {
+          if (valid) {
+            resolve(user);
+          } else {
+            reject(new Error('The password was incorrect.'));
+          }
+        });
+      });
     });
   })
 });
