@@ -4,8 +4,9 @@
   "description": "a first attempt at a database wrapper app over postgres",
   "scripts": {
     "start": "node ./main.js",
-    "test": "mocha",
-    "dbSetup": "./database/dbSetup.sh"
+    "dbSetup": "./database/dbSetup.sh",
+    "test": "./node_modules/.bin/mocha",
+    "lint": "./node_modules/.bin/eslint ."
   },
   "repository": {
     "type": "git",
@@ -23,7 +24,7 @@
     "url": "https://github.com/RobertWarrenGilmore/pgSandbox/issues"
   },
   "devDependencies": {
-    "eslint": "^0.24.0",
+    "eslint": "^1.5.1",
     "eslint-plugin-react": "^2.6.4",
     "mocha": "^2.3.3"
   },
