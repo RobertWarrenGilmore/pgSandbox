@@ -40,15 +40,15 @@ var User = bookshelf.Model.extend({
       require: true // Reject if there is no such user.
     }).then(function (user) {
       // Reject if the password doesn't match.
-      return new Promise(function (resolve, reject) {
-        bcrypt.compareAsync(password, user.get('passwordHash')).then(function (valid) {
+      return bcrypt.compareAsync(password, user.get('passwordHash')).then(
+        function (valid) {
           if (valid) {
-            resolve(user);
+            return user;
           } else {
-            reject(new Error('The password was incorrect.'));
+            throw new Error('The password was incorrect.');
           }
-        });
-      });
+        }
+      );
     });
   })
 });
