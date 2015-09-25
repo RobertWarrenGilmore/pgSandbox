@@ -146,8 +146,10 @@ describe('the user model', function () {
     }).save().then(
 
       // Successfully created.
-      function () {
-        done(new Error('The user was successfully created without an email address.'));
+      function (user) {
+        user.destroy().then(function () {
+          done(new Error('The user was successfully created without an email address.'));
+        });
       },
 
       // Failed to create.
