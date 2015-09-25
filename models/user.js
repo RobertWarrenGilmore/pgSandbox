@@ -48,7 +48,9 @@ var User = bookshelf.Model.extend({
             throw new Error('The password was incorrect.');
           }
         }
-      );
+      ).catch(function () {
+        throw new Error('Password verification failed. The password might not be set.');
+      });
     });
   })
 });
