@@ -1,5 +1,4 @@
 var assert = require('assert');
-var Promise = require('bluebird');
 var User = require('../models/user');
 
 describe('the user model', function () {
@@ -37,6 +36,7 @@ describe('the user model', function () {
 
   it('should be able to update its email address', function (done) {
     var expectedMod = emailAddress + 'a';
+    var actualMod;
 
     // Fetch the user.
     new User({
@@ -47,20 +47,14 @@ describe('the user model', function () {
       return user.set('emailAddress', expectedMod).save();
 
     }).then(function (user) {
-      return new Promise(function (resolve, reject) {
 
-        // What is the email address after the update?
-        var actualMod = user.get('emailAddress');
+      // What is the email address after the update?
+      actualMod = user.get('emailAddress');
 
-        // Revert to the original email address.
-        user.set('emailAddress', emailAddress)
-          .save().then(function () {
+      // Revert to the original email address.
+      return user.set('emailAddress', emailAddress).save();
 
-            // Pass the modified email address on to the next step.
-            resolve(actualMod);
-          }, reject);
-      });
-    }).then(function (actualMod) {
+    }).then(function () {
 
       assert.notStrictEqual(actualMod, emailAddress,
         'The email address was not changed.');
@@ -88,20 +82,11 @@ describe('the user model', function () {
 
       // Successfully changed.
       function (user) {
-        console.log(user.get('emailAddress'));
-        return new Promise(function (resolve, reject) {
-
-          // What is the email address after the update?
-          var actualMod = user.get('emailAddress');
-
-          // Revert to the original email address.
-          user.set('emailAddress', emailAddress)
-            .save().then(function () {
-
-              // Pass the modified email address on to the next step.
-              resolve(actualMod);
-            }, reject);
-        });
+        // Revert to the original email address.
+        user.set('emailAddress', emailAddress)
+          .save().then(function () {
+            done(new Error('The user\'s email address was successfully changed to something invalid.'));
+          });
       },
 
       // Failed to change.
@@ -115,7 +100,7 @@ describe('the user model', function () {
 
   it('should be able to update its password', function (done) {
     var expectedMod = password + 'a';
-
+    var authenticated;
     // Fetch the user.
     new User({
       emailAddress: emailAddress
@@ -125,20 +110,14 @@ describe('the user model', function () {
       return user.set('password', expectedMod).save();
 
     }).then(function (user) {
-      return new Promise(function (resolve, reject) {
 
-        // Does the new password work after the update?
-        var authenticated = user.get('emailAddress');
+      // Does the new password work after the update?
+      authenticated = user.get('emailAddress');
 
-        // Revert to the original password.
-        user.set('password', password)
-          .save().then(function () {
+      // Revert to the original password.
+      return user.set('password', password).save();
 
-            // Pass the modified password on to the next step.
-            resolve(authenticated);
-          }, reject);
-      });
-    }).then(function (authenticated) {
+    }).then(function () {
 
       assert(authenticated,
         'Logging in with the changed password failed.');
@@ -158,6 +137,26 @@ describe('the user model', function () {
       }).catch(function (err) {
         done(err);
       });
+    });
+  });
+
+  it('should fail to be created when its email address is omitted', function (done) {
+    new User({
+      password: password
+    }).save().then(
+
+      // Successfully created.
+      function () {
+        done(new Error('The user was successfully created without an email address.'));
+      },
+
+      // Failed to create.
+      function () {
+        done();
+      }
+
+    ).catch(function (err) {
+      done(err);
     });
   });
 
