@@ -5,9 +5,10 @@
 // Read the database password that was set in npm postinstall.
 var fs = require('fs');
 var path = require('path');
-var dbPassword = fs.readFileSync(path.join(__dirname, '/dbPassword'));
+var dbPassword = fs.readFileSync(path.join(__dirname, '/dbPassword'))
+  .toString().trim();
 
-exports = {
+module.exports = {
 
   development: {
     client: 'postgresql',
@@ -23,6 +24,7 @@ exports = {
       max: 10
     },
     migrations: {
+      directory: 'database/migrations',
       tableName: 'knex_migrations'
     }
   },

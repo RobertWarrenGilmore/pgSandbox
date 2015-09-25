@@ -1,6 +1,12 @@
 var bookshelf = require('../database/bookshelf');
 var Promise = require('bluebird');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
+var Checkit = require('checkit');
+
+var validationRules = new Checkit({
+  emailAddress: ['required', 'email'],
+  password: ['minLength:8', 'maxLength:30']
+});
 
 var User = bookshelf.Model.extend({
   tableName: 'users',
@@ -9,19 +15,16 @@ var User = bookshelf.Model.extend({
     this.on('saving', this.validateSave);
   },
 
-  validateSave: function () {
-    if (!this.has('emailAddress')) {
-      throw new Error('An email address is required.');
-    } else if(!this.get('emailAddress').match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      throw new Error('The email address is in an invalid format.');
+  validateSave: function (/*model, attrs, options*/) {
+    validationRules.run(this.attributes);
+    if (this.hasChanged('password')) {
+      // TODO Check the password reset key and reset the password within a transaction. This might require that we check whether the current save action is in a transaction. If there is no transaction (in options.transacting), then fail the password change. If there is, then add the check of the password reset key onto the same transaction.
+      var self = this;
+      return bcrypt.hashAsync(this.get('password'), 10).then(function (hash) {
+        self.set('passwordHash', hash);
+        self.unset('password'); // We don't store the actual password.
+      });
     }
-  },
-
-  setPassword: function (password) {
-    // TODO Check the password reset key and reset the password within a transaction.
-    bcrypt.hash(password, 10).then(function (hash) {
-      this.set('passwordHash', hash);
-    });
   }
 
 }, {
@@ -35,9 +38,9 @@ var User = bookshelf.Model.extend({
     }).fetch({
       require: true // Reject if there is no such user.
     }).tap(function (user) { // Reject if the password doesn't match.
-      return bcrypt.compare(password, user.get('passwordHash'));
+      return bcrypt.compareAsync(password, user.get('passwordHash'));
     });
   })
 });
 
-exports = User;
+module.exports = User;

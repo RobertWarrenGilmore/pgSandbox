@@ -8,7 +8,7 @@ exports.up = function (knex, Promise) {
     table.increments();
     table.string('emailAddress').comment('the email address of the user')
       .unique().notNullable();
-    table.string('passwordHash').comment('the salted hash of the user\'s password');
+    table.string('passwordHash').comment('the salted hash of the user\'\'s password');
     table.timestamps();
   });
 };
