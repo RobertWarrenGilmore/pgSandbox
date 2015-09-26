@@ -15,17 +15,49 @@ var User = bookshelf.Model.extend({
     this.on('saving', this.validateSave);
   },
 
-  validateSave: function ( /*model, attrs, options*/ ) {
+  validateSave: function () {
     var self = this;
-    return validationRules.run(this.attributes).then(function () {
-      if (self.hasChanged('password')) {
-        // TODO Check the password reset key and reset the password within a transaction. This might require that we check whether the current save action is in a transaction. If there is no transaction (in options.transacting), then fail the password change. If there is, then add the check of the password reset key onto the same transaction.
-        return bcrypt.hashAsync(self.get('password'), 8).then(function (hash) {
-          self.set('passwordHash', hash);
-          self.unset('password'); // We don't store the actual password.
-        });
+    var fieldValidationPromise = validationRules.run(this.attributes);
+
+    // If there is a password and a valid password reset key, then set the password hash.
+    var passwordReset = function () {
+      if (self.has('password')) {
+        if (self.has('passwordResetKey')) {
+          var keyValid = bcrypt.compareSync(self.get('passwordResetKey'), self.get('passwordResetKeyHash'));
+          if (keyValid) {
+            var password = self.get('password');
+            var passwordHash = bcrypt.hashSync(password, 8);
+            self.set('passwordHash', passwordHash);
+          } else {
+            throw new Error('The password reset key was invalid.');
+          }
+        } else {
+          throw new Error('A password reset key must be provided in order to change the password.');
+        }
+        self.unset('password'); // This field doesn't get saved.
       }
-    });
+      self.unset('passwordResetKey'); // This field doesn't get saved.
+    }.bind(this);
+
+    return fieldValidationPromise.then(passwordReset);
+  },
+
+  generatePasswordResetKey: function () {
+    // Generate a random alphanumeric key of length 30.
+    var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var length = 30;
+    var key = [];
+    for (var i = 0; i < length; ++i) {
+      key.push(possible.charAt(Math.floor(Math.random() * possible.length)));
+    }
+    key = key.join('');
+
+    // Store a hash of the key.
+    var hash = bcrypt.hashSync(key, 8);
+    this.set('passwordResetKeyHash', hash);
+
+    // Return the key.
+    return key;
   }
 
 }, {

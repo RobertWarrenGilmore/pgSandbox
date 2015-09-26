@@ -4,14 +4,99 @@ var User = require('../models/user');
 describe('the user model', function () {
   var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
   var password = 'taco tuesday';
+  var passwordResetKey;
 
   it('should be able to be created', function (done) {
     new User({
-      emailAddress: emailAddress,
-      password: password
+      emailAddress: emailAddress
     }).save().then(function () {
       done();
     }).catch(function (err) {
+      done(err);
+    });
+  });
+
+  it('should be able to generate a password reset key', function (done) {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+
+      // Generate and save the key.
+      passwordResetKey = user.generatePasswordResetKey()
+      return user.save();
+    }).then(function () {
+
+      // Validate the format of the key.
+      if (typeof passwordResetKey === 'string' && passwordResetKey.match(/^[A-Za-z0-9]{30}$/)) {
+        done();
+      } else {
+        done(new Error('The key was not a string of 30 alphanumerics.'));
+      }
+
+    }).catch(function (err) {
+      done(err);
+    });
+  });
+
+  it('should be able to set its password', function (done) {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+
+      // Set the password using the key.
+      return user.set({
+        'password': password,
+        'passwordResetKey': passwordResetKey
+      }).save();
+
+    }).then(function () {
+      done();
+    }).catch(function (err) {
+      done(err);
+    });
+  });
+
+  it('should fail to set its password when given the wrong password reset key', function (done) {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+
+      // Set the password using the wrong key.
+      return user.set({
+        'password': password,
+        'passwordResetKey': passwordResetKey + 'a'
+      }).save();
+
+    }).then(
+      function () {
+        done(new Error('The password was set using an incorrect password reset key.'));
+      },
+      function () {
+        done();
+      }
+    ).catch(function (err) {
+      done(err);
+    });
+  });
+
+  it('should fail to set its password without a password reset key', function (done) {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+
+      // Set the password using the wrong key.
+      return user.set({
+        'password': password
+      }).save();
+
+    }).then(
+      function () {
+        done(new Error('The password was set without a password reset key.'));
+      },
+      function () {
+        done();
+      }
+    ).catch(function (err) {
       done(err);
     });
   });
@@ -98,36 +183,6 @@ describe('the user model', function () {
     });
   });
 
-  it('should be able to update its password', function (done) {
-    var expectedMod = password + 'a';
-    var authenticated;
-    // Fetch the user.
-    new User({
-      emailAddress: emailAddress
-    }).fetch().then(function (user) {
-
-      // Modify the password.
-      return user.set('password', expectedMod).save();
-
-    }).then(function (user) {
-
-      // Does the new password work after the update?
-      authenticated = user.get('emailAddress');
-
-      // Revert to the original password.
-      return user.set('password', password).save();
-
-    }).then(function () {
-
-      assert(authenticated,
-        'Logging in with the changed password failed.');
-
-      done();
-    }).catch(function (err) {
-      done(err);
-    });
-  });
-
   it('should be able to be deleted', function (done) {
     new User({
       emailAddress: emailAddress
@@ -141,9 +196,7 @@ describe('the user model', function () {
   });
 
   it('should fail to be created when its email address is omitted', function (done) {
-    new User({
-      password: password
-    }).save().then(
+    new User({}).save().then(
 
       // Successfully created.
       function (user) {
