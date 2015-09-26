@@ -3,7 +3,7 @@
  * and passwords.
  */
 
-exports.up = function (knex, Promise) {
+exports.up = function (knex) {
   return knex.schema.createTable('users', function (table) {
     table.increments();
     table.string('emailAddress').comment('the email address of the user')
@@ -13,6 +13,6 @@ exports.up = function (knex, Promise) {
   });
 };
 
-exports.down = function (knex, Promise) {
+exports.down = function (knex) {
   return knex.schema.dropTable('users');
 };
