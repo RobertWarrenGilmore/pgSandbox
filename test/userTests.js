@@ -23,7 +23,11 @@ describe('the user model', function () {
       return user.generatePasswordResetKey();
     }).then(function (key) {
       passwordResetKey = key;
-      done();
+      if (typeof key === 'string' && key.match(/^[A-Za-z0-9]{30}$/)) {
+        done();
+      } else {
+        done(new Error('The key was not a string of 30 alphanumerics.'));
+      }
     }).catch(function (err) {
       done(err);
     });
@@ -40,7 +44,7 @@ describe('the user model', function () {
         'password': password,
         'passwordResetKey': passwordResetKey
       }).save();
-      
+
     }).then(function () {
       done();
     }).catch(function (err) {

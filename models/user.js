@@ -26,6 +26,26 @@ var User = bookshelf.Model.extend({
         });
       }
     });
+  },
+
+  generatePasswordResetKey: function () {
+    // Generate a random alphanumeric key of length 30.
+    var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var length = 30;
+    var key = [];
+    for (var i = 0; i < length; ++i) {
+      key.push(possible.charAt(Math.floor(Math.random() * possible.length)));
+    }
+    key = key.join('');
+
+    // Save a hash of the key.
+    var self = this;
+    return bcrypt.hashAsync(key, 8).then(function (hash) {
+      self.set('passwordResetKeyHash', hash);
+
+      // Return the key.
+      return key;
+    });
   }
 
 }, {
