@@ -1,5 +1,5 @@
 var assert = require('assert');
-var User = require('../models/user');
+var User = require('../models/bookshelf').model('User');
 
 describe('the user model', function () {
   var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';

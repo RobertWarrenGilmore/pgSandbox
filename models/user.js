@@ -11,6 +11,8 @@ var validationRules = {
 var User = bookshelf.Model.extend({
   tableName: 'users',
 
+  hidden: ['passwordHash', 'passwordResetKeyHash'],
+
   initialize: function () {
     this.on('saving', this._validateSave);
   },
@@ -93,4 +95,4 @@ var User = bookshelf.Model.extend({
 
 });
 
-module.exports = User;
+module.exports = bookshelf.model('User', User);
