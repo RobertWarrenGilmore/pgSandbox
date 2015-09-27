@@ -1,7 +1,7 @@
 var assert = require('assert');
-var User = require('../models/bookshelf').model('User');
+var User = require('../../../server/models/bookshelf').model('User');
 
-describe('the user model', function () {
+describe('user', function () {
   var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
   var badEmailAddress = 'NotAValidEmailAddress.com';
   var password = 'taco tuesday';
@@ -317,7 +317,9 @@ describe('the user model', function () {
     new User({
       emailAddress: emailAddress
     }).fetch().then(function (user) {
-      user.destroy();
+      if (user) {
+        user.destroy();
+      }
     });
   });
 });
