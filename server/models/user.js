@@ -88,7 +88,7 @@ var User = bookshelf.Model.extend({
     var passwordResetKeyHash = this.get('passwordResetKeyHash');
     var keyValid = bcrypt.compareSync(passwordResetKey, passwordResetKeyHash);
     if (keyValid) {
-      this.unset('passwordResetKeyHash');
+      this.set('passwordResetKeyHash', null);
     }
     return keyValid;
   }
