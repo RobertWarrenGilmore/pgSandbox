@@ -25,22 +25,34 @@ var User = bookshelf.Model.extend({
    * Sets the password by storing its hash. The password itself is not stored.
    * @param {string} password - the new password to be set
    * @returns {void}
+   * @throws if the password is not between 8 and 30 (inclusive) in length.
    */
   setPassword: function (password) {
-    Checkit.checkSync('password', password, validationRules.password);
-    var passwordHash = bcrypt.hashSync(password, 8);
-    this.set('passwordHash', passwordHash);
+    var validationResult = Checkit.checkSync('password', password, validationRules.password);
+    var err = validationResult[0];
+    if (err) {
+      throw err;
+    } else {
+      var passwordHash = bcrypt.hashSync(password, 8);
+      this.set('passwordHash', passwordHash);
+    }
   },
 
   /**
-   * Validates the password by checking whether it matches the stored password hash.
-   * @param {string} password - the password to be validated
+   * Verifies the password by checking whether it matches the stored password hash.
+   * @param {string} password - the password to be verified
    * @returns {boolean} true if the password matches; false otherwise
+   * @throws if the password is not between 8 and 30 (inclusive) in length.
    */
-  validatePassword: function (password) {
-    Checkit.checkSync('password', password, validationRules.password);
-    var valid = bcrypt.compareSync(password, this.get('passwordHash'));
-    return valid;
+  verifyPassword: function (password) {
+    var validationResult = Checkit.checkSync('password', password, validationRules.password);
+    var err = validationResult[0];
+    if (err) {
+      throw err;
+    } else {
+      var valid = bcrypt.compareSync(password, this.get('passwordHash'));
+      return valid;
+    }
   },
 
   /**
@@ -66,11 +78,11 @@ var User = bookshelf.Model.extend({
   },
 
   /**
-   * Validates the password reset key by checking whether it matches the stored password reset key hash. If validation is successful, then the password reset key hash is cleared.
-   * @param {string} passwordResetKey - the password reset key to be validated
+   * Verifies the password reset key by checking whether it matches the stored password reset key hash. If verification is successful, then the password reset key hash is cleared.
+   * @param {string} passwordResetKey - the password reset key to be verified
    * @returns {boolean} true if the password reset key matches; false otherwise
    */
-  validatePasswordResetKey: function (passwordResetKey) {
+  verifyPasswordResetKey: function (passwordResetKey) {
     var passwordResetKeyHash = this.get('passwordResetKeyHash');
     var keyValid = bcrypt.compareSync(passwordResetKey, passwordResetKeyHash);
     if (keyValid) {

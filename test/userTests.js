@@ -86,7 +86,7 @@ describe('the user model', function () {
       emailAddress: emailAddress
     }).fetch().then(function (user) {
 
-      // Set the password using the key.
+      // Set the password.
       user.setPassword(password);
       return user.save();
 
@@ -97,11 +97,35 @@ describe('the user model', function () {
     });
   });
 
-  it('should be able to validate its password', function (done) {
+  it('should fail to set a too short password', function (done) {
     new User({
       emailAddress: emailAddress
     }).fetch().then(function (user) {
-      var authenticated = user.validatePassword(password);
+      // Set a password 7 characters long.
+      user.setPassword('1234567');
+      done(new Error('Set a too short password.'));
+    }).catch(function () {
+      done();
+    });
+  });
+
+  it('should fail to set a too long password', function (done) {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+      // Set a password 31 characters long.
+      user.setPassword('ABCDEFGHIJKLMNOPQRSTUVWXYZabcde');
+      done(new Error('Set a too long password.'));
+    }).catch(function () {
+      done();
+    });
+  });
+
+  it('should be able to verify its password', function (done) {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+      var authenticated = user.verifyPassword(password);
       if (authenticated) {
         done();
       } else {
@@ -112,11 +136,41 @@ describe('the user model', function () {
     });
   });
 
-  it('should fail to validate an incorrect password', function (done) {
+  it('should fail to verify a too short password', function (done) {
     new User({
       emailAddress: emailAddress
     }).fetch().then(function (user) {
-      var authenticated = user.validatePassword(password + 'a');
+      var authenticated = user.verifyPassword('1234567');
+      if (authenticated) {
+        done(new Error('Verified a too short password.'));
+      } else {
+        done(new Error('Did not throw an error while verifying a too short password.'));
+      }
+    }).catch(function () {
+      done();
+    });
+  });
+
+  it('should fail to verify a too long password', function (done) {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+      var authenticated = user.verifyPassword('ABCDEFGHIJKLMNOPQRSTUVWXYZabcde');
+      if (authenticated) {
+        done(new Error('Verified a too long password.'));
+      } else {
+        done(new Error('Did not throw an error while verifying a too long password.'));
+      }
+    }).catch(function () {
+      done();
+    });
+  });
+
+  it('should fail to verify an incorrect password', function (done) {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+      var authenticated = user.verifyPassword(password + 'a');
       if (authenticated) {
         done(new Error('The user logged in successfully with the wrong password.'));
       } else {
@@ -145,12 +199,12 @@ describe('the user model', function () {
     });
   });
 
-  it('should be able to validate its password reset key', function (done) {
+  it('should be able to verify its password reset key', function (done) {
     new User({
       emailAddress: emailAddress
     }).fetch().then(function (user) {
 
-      var keyValid = user.validatePasswordResetKey(passwordResetKey);
+      var keyValid = user.verifyPasswordResetKey(passwordResetKey);
       if (keyValid) {
         var keyCleared = !user.has('passwordResetKeyHash');
         if (keyCleared) {
@@ -167,12 +221,12 @@ describe('the user model', function () {
     });
   });
 
-  it('should fail to validate an incorrect password reset key', function (done) {
+  it('should fail to verify an incorrect password reset key', function (done) {
     new User({
       emailAddress: emailAddress
     }).fetch().then(function (user) {
 
-      var keyValid = user.validatePasswordResetKey(passwordResetKey + 'a');
+      var keyValid = user.verifyPasswordResetKey(passwordResetKey + 'a');
       if (keyValid) {
         done(new Error('An incorrect key validated successfully.'));
       } else {
