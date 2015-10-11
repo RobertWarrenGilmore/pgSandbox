@@ -50,7 +50,7 @@ var createModelClass = function (extraStubs) {
     throw new Error('This method should have been stubbed.');
   };
   Model.prototype.serialize = function () {
-    throw new Error('This method should have been stubbed.');
+    //throw new Error('This method should have been stubbed.');
   };
   if (extraStubs) {
     for (var extraStub of extraStubs) {

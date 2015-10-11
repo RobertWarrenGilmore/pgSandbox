@@ -2,8 +2,12 @@ var assert = require('assert');
 var mockBookshelf = require('./mockBookshelf');
 var Model = mockBookshelf.model('User', ['setPassword', 'verifyPassword', 'generatePassword', 'verifyPasswordResetKey']);
 var proxyquire = require('proxyquire');
-var biz = proxyquire('../../../server/businessLogic/biz', {
+var UserBiz = proxyquire('../../../server/businessLogic/user', {
   '../models/bookshelf': mockBookshelf
+});
+var biz = proxyquire('../../../server/businessLogic/biz', {
+  '../models/bookshelf': mockBookshelf,
+  './user': UserBiz
 });
 
 describe('user', function () {
@@ -23,16 +27,16 @@ describe('user', function () {
     var instance = Model.queueInstances(1)[0];
     instance.serialize.returns(expectedJson);
 
-    biz.anonymous.user.create({
+    biz.anonymous.user().create({
+      // TODO Find a way to remove the () from after user.
       emailAddress: emailAddress
     }).then(
       function (user) {
 
-        assert(instance.verifyPassword.withArgs(password).calledOnce, 'The password was not verified properly.');
         assert(Model.withArgs({
           emailAddress: emailAddress
         }).calledOnce, 'The model was not instantiated properly.');
-        assert(Model.instances[0].save.withArgs().calledOnce, 'The model was not saved properly.');
+        assert(instance.save.withArgs().calledOnce, 'The model was not saved properly.');
         assert.deepStrictEqual(user, expectedJson, 'The returned User JSON was wrong.');
 
         // TODO Test that the password reset key email was sent.
@@ -64,7 +68,7 @@ describe('user', function () {
     }).then(
       function (user) {
 
-        assert(instance.fetch.calledOnce, 'The model was not fetched.');
+        assert(instance.fetch.calledOnce, 'The model was not fetched properly.');
         assert(instance.verifyPasswordResetKey.withArgs(passwordResetKey).calledOnce, 'The password reset key was not verified properly.');
         assert(instance.setPassword.withArgs(password).calledOnce, 'The password was not set properly.');
         assert(Model.instances[0].save.withArgs().calledOnce, 'The model was not saved properly.');
@@ -92,7 +96,7 @@ describe('user', function () {
     }).then(
       function (user) {
 
-        assert(instance.fetch.calledOnce, 'The model was not fetched.');
+        assert(instance.fetch.calledOnce, 'The model was not fetched properly.');
         assert(instance.set.withArgs({
           emailAddress: mod
         }).calledOnce, 'The email address was not set properly.');

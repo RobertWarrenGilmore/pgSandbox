@@ -1,27 +1,29 @@
-var UserModel = require('../models/bookshelf').model('User');
+var User = require('../models/bookshelf').model('User');
+var UserBiz = require('./user');
 
-var BizModules = function () {
+var BizModules = function (authenticatedUser) {
+  this.user = new UserBiz(authenticatedUser);
 };
-
-//BizModules.prototype.user = userBiz;
 
 var authenticator = {
   anonymous: new BizModules(),
   authenticate: function (emailAddress, password) {
-    var bizModules = new BizModules();
-    new UserModel({
+    var authenticatedUser = new User({
       emailAddress: emailAddress
-    }).fetch().then(function (user) {
-      var authenticated = user.verifyPassword(password);
-      if (authenticated) {
-        bizModules.setAuthenticatedUser(user);
-      } else {
-        throw new Error('Authentication failed.');
+    }).fetch().then(
+      function (user) {
+        var authenticated = user.verifyPassword(password);
+        if (authenticated) {
+          return user;
+        } else {
+          throw new Error('Authentication failed.');
+        }
+      },
+      function (err) {
+        throw err;
       }
-    }).catch(function (err) {
-      throw err;
-    });
-    return bizModules;
+    );
+    return new BizModules(authenticatedUser);
   }
 
 };
