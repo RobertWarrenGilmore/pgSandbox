@@ -1,42 +1,73 @@
-var Promise = require('bluebird');
+var GeneralBiz = require('./general');
 var User = require('../models/bookshelf').model('User');
 
-var UserBiz = function (authenticatedUser) {
-  this._authenticatedUser = authenticatedUser;
-  var self = this;
-  return function (idOrEmailAddress) {
-    if (idOrEmailAddress) {
-      if (typeof idOrEmailAddress === 'string') {
-        self._specifiedUser = new User({
-          emailAddress: idOrEmailAddress
-        }).fetch();
-      } else {
-        self._specifiedUser = new User({
-          id: idOrEmailAddress
-        }).fetch();
-      }
+var operations = {
+
+  create: {
+    beforeCommit: function (trx, authUser, model, body) {
+      // TODO Move all validation up from the model?
+      return new User(body).save({
+        transacting: trx
+      });
+    },
+    afterCommit: function (result) {
+      return result.serialize();
     }
-    return self;
-  };
+  },
+
+  read: {
+    beforeCommit: function (trx, authUser, model, body) {},
+    afterCommit: function (result) {}
+  },
+
+  update: {
+    beforeCommit: function (trx, authUser, model, body) {
+      if (!authUser && body.passwordResetKey && body.password) {
+        if (model.verifyPasswordResetKey(body.passwordResetKey)) {
+          model.setPassword(body.password);
+        }
+        return model.set(body).save(null, null, null, {
+          transacting: trx
+        });
+      } else if (authUser.get('id') === model.get('id')) {
+        if (body.password) {
+          model.setPassword(body.password);
+        }
+        return model.set(body).save(null, null, null, {
+          transacting: trx
+        });
+      } else {
+        throw new Error('The authenticated user is not the specified user.');
+      }
+    },
+
+    afterCommit: function (result) {
+      return result.serialize();
+    }
+  },
+
+  delete: {
+    beforeCommit: function (trx, authUser, model, body) {},
+    afterCommit: function (result) {}
+  }
 };
 
-UserBiz.prototype.create = function (options) {
-  // TODO Move all verification up from the model.
-  return new User(options).save().then(function (user) {
-    return user.serialize();
-  });
+var modelSpecifier = function (idOrEmailAddress) {
+  var result = {};
+  if (idOrEmailAddress) {
+    if (typeof idOrEmailAddress === 'string') {
+      result = new User({
+        emailAddress: idOrEmailAddress
+      });
+    } else {
+      result = new User({
+        id: idOrEmailAddress
+      });
+    }
+  }
+  return result;
 };
 
-UserBiz.prototype.update = function () {
-  return new Promise(function (resolve, reject) {
-    resolve();
-  });
-};
-
-UserBiz.prototype.generatePasswordResetKey = function () {
-  return new Promise(function (resolve, reject) {
-    resolve();
-  });
-};
+var UserBiz = GeneralBiz(modelSpecifier, operations);
 
 module.exports = UserBiz;

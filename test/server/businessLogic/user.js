@@ -1,9 +1,14 @@
 var assert = require('assert');
+var sinon = require('sinon');
 var mockBookshelf = require('./mockBookshelf');
 var Model = mockBookshelf.model('User', ['setPassword', 'verifyPassword', 'generatePassword', 'verifyPasswordResetKey']);
 var proxyquire = require('proxyquire');
-var UserBiz = proxyquire('../../../server/businessLogic/user', {
+var GeneralBiz = proxyquire('../../../server/businessLogic/general', {
   '../models/bookshelf': mockBookshelf
+});
+var UserBiz = proxyquire('../../../server/businessLogic/user', {
+  '../models/bookshelf': mockBookshelf,
+  './general': GeneralBiz
 });
 var biz = proxyquire('../../../server/businessLogic/biz', {
   '../models/bookshelf': mockBookshelf,
@@ -19,13 +24,18 @@ describe('user', function () {
   beforeEach(function (done) {
     Model.clearInstances();
     Model.reset();
+    mockBookshelf.clearTrxs();
     done();
   });
 
   it('should be able to create', function (done) {
-    var expectedJson = '{"id":' + id + ',"emailAddress":"' + emailAddress + '"}';
+    var expectedUser = {
+      id: id,
+      emailAddress: emailAddress
+    };
     var instance = Model.queueInstances(1)[0];
-    instance.serialize.returns(expectedJson);
+    instance.serialize.returns(expectedUser);
+    var trx = mockBookshelf.queueTrxs(1)[0];
 
     biz.anonymous.user().create({
       // TODO Find a way to remove the () from after user.
@@ -36,8 +46,12 @@ describe('user', function () {
         assert(Model.withArgs({
           emailAddress: emailAddress
         }).calledOnce, 'The model was not instantiated properly.');
-        assert(instance.save.withArgs().calledOnce, 'The model was not saved properly.');
-        assert.deepStrictEqual(user, expectedJson, 'The returned User JSON was wrong.');
+        assert(instance.save.withArgs(
+          sinon.match({
+            transacting: sinon.match.same(trx)
+          })
+        ).calledOnce, 'The model was not saved properly.');
+        assert.deepStrictEqual(user, expectedUser, 'The returned user was wrong.');
 
         // TODO Test that the password reset key email was sent.
         assert(false, 'The test does not yet test for the sending of the password reset key email.');
@@ -57,10 +71,14 @@ describe('user', function () {
   it('should be able to verify a password reset key');
 
   it('should be able to set a password', function (done) {
-    var expectedJson = '{"id":' + id + ',"emailAddress":"' + emailAddress + '"}';
+    var expectedUser = {
+      id: id,
+      emailAddress: emailAddress
+    };
     var instance = Model.queueInstances(1)[0];
     instance.verifyPasswordResetKey.returns(true);
-    instance.serialize.returns(expectedJson);
+    instance.serialize.returns(expectedUser);
+    var trx = mockBookshelf.queueTrxs(1)[0];
 
     biz.anonymous.user(1).update({
       password: password,
@@ -71,8 +89,12 @@ describe('user', function () {
         assert(instance.fetch.calledOnce, 'The model was not fetched properly.');
         assert(instance.verifyPasswordResetKey.withArgs(passwordResetKey).calledOnce, 'The password reset key was not verified properly.');
         assert(instance.setPassword.withArgs(password).calledOnce, 'The password was not set properly.');
-        assert(Model.instances[0].save.withArgs().calledOnce, 'The model was not saved properly.');
-        assert.deepStrictEqual(user, expectedJson, 'The returned User JSON was wrong.');
+        assert(instance.save.withArgs(null, null, null,
+          sinon.match({
+            transacting: sinon.match.same(trx)
+          })
+        ).calledOnce, 'The model was not saved properly.');
+        assert.deepStrictEqual(user, expectedUser, 'The returned user was wrong.');
         done();
 
       },
@@ -86,22 +108,24 @@ describe('user', function () {
 
   it('should be able to set an email address', function (done) {
     var mod = emailAddress + 'a';
-    var expectedJson = '{"emailAddress":"' + mod + '"}';
-    var instance = Model.queueInstances(1)[0];
-    instance.serialize.returns(expectedJson);
-    // TODO separate instance for auth?
+    var expectedUser = {
+      emailAddress: mod
+    };
+    var instances = Model.queueInstances(2);
+    instances[1].serialize.returns(expectedUser);
+    var trx = mockBookshelf.queueTrxs(1)[0];
 
     biz.authenticate(emailAddress, password).user(1).update({
       emailAddress: mod
     }).then(
       function (user) {
 
-        assert(instance.fetch.calledOnce, 'The model was not fetched properly.');
-        assert(instance.set.withArgs({
+        assert(instances[1].fetch.calledOnce, 'The model was not fetched properly.');
+        assert(instances[1].set.withArgs({
           emailAddress: mod
         }).calledOnce, 'The email address was not set properly.');
-        assert(Model.instances[0].save.withArgs().calledOnce, 'The model was not saved properly.');
-        assert.deepStrictEqual(user, expectedJson, 'The returned User JSON was wrong.');
+        assert(instances[1].save.withArgs().calledOnce, 'The model was not saved properly.');
+        assert.deepStrictEqual(user, expectedUser, 'The returned user was wrong.');
 
         done();
       },

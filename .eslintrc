@@ -39,7 +39,7 @@
     "no-shadow": 1,
 
     // Warn if there are unused variables in a file.
-    "no-unused-vars": 1,
+    "no-unused-vars": [1, {"vars": "all", "args": "none"}],
 
     // Warn if there are extraneous spaces on a line.
     "no-multi-spaces": 1,

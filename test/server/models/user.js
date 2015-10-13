@@ -1,5 +1,6 @@
 var assert = require('assert');
-var User = require('../../../server/models/bookshelf').model('User');
+var Bookshelf = require('../../../server/models/bookshelf');
+var User = Bookshelf.model('User');
 
 describe('user', function () {
   var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
@@ -14,6 +15,22 @@ describe('user', function () {
       done();
     }).catch(function (err) {
       done(err);
+    });
+  });
+
+  it('should be able to be created and deleted in a transaction', function (done) {
+    var t = Bookshelf.transaction(function (trx) {
+      return new User({
+        emailAddress: emailAddress + 'trx'
+      }).save(null, null, null, {
+        transacting: t
+      }).then(function (user) {
+        return user.destroy();
+      }).then(function () {
+        done();
+      }).catch(function (err) {
+        done(err);
+      });
     });
   });
 

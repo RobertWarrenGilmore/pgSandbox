@@ -8,7 +8,7 @@ var createModelClass = function (extraStubs) {
     var instance;
     // Return either a new instance or the next queued instance.
     if (instances.length) {
-      instance = instances.unshift();
+      instance = instances.shift();
     } else {
       sinon.spy(this, 'save');
       sinon.spy(this, 'fetch');
@@ -16,10 +16,11 @@ var createModelClass = function (extraStubs) {
       sinon.stub(this, 'get');
       sinon.stub(this, 'serialize');
       if (extraStubs) {
-        for (var extraStub of extraStubs) {
-          sinon.stub(this, extraStub);
+        for (var i in extraStubs) {
+          sinon.stub(this, extraStubs[i]);
         }
       }
+
       instance = this;
     }
     return instance;
@@ -29,8 +30,10 @@ var createModelClass = function (extraStubs) {
     var queued = [];
     for (var i = 0; i < count; ++i) {
       var instance = new Model();
-      instances.push(instance);
       queued.push(instance);
+    }
+    for (var i in queued) {
+      instances.push(queued[i]);
     }
     return queued;
   }
@@ -53,8 +56,8 @@ var createModelClass = function (extraStubs) {
     //throw new Error('This method should have been stubbed.');
   };
   if (extraStubs) {
-    for (var extraStub of extraStubs) {
-      Model.prototype[extraStub] = function () {
+    for (var i in extraStubs) {
+      Model.prototype[extraStubs[i]] = function () {
         throw new Error('This method should have been stubbed.');
       };
     }
@@ -62,12 +65,43 @@ var createModelClass = function (extraStubs) {
   return sinon.spy(Model);
 };
 
+var trxs = [];
+
 var mockBookshelf = {
   model: function (name, extraStubs) {
     if (!models[name]) {
       models[name] = createModelClass(extraStubs);
     }
     return models[name];
+  },
+  transaction: function (transactionCallback) {
+    var trx;
+    if (trxs.length) {
+      trx = trxs.shift();
+    } else {
+      trx = {
+        // commit: sinon.spy(),
+        // rollback: sinon.spy()
+      };
+    }
+    return transactionCallback(trx);
+  },
+  queueTrxs: function (count) {
+    var queued = [];
+    for (var i = 0; i < count; ++i) {
+      var trx = {
+        // commit: sinon.spy(),
+        // rollback: sinon.spy()
+      };
+      queued.push(trx);
+    }
+    for (var i in queued) {
+      trxs.push(queued[i]);
+    }
+    return queued;
+  },
+  clearTrxs: function () {
+    trxs.length = 0;
   }
 };
 
