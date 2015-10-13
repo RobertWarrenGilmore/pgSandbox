@@ -1,13 +1,16 @@
 var assert = require('assert');
 var sinon = require('sinon');
+var appUrl = require('../../../package.json').appUrl;
 var mockBookshelf = require('./mockBookshelf');
-var Model = mockBookshelf.model('User', ['setPassword', 'verifyPassword', 'generatePassword', 'verifyPasswordResetKey']);
+var Model = mockBookshelf.model('User', ['setPassword', 'verifyPassword', 'generatePassword', 'verifyPasswordResetKey', 'generatePasswordResetKey']);
+var mockEmailer = require('./mockEmailer');
 var proxyquire = require('proxyquire');
 var GeneralBiz = proxyquire('../../../server/businessLogic/general', {
   '../models/bookshelf': mockBookshelf
 });
 var UserBiz = proxyquire('../../../server/businessLogic/user', {
   '../models/bookshelf': mockBookshelf,
+  './emailer': mockEmailer,
   './general': GeneralBiz
 });
 var biz = proxyquire('../../../server/businessLogic/biz', {
@@ -34,8 +37,11 @@ describe('user', function () {
       emailAddress: emailAddress
     };
     var instance = Model.queueInstances(1)[0];
+    instance.generatePasswordResetKey.returns(passwordResetKey);
+    instance.get.withArgs('id').returns(id);
     instance.serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
+    var emailMessage = 'Set your password at the following URL: ' + appUrl + '/user/' + id + '/setPassword?key=' + passwordResetKey;
 
     biz.anonymous.user().create({
       // TODO Find a way to remove the () from after user.
@@ -52,9 +58,7 @@ describe('user', function () {
           })
         ).calledOnce, 'The model was not saved properly.');
         assert.deepStrictEqual(user, expectedUser, 'The returned user was wrong.');
-
-        // TODO Test that the password reset key email was sent.
-        assert(false, 'The test does not yet test for the sending of the password reset key email.');
+        assert(mockEmailer.withArgs(emailAddress, emailMessage).calledOnce, 'The password setting email was not sent properly.');
 
         done();
 

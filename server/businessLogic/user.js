@@ -1,13 +1,20 @@
 var GeneralBiz = require('./general');
 var User = require('../models/bookshelf').model('User');
+var emailer = require('./emailer');
+var appUrl = require('../../package.json').appUrl;
 
 var operations = {
 
   create: {
     beforeCommit: function (trx, authUser, model, body) {
       // TODO Move all validation up from the model?
-      return new User(body).save({
+      var user = new User(body);
+      var key = user.generatePasswordResetKey();
+      return user.save({
         transacting: trx
+      }).tap(function(savedUser){
+        var emailMessage = 'Set your password at the following URL: ' + appUrl + '/user/' + savedUser.get('id') + '/setPassword?key=' + key;
+        emailer(body.emailAddress, emailMessage);
       });
     },
     afterCommit: function (result) {

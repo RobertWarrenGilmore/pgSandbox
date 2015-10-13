@@ -1,4 +1,5 @@
 var sinon = require('sinon');
+var Promise = require('bluebird');
 
 var models = {};
 
