@@ -2,7 +2,7 @@ var assert = require('assert');
 var sinon = require('sinon');
 var appUrl = require('../../../package.json').appUrl;
 var mockBookshelf = require('./mockBookshelf');
-var Model = mockBookshelf.model('User', ['setPassword', 'verifyPassword', 'generatePassword', 'verifyPasswordResetKey', 'generatePasswordResetKey']);
+var Model = mockBookshelf.model('User', ['setPassword', 'verifyPassword', 'verifyPasswordResetKey', 'generatePasswordResetKey']);
 var mockEmailer = require('./mockEmailer');
 var proxyquire = require('proxyquire');
 var GeneralBiz = proxyquire('../../../server/businessLogic/general', {
@@ -28,6 +28,7 @@ describe('user', function () {
     Model.clearInstances();
     Model.reset();
     mockBookshelf.clearTrxs();
+    mockEmailer.reset();
     done();
   });
 
@@ -44,7 +45,6 @@ describe('user', function () {
     var emailMessage = 'Set your password at the following URL: ' + appUrl + '/user/' + id + '/setPassword?key=' + passwordResetKey;
 
     biz.anonymous.user().create({
-      // TODO Find a way to remove the () from after user.
       emailAddress: emailAddress
     }).then(
       function (user) {
@@ -52,7 +52,7 @@ describe('user', function () {
         assert(Model.withArgs({
           emailAddress: emailAddress
         }).calledOnce, 'The model was not instantiated properly.');
-        assert(instance.save.withArgs(
+        assert(instance.save.withArgs(null, null, null,
           sinon.match({
             transacting: sinon.match.same(trx)
           })
@@ -71,8 +71,38 @@ describe('user', function () {
     });
   });
 
-  it('should be able to generate a password reset key');
-  it('should be able to verify a password reset key');
+  it('should be able to send a password reset email', function (done) {
+    var instance = Model.queueInstances(1)[0];
+    instance.generatePasswordResetKey.returns(passwordResetKey);
+    instance.get.withArgs('emailAddress').returns(emailAddress);
+    instance.get.withArgs('id').returns(id);
+    var trx = mockBookshelf.queueTrxs(1)[0];
+    var emailMessage = 'Set your password at the following URL: ' + appUrl + '/user/' + id + '/setPassword?key=' + passwordResetKey;
+
+    biz.anonymous.user(id).update({
+      passwordResetKey: true
+    }).then(
+      function (user) {
+
+        assert(instance.fetch.calledOnce, 'The model was not fetched properly.');
+        assert(instance.generatePasswordResetKey.calledOnce, 'The password reset key was not generated properly.');
+        assert(instance.save.withArgs(null, null, null,
+          sinon.match({
+            transacting: sinon.match.same(trx)
+          })
+        ).calledOnce, 'The model was not saved properly.');
+        assert(mockEmailer.withArgs(emailAddress, emailMessage).calledOnce, 'The password setting email was not sent properly.');
+
+        done();
+
+      },
+      function (err) {
+        done(err);
+      }
+    ).catch(function (err) {
+      done(err);
+    });
+  });
 
   it('should be able to set a password', function (done) {
     var expectedUser = {

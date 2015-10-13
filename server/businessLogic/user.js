@@ -3,6 +3,11 @@ var User = require('../models/bookshelf').model('User');
 var emailer = require('./emailer');
 var appUrl = require('../../package.json').appUrl;
 
+var sendPasswordResetEmail = function (emailAddress, id, key) {
+  var emailMessage = 'Set your password at the following URL: ' + appUrl + '/user/' + id + '/setPassword?key=' + key;
+  emailer(emailAddress, emailMessage);
+};
+
 var operations = {
 
   create: {
@@ -10,11 +15,10 @@ var operations = {
       // TODO Move all validation up from the model?
       var user = new User(body);
       var key = user.generatePasswordResetKey();
-      return user.save({
+      return user.save(null, null, null, {
         transacting: trx
-      }).tap(function(savedUser){
-        var emailMessage = 'Set your password at the following URL: ' + appUrl + '/user/' + savedUser.get('id') + '/setPassword?key=' + key;
-        emailer(body.emailAddress, emailMessage);
+      }).tap(function (savedUser) {
+        sendPasswordResetEmail(body.emailAddress, savedUser.get('id'), key);
       });
     },
     afterCommit: function (result) {
@@ -29,24 +33,24 @@ var operations = {
 
   update: {
     beforeCommit: function (trx, authUser, model, body) {
-      if (!authUser && body.passwordResetKey && body.password) {
+      if (body.passwordResetKey && body.password) {
         if (model.verifyPasswordResetKey(body.passwordResetKey)) {
           model.setPassword(body.password);
         }
-        return model.set(body).save(null, null, null, {
-          transacting: trx
-        });
+      } else if (body.passwordResetKey) {
+        var key = model.generatePasswordResetKey();
+        sendPasswordResetEmail(model.get('emailAddress'), model.get('id'), key);
       } else if (authUser.get('id') === model.get('id')) {
         if (body.password) {
           model.setPassword(body.password);
           delete body.password;
         }
-        return model.set(body).save(null, null, null, {
-          transacting: trx
-        });
       } else {
         throw new Error('The authenticated user is not the specified user.');
       }
+      return model.set(body).save(null, null, null, {
+        transacting: trx
+      });
     },
 
     afterCommit: function (result) {
