@@ -5,6 +5,7 @@ var GeneralBiz = function (authUser, password, modelSpecifier, operations) {
   this._authUser = authUser;
   this._password = password;
   this._operations = operations;
+  this._specifiedModel = null;
   if (typeof modelSpecifier === 'function') {
     return function () {
       this._specifiedModel = modelSpecifier.apply(this, arguments);

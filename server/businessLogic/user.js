@@ -32,6 +32,7 @@ var operations = {
       } else if (authUser.get('id') === model.get('id')) {
         if (body.password) {
           model.setPassword(body.password);
+          delete body.password;
         }
         return model.set(body).save(null, null, null, {
           transacting: trx
@@ -53,7 +54,7 @@ var operations = {
 };
 
 var modelSpecifier = function (idOrEmailAddress) {
-  var result = {};
+  var result;
   if (idOrEmailAddress) {
     if (typeof idOrEmailAddress === 'string') {
       result = new User({
