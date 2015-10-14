@@ -62,8 +62,8 @@ GeneralBiz.prototype.update = function (body) {
   return this._doTransaction(this._operations.update, body);
 };
 
-GeneralBiz.prototype.delete = function (body) {
-  return this._doTransaction(this._operations.delete, body);
+GeneralBiz.prototype.destroy = function (body) {
+  return this._doTransaction(this._operations.destroy, body);
 };
 
 var newSubClass = function (modelSpecifier, operations) {

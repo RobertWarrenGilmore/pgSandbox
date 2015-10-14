@@ -318,6 +318,11 @@ describe('user', function () {
     });
   });
 
+  it('should be able to set itself inactive');
+  it('should be able to set itself active');
+  it('should be able to set its first name');
+  it('should be able to set its last name');
+
   it('should be able to be deleted', function (done) {
     new User({
       emailAddress: emailAddress

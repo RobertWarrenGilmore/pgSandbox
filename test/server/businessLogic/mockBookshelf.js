@@ -13,6 +13,7 @@ var createModelClass = function (extraStubs) {
     } else {
       sinon.spy(this, 'save');
       sinon.spy(this, 'fetch');
+      sinon.spy(this, 'destroy');
       sinon.spy(this, 'set');
       sinon.stub(this, 'get');
       sinon.stub(this, 'serialize');
@@ -45,6 +46,9 @@ var createModelClass = function (extraStubs) {
     return Promise.resolve(this);
   };
   Model.prototype.fetch = function () {
+    return Promise.resolve(this);
+  };
+  Model.prototype.destroy = function () {
     return Promise.resolve(this);
   };
   Model.prototype.set = function () {

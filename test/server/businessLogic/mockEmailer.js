@@ -1,5 +1,5 @@
 var sinon = require('sinon');
 
-var emailer = sinon.spy();
+var emailer = sinon.stub();
 
 module.exports = emailer;

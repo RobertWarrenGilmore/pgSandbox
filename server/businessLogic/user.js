@@ -62,8 +62,10 @@ var operations = {
     }
   },
 
-  delete: {
-    beforeCommit: function (trx, authUser, model, body) {},
+  destroy: {
+    beforeCommit: function (trx, authUser, model, body) {
+      throw new Error('Deletion of users is not supported. Mark a user inactive instead.');
+    },
     afterCommit: function (result) {}
   }
 };
