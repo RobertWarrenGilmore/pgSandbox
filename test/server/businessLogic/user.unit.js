@@ -42,7 +42,7 @@ describe('user', function () {
     instance.get.withArgs('id').returns(id);
     instance.serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
-    var emailMessage = 'Set your password at the following URL: ' + appUrl + '/user/' + id + '/setPassword?key=' + passwordResetKey;
+    var emailMessage = 'Set your password at the following URL: ' + appUrl + '/users/' + id + '/setPassword?key=' + passwordResetKey;
 
     biz.anonymous.user().create({
       emailAddress: emailAddress
@@ -72,7 +72,7 @@ describe('user', function () {
     instance.get.withArgs('emailAddress').returns(emailAddress);
     instance.get.withArgs('id').returns(id);
     var trx = mockBookshelf.queueTrxs(1)[0];
-    var emailMessage = 'Set your password at the following URL: ' + appUrl + '/user/' + id + '/setPassword?key=' + passwordResetKey;
+    var emailMessage = 'Set your password at the following URL: ' + appUrl + '/users/' + id + '/setPassword?key=' + passwordResetKey;
 
     biz.anonymous.user(id).update({
       passwordResetKey: true

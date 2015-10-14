@@ -1,6 +1,7 @@
 var bookshelf = require('../database/bookshelf');
 var Promise = require('bluebird');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
+var appUrl = require('../../../package.json').appUrl;
 var Checkit = require('checkit');
 
 var validationRules = {
@@ -12,6 +13,12 @@ var User = bookshelf.Model.extend({
   tableName: 'users',
 
   hidden: ['passwordHash', 'passwordResetKeyHash'],
+
+  virtuals: {
+    uri: function() {
+        return appUrl + '/users/' + this.get('id');
+    }
+  },
 
   initialize: function () {
     this.on('saving', this._validateSave);
