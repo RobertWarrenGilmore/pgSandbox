@@ -37,7 +37,9 @@ describe('business logic', function () {
     });
 
   });
-
-  // a list of all of the business logic test modules
-  require('./user');
+  
+  context('unit', function () {
+    // a list of all of the business logic test modules
+    require('./user.unit');
+  });
 });

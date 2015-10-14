@@ -27,8 +27,12 @@ var operations = {
   },
 
   read: {
-    beforeCommit: function (trx, authUser, model, body) {},
-    afterCommit: function (result) {}
+    beforeCommit: function (trx, authUser, model, body) {
+      return model;
+    },
+    afterCommit: function (result) {
+      return result.serialize();
+    }
   },
 
   update: {

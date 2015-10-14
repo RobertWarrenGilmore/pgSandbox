@@ -84,7 +84,11 @@ describe('user', function () {
     }).then(
       function (user) {
 
-        assert(instance.fetch.calledOnce, 'The model was not fetched properly.');
+        assert(instance.fetch.withArgs(null, null, null,
+          sinon.match({
+            transacting: sinon.match.same(trx)
+          })
+        ).calledOnce, 'The model was not fetched properly.');
         assert(instance.generatePasswordResetKey.calledOnce, 'The password reset key was not generated properly.');
         assert(instance.save.withArgs(null, null, null,
           sinon.match({
@@ -120,7 +124,11 @@ describe('user', function () {
     }).then(
       function (user) {
 
-        assert(instance.fetch.calledOnce, 'The model was not fetched properly.');
+        assert(instance.fetch.withArgs(null, null, null,
+          sinon.match({
+            transacting: sinon.match.same(trx)
+          })
+        ).calledOnce, 'The model was not fetched properly.');
         assert(instance.verifyPasswordResetKey.withArgs(passwordResetKey).calledOnce, 'The password reset key was not verified properly.');
         assert(instance.setPassword.withArgs(password).calledOnce, 'The password was not set properly.');
         assert(instance.save.withArgs(null, null, null,
@@ -154,7 +162,11 @@ describe('user', function () {
     }).then(
       function (user) {
 
-        assert(instances[1].fetch.calledOnce, 'The model was not fetched properly.');
+        assert(instances[1].fetch.withArgs(null, null, null,
+          sinon.match({
+            transacting: sinon.match.same(trx)
+          })
+        ).calledOnce, 'The model was not fetched properly.');
         assert(instances[1].set.withArgs({
           emailAddress: mod
         }).calledOnce, 'The email address was not set properly.');
@@ -171,6 +183,39 @@ describe('user', function () {
     });
 
   });
+
+  it('should be able to read', function (done) {
+    var expectedUser = {
+      id: id,
+      emailAddress: emailAddress
+    };
+    var instance = Model.queueInstances(1)[0];
+    instance.serialize.returns(expectedUser);
+    var trx = mockBookshelf.queueTrxs(1)[0];
+
+    biz.anonymous.user(1).read().then(
+      function (user) {
+
+        assert(instance.fetch.withArgs(null, null, null,
+          sinon.match({
+            transacting: sinon.match.same(trx)
+          })
+        ).calledOnce, 'The model was not fetched properly.');
+        assert.deepStrictEqual(user, expectedUser, 'The returned user was wrong.');
+        done();
+
+      },
+      function (err) {
+        done(err);
+      }
+    ).catch(function (err) {
+      done(err);
+    });
+  });
+
+  it('should be able to delete');
+  it('should be able to search by first name');
+  it('should be able to search by last name');
 
   context('when the model fails to set an attribute', function () {
     it('should fail to create');
