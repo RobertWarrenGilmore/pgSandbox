@@ -7,6 +7,8 @@ describe('user', function () {
   var badEmailAddress = 'NotAValidEmailAddress.com';
   var password = 'taco tuesday';
   var passwordResetKey;
+  var givenName = 'Victor';
+  var familyName = 'Frankenstein';
 
   it('should be able to be created', function (done) {
     new User({
@@ -31,6 +33,18 @@ describe('user', function () {
       }).catch(function (err) {
         done(err);
       });
+    });
+  });
+
+  it('should be active by default', function (done) {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+      var active = user.get('active');
+      assert(active, 'The user was inactive just after creation.');
+      done();
+    }).catch(function (err) {
+      done(err);
     });
   });
 
@@ -318,10 +332,81 @@ describe('user', function () {
     });
   });
 
-  it('should be able to set itself inactive');
-  it('should be able to set itself active');
-  it('should be able to set its first name');
-  it('should be able to set its last name');
+  it('should be able to set itself inactive', function (done) {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+      var active = user.get('active');
+      assert(active, 'The user was already inactive.');
+      return user.set('active', false).save();
+    }).then(function (user) {
+      var active = user.get('active');
+      assert(!active, 'The user is still active.');
+      done();
+    }).catch(function (err) {
+      done(err);
+    });
+  });
+
+  it('should be able to set itself active', function (done) {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+      var active = user.get('active');
+      assert(!active, 'The user was already active.');
+      return user.set('active', true).save();
+    }).then(function (user) {
+      var active = user.get('active');
+      assert(active, 'The user is still inactive.');
+      done();
+    }).catch(function (err) {
+      done(err);
+    });
+  });
+
+  it('should be able to set its given name', function (done) {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+      return user.set('givenName', givenName).save();
+    }).then(function (user) {
+      var actualGivenName = user.get('givenName');
+      assert.strictEqual(actualGivenName, givenName, 'The given name was not set properly.');
+      done();
+    }).catch(function (err) {
+      done(err);
+    });
+  });
+
+  it('should be able to set its family name', function (done) {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+      return user.set('familyName', familyName).save();
+    }).then(function (user) {
+      var actualFamilyName = user.get('familyName');
+      assert.strictEqual(actualFamilyName, familyName, 'The family name was not set properly.');
+      done();
+    }).catch(function (err) {
+      done(err);
+    });
+  });
+
+  it('should be able to fetch itself by ID', function (done) {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+      var id = user.get('id');
+      return new User({
+        id: id
+      }).fetch();
+    }).then(function (user) {
+      assert.strictEqual(user.get('emailAddress'), emailAddress, 'The user fetched by ID did not have the expected email address.');
+      done();
+    }).catch(function (err) {
+      done(err);
+    });
+  });
 
   it('should be able to be deleted', function (done) {
     new User({

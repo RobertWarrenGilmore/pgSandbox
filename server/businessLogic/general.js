@@ -44,8 +44,6 @@ GeneralBiz.prototype._doTransaction = function (operations, body) {
     });
   }).then(function (result) {
     return operations.afterCommit(result);
-  }).catch(function (err) {
-    throw err;
   });
 
 };

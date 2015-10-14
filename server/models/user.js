@@ -1,12 +1,15 @@
 var bookshelf = require('../database/bookshelf');
 var Promise = require('bluebird');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
-var appUrl = require('../../../package.json').appUrl;
+var appUrl = require('../../package.json').appUrl;
 var Checkit = require('checkit');
 
 var validationRules = {
   emailAddress: ['required', 'email'],
-  password: ['minLength:8', 'maxLength:30']
+  password: ['minLength:8', 'maxLength:30'], // Used by setPassword.
+  givenName: ['minLength:1', 'maxLength:30'],
+  familyName: ['minLength:1', 'maxLength:30'],
+  active: ['required', 'boolean']
 };
 
 var User = bookshelf.Model.extend({
@@ -15,13 +18,18 @@ var User = bookshelf.Model.extend({
   hidden: ['passwordHash', 'passwordResetKeyHash'],
 
   virtuals: {
-    uri: function() {
-        return appUrl + '/users/' + this.get('id');
+    uri: function () {
+      return appUrl + '/users/' + this.get('id');
     }
   },
 
   initialize: function () {
+    this.on('creating', this._setActive);
     this.on('saving', this._validateSave);
+  },
+
+  _setActive: function() {
+    this.set('active', true);
   },
 
   _validateSave: function () {

@@ -269,12 +269,30 @@ describe('user', function () {
     });
   });
 
-  it('should fail to set inactive while authenticated as someone else');
+  it('should fail to set inactive while authenticated as someone else', function (done) {
+    var expectedUser = {
+      id: id,
+      emailAddress: emailAddress,
+      active: false
+    };
+    var instances = Model.queueInstances(2);
+    instances[0].get.withArgs('id').returns(id + 1); // different id, different user
+    instances[1].serialize.returns(expectedUser);
+    var trx = mockBookshelf.queueTrxs(1)[0];
 
-  it('should be able to set a first name');
-  it('should be able to set a last name');
-  it('should be able to search by first name');
-  it('should be able to search by last name');
+    biz.authenticate(emailAddress, password).user(1).update({
+      active: false
+    }).then(function (user) {
+      done(new Error('Updating another user succeeded.'));
+    }).catch(function (err) {
+      done();
+    });
+  });
+
+  it('should be able to set a given name');
+  it('should be able to set a family name');
+  it('should be able to search by given name');
+  it('should be able to search by family name');
 
   context('when the model fails to set an attribute', function () {
     it('should fail to create');
@@ -290,7 +308,9 @@ describe('user', function () {
   context('when the model fails another operation', function () {
     it('should fail to verify a wrong password');
     it('should fail to verify a wrong password reset key');
-    it('should fail to authenticate with a bad email address');
+    it('should fail to authenticate with an improperly formatted email address');
+    it('should fail to authenticate with an unassigned email address');
+    it('should fail to authenticate with a wrong password');
     it('should fail to set an email address on a non-existent user');
   });
 

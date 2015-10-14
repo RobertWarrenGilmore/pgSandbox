@@ -4,7 +4,7 @@ var emailer = require('./emailer');
 var appUrl = require('../../package.json').appUrl;
 
 var sendPasswordResetEmail = function (emailAddress, id, key) {
-  var emailMessage = 'Set your password at the following URL: ' + appUrl + '/user/' + id + '/setPassword?key=' + key;
+  var emailMessage = 'Set your password at the following URL: ' + appUrl + '/users/' + id + '/setPassword?key=' + key;
   emailer(emailAddress, emailMessage);
 };
 
@@ -12,7 +12,6 @@ var operations = {
 
   create: {
     beforeCommit: function (trx, authUser, model, body) {
-      // TODO Move all validation up from the model?
       var user = new User(body);
       var key = user.generatePasswordResetKey();
       return user.save(null, null, null, {
