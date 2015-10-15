@@ -1,6 +1,7 @@
 var assert = require('assert');
 var Bookshelf = require('../../../server/models/bookshelf');
 var User = Bookshelf.model('User');
+var appUrl = require('../../../package.json').appUrl;
 
 describe('user', function () {
   var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
@@ -402,6 +403,19 @@ describe('user', function () {
       }).fetch();
     }).then(function (user) {
       assert.strictEqual(user.get('emailAddress'), emailAddress, 'The user fetched by ID did not have the expected email address.');
+      done();
+    }).catch(function (err) {
+      done(err);
+    });
+  });
+
+  it('should be able to generate its URI', function (done) {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+      var actualUri = user.get('uri');
+      var expectedUri = appUrl + '/users/' + user.get('id');
+      assert.strictEqual(actualUri, expectedUri, 'The URI was wrong.');
       done();
     }).catch(function (err) {
       done(err);
