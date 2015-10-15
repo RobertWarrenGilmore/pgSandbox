@@ -99,7 +99,7 @@ describe('user', function () {
     instance.serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
-    biz().user(1).update({
+    biz().user(id).update({
       password: password,
       passwordResetKey: passwordResetKey
     }).then(function (user) {
@@ -135,7 +135,7 @@ describe('user', function () {
     instances[1].serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
-    biz(emailAddress, password).user(1).update({
+    biz(emailAddress, password).user(id).update({
       emailAddress: mod
     }).then(function (user) {
 
@@ -165,7 +165,7 @@ describe('user', function () {
     instance.serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
-    biz().user(1).read().then(function (user) {
+    biz().user(id).read().then(function (user) {
 
       assert(instance.fetch.withArgs(null, null, null,
         sinon.match({
@@ -183,7 +183,7 @@ describe('user', function () {
   it('should fail to delete', function (done) {
     var instance = Model.queueInstances(1)[0];
     instance.verifyPassword.withArgs(password).returns(true);
-    biz(emailAddress, password).user(1).destroy().then(function (user) {
+    biz(emailAddress, password).user(id).destroy().then(function (user) {
       assert.strictEqual(instance.destroy.callCount, 0, 'The model was destroyed.');
       done(new Error('destroy() did not throw.'));
     }).catch(AuthenticationError, function (err) {
@@ -204,7 +204,7 @@ describe('user', function () {
     instances[1].serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
-    biz(emailAddress, password).user(1).update({
+    biz(emailAddress, password).user(id).update({
       active: false
     }).then(function (user) {
 
@@ -236,7 +236,7 @@ describe('user', function () {
     instances[1].serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
-    biz(emailAddress, password).user(1).update({
+    biz(emailAddress, password).user(id).update({
       active: true
     }).then(function (user) {
 
@@ -263,7 +263,7 @@ describe('user', function () {
     instances[0].verifyPassword.withArgs(password).returns(true);
     instances[1].get.withArgs('id').returns(id + 1); // different id, different user
 
-    biz(emailAddress, password).user(1).update({
+    biz(emailAddress, password).user(id).update({
       active: false
     }).then(function (user) {
       done(new Error('Updating another user succeeded.'));
@@ -287,7 +287,7 @@ describe('user', function () {
     instances[1].serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
-    biz(emailAddress, password).user(1).update({
+    biz(emailAddress, password).user(id).update({
       givenName: givenName,
       familyName: familyName
     }).then(function (user) {
@@ -324,7 +324,7 @@ describe('user', function () {
       instance.verifyPasswordResetKey.withArgs(passwordResetKey).returns(true);
       instance.set.throws(new MyCustomError());
 
-      biz().user(1).update({
+      biz().user(id).update({
         password: password,
         passwordResetKey: passwordResetKey
       }).then(function (user) {
@@ -345,7 +345,7 @@ describe('user', function () {
       instances[0].verifyPassword.withArgs(password).returns(true);
       instances[1].set.throws(new MyCustomError());
 
-      biz(emailAddress, password).user(1).update({
+      biz(emailAddress, password).user(id).update({
         emailAddress: mod
       }).then(function (user) {
         assert(false, 'The creation succeeded.');
@@ -409,7 +409,7 @@ describe('user', function () {
       instance.verifyPasswordResetKey.withArgs(passwordResetKey).returns(true);
       instance.save.throws(new MyCustomError());
 
-      biz().user(1).update({
+      biz().user(id).update({
         password: password,
         passwordResetKey: passwordResetKey
       }).then(function (user) {
@@ -430,7 +430,7 @@ describe('user', function () {
       instances[0].verifyPassword.withArgs(password).returns(true);
       instances[1].save.throws(new MyCustomError());
 
-      biz(emailAddress, password).user(1).update({
+      biz(emailAddress, password).user(id).update({
         emailAddress: mod
       }).then(function (user) {
         assert(false, 'The creation succeeded.');
@@ -443,11 +443,24 @@ describe('user', function () {
 
   });
   context('when the model fails another operation', function () {
-    it('should fail to verify a wrong password');
     it('should fail to verify a wrong password reset key');
     it('should fail to authenticate with an improperly formatted email address');
     it('should fail to authenticate with an unassigned email address');
-    it('should fail to authenticate with a wrong password');
+
+    it('should fail to authenticate with a wrong password', function (done) {
+      var instance = Model.queueInstances(1)[0];
+      instance.verifyPassword.withArgs(password).returns(false);
+      instance.get.withArgs('id').returns(id);
+
+      biz(emailAddress, password).user(id).read().then(function (user) {
+        assert(false, 'Authentication did not fail.');
+      }).catch(AuthenticationError, function () {
+        done();
+      }).catch(function (err) {
+        done(err);
+      });
+    });
+    
     it('should fail to set an email address on a non-existent user');
   });
 

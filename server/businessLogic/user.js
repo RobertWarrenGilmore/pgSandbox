@@ -73,6 +73,7 @@ module.exports = function (bookshelf, emailer, authUser, password) {
   return function (idOrEmailAddress) {
     function modelSpecifier() {
       var model;
+      // TODO This should change to custom URI name rather than email address.
       if (idOrEmailAddress) {
         if (typeof idOrEmailAddress === 'string') {
           model = new User({
