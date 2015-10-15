@@ -95,7 +95,7 @@ describe('user', function () {
       emailAddress: emailAddress
     };
     var instance = Model.queueInstances(1)[0];
-    instance.verifyPasswordResetKey.returns(true);
+    instance.verifyPasswordResetKey.withArgs(passwordResetKey).returns(true);
     instance.serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
@@ -131,7 +131,7 @@ describe('user', function () {
       emailAddress: mod
     };
     var instances = Model.queueInstances(2);
-    instances[0].verifyPassword.returns(true);
+    instances[0].verifyPassword.withArgs(password).returns(true);
     instances[1].serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
@@ -182,7 +182,7 @@ describe('user', function () {
 
   it('should fail to delete', function (done) {
     var instance = Model.queueInstances(1)[0];
-    instance.verifyPassword.returns(true);
+    instance.verifyPassword.withArgs(password).returns(true);
     biz(emailAddress, password).user(1).destroy().then(function (user) {
       assert.strictEqual(instance.destroy.callCount, 0, 'The model was destroyed.');
       done(new Error('destroy() did not throw.'));
@@ -200,7 +200,7 @@ describe('user', function () {
       active: false
     };
     var instances = Model.queueInstances(2);
-    instances[0].verifyPassword.returns(true);
+    instances[0].verifyPassword.withArgs(password).returns(true);
     instances[1].serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
@@ -232,7 +232,7 @@ describe('user', function () {
       active: true
     };
     var instances = Model.queueInstances(2);
-    instances[0].verifyPassword.returns(true);
+    instances[0].verifyPassword.withArgs(password).returns(true);
     instances[1].serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
@@ -260,6 +260,7 @@ describe('user', function () {
   it('should fail to set inactive while authenticated as someone else', function (done) {
     var instances = Model.queueInstances(2);
     instances[0].get.withArgs('id').returns(id);
+    instances[0].verifyPassword.withArgs(password).returns(true);
     instances[1].get.withArgs('id').returns(id + 1); // different id, different user
 
     biz(emailAddress, password).user(1).update({
@@ -282,7 +283,7 @@ describe('user', function () {
       active: true
     };
     var instances = Model.queueInstances(2);
-    instances[0].verifyPassword.returns(true);
+    instances[0].verifyPassword.withArgs(password).returns(true);
     instances[1].serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
@@ -320,7 +321,7 @@ describe('user', function () {
       MyCustomError.prototype = Object.create(Error.prototype);
 
       var instance = Model.queueInstances(1)[0];
-      instance.verifyPasswordResetKey.returns(true);
+      instance.verifyPasswordResetKey.withArgs(passwordResetKey).returns(true);
       instance.set.throws(new MyCustomError());
 
       biz().user(1).update({
@@ -341,7 +342,7 @@ describe('user', function () {
 
       var mod = emailAddress + 'a';
       var instances = Model.queueInstances(2);
-      instances[0].verifyPassword.returns(true);
+      instances[0].verifyPassword.withArgs(password).returns(true);
       instances[1].set.throws(new MyCustomError());
 
       biz(emailAddress, password).user(1).update({
@@ -405,7 +406,7 @@ describe('user', function () {
       MyCustomError.prototype = Object.create(Error.prototype);
 
       var instance = Model.queueInstances(1)[0];
-      instance.verifyPasswordResetKey.returns(true);
+      instance.verifyPasswordResetKey.withArgs(passwordResetKey).returns(true);
       instance.save.throws(new MyCustomError());
 
       biz().user(1).update({
@@ -426,7 +427,7 @@ describe('user', function () {
 
       var mod = emailAddress + 'a';
       var instances = Model.queueInstances(2);
-      instances[0].verifyPassword.returns(true);
+      instances[0].verifyPassword.withArgs(password).returns(true);
       instances[1].save.throws(new MyCustomError());
 
       biz(emailAddress, password).user(1).update({
