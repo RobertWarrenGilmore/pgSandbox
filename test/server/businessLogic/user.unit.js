@@ -23,6 +23,8 @@ describe('user', function () {
   var id = 1;
   var password = 'taco tuesday';
   var passwordResetKey = 'abc123';
+  var givenName = 'Victor';
+  var familyName = 'Frankenstein';
 
   beforeEach(function (done) {
     Model.clearInstances();
@@ -189,19 +191,10 @@ describe('user', function () {
   });
 
   it('should fail to delete', function (done) {
-    var expectedUser = {
-      id: id,
-      emailAddress: emailAddress
-    };
     var instance = Model.queueInstances(1)[0];
-    instance.serialize.returns(expectedUser);
-    var trx = mockBookshelf.queueTrxs(1)[0];
-
     biz.anonymous.user(1).destroy().then(function (user) {
-
       assert.strictEqual(instance.destroy.callCount, 0, 'The model was destroyed.');
       done(new Error('destroy() did not throw.'));
-
     }).catch(function (err) {
       done();
     });
@@ -270,15 +263,9 @@ describe('user', function () {
   });
 
   it('should fail to set inactive while authenticated as someone else', function (done) {
-    var expectedUser = {
-      id: id,
-      emailAddress: emailAddress,
-      active: false
-    };
     var instances = Model.queueInstances(2);
-    instances[0].get.withArgs('id').returns(id + 1); // different id, different user
-    instances[1].serialize.returns(expectedUser);
-    var trx = mockBookshelf.queueTrxs(1)[0];
+    instances[0].get.withArgs('id').returns(id);
+    instances[1].get.withArgs('id').returns(id + 1); // different id, different user
 
     biz.authenticate(emailAddress, password).user(1).update({
       active: false
@@ -289,10 +276,43 @@ describe('user', function () {
     });
   });
 
-  it('should be able to set a given name');
-  it('should be able to set a family name');
-  it('should be able to search by given name');
+  it('should be able to set a given name and family name', function (done) {
+    var expectedUser = {
+      id: id,
+      emailAddress: emailAddress,
+      givenName: givenName,
+      familyName: familyName,
+      active: true
+    };
+    var instances = Model.queueInstances(2);
+    instances[1].serialize.returns(expectedUser);
+    var trx = mockBookshelf.queueTrxs(1)[0];
+
+    biz.authenticate(emailAddress, password).user(1).update({
+      givenName: givenName,
+      familyName: familyName
+    }).then(function (user) {
+
+      assert(instances[1].fetch.withArgs(null, null, null,
+        sinon.match({
+          transacting: sinon.match.same(trx)
+        })
+      ).calledOnce, 'The model was not fetched properly.');
+      assert(instances[1].set.withArgs({
+        givenName: givenName,
+        familyName: familyName
+      }).calledOnce, 'The property was not set properly.');
+      assert(instances[1].save.withArgs().calledOnce, 'The model was not saved properly.');
+      assert.deepStrictEqual(user, expectedUser, 'The returned user was wrong.');
+
+      done();
+    }).catch(function (err) {
+      done(err);
+    });
+  });
+
   it('should be able to search by family name');
+  it('should be able to search by family name and given name');
 
   context('when the model fails to set an attribute', function () {
     it('should fail to create');
@@ -340,7 +360,21 @@ describe('user', function () {
       });
     });
 
-    it('should fail to generate a password reset key');
+    it('should fail to send a password reset email', function (done) {
+      var instance = Model.queueInstances(1)[0];
+      instance.generatePasswordResetKey.returns(passwordResetKey);
+      instance.get.withArgs('emailAddress').returns(emailAddress);
+      instance.get.withArgs('id').returns(id);
+
+      biz.anonymous.user(id).update({
+        passwordResetKey: true
+      }).then(function (user) {
+        done(new Error('The email was sent.'));
+      }).catch(function (err) {
+        done();
+      });
+    });
+
   });
 
 });
