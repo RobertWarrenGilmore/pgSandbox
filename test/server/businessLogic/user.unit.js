@@ -4,19 +4,8 @@ var appUrl = require('../../../package.json').appUrl;
 var mockBookshelf = require('./mockBookshelf');
 var Model = mockBookshelf.model('User', ['setPassword', 'verifyPassword', 'verifyPasswordResetKey', 'generatePasswordResetKey']);
 var mockEmailer = require('./mockEmailer');
-var proxyquire = require('proxyquire');
-var GeneralBiz = proxyquire('../../../server/businessLogic/general', {
-  '../models/bookshelf': mockBookshelf
-});
-var UserBiz = proxyquire('../../../server/businessLogic/user', {
-  '../models/bookshelf': mockBookshelf,
-  './emailer': mockEmailer,
-  './general': GeneralBiz
-});
-var biz = proxyquire('../../../server/businessLogic/biz', {
-  '../models/bookshelf': mockBookshelf,
-  './user': UserBiz
-});
+var biz = require('../../../server/businessLogic/biz')(mockBookshelf, mockEmailer);
+var AuthenticationError = require('../../../server/businessLogic/authenticationError');
 
 describe('user', function () {
   var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
@@ -46,7 +35,7 @@ describe('user', function () {
     var trx = mockBookshelf.queueTrxs(1)[0];
     var emailMessage = 'Set your password at the following URL: ' + appUrl + '/users/' + id + '/setPassword?key=' + passwordResetKey;
 
-    biz.anonymous.user().create({
+    biz().user().create({
       emailAddress: emailAddress
     }).then(function (user) {
 
@@ -76,7 +65,7 @@ describe('user', function () {
     var trx = mockBookshelf.queueTrxs(1)[0];
     var emailMessage = 'Set your password at the following URL: ' + appUrl + '/users/' + id + '/setPassword?key=' + passwordResetKey;
 
-    biz.anonymous.user(id).update({
+    biz().user(id).update({
       passwordResetKey: true
     }).then(function (user) {
 
@@ -110,7 +99,7 @@ describe('user', function () {
     instance.serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
-    biz.anonymous.user(1).update({
+    biz().user(1).update({
       password: password,
       passwordResetKey: passwordResetKey
     }).then(function (user) {
@@ -142,10 +131,11 @@ describe('user', function () {
       emailAddress: mod
     };
     var instances = Model.queueInstances(2);
+    instances[0].verifyPassword.returns(true);
     instances[1].serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
-    biz.authenticate(emailAddress, password).user(1).update({
+    biz(emailAddress, password).user(1).update({
       emailAddress: mod
     }).then(function (user) {
 
@@ -175,7 +165,7 @@ describe('user', function () {
     instance.serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
-    biz.anonymous.user(1).read().then(function (user) {
+    biz().user(1).read().then(function (user) {
 
       assert(instance.fetch.withArgs(null, null, null,
         sinon.match({
@@ -192,9 +182,12 @@ describe('user', function () {
 
   it('should fail to delete', function (done) {
     var instance = Model.queueInstances(1)[0];
-    biz.anonymous.user(1).destroy().then(function (user) {
+    instance.verifyPassword.returns(true);
+    biz(emailAddress, password).user(1).destroy().then(function (user) {
       assert.strictEqual(instance.destroy.callCount, 0, 'The model was destroyed.');
       done(new Error('destroy() did not throw.'));
+    }).catch(AuthenticationError, function (err) {
+      done(err);
     }).catch(function (err) {
       done();
     });
@@ -207,10 +200,11 @@ describe('user', function () {
       active: false
     };
     var instances = Model.queueInstances(2);
+    instances[0].verifyPassword.returns(true);
     instances[1].serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
-    biz.authenticate(emailAddress, password).user(1).update({
+    biz(emailAddress, password).user(1).update({
       active: false
     }).then(function (user) {
 
@@ -238,10 +232,11 @@ describe('user', function () {
       active: true
     };
     var instances = Model.queueInstances(2);
+    instances[0].verifyPassword.returns(true);
     instances[1].serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
-    biz.authenticate(emailAddress, password).user(1).update({
+    biz(emailAddress, password).user(1).update({
       active: true
     }).then(function (user) {
 
@@ -267,10 +262,12 @@ describe('user', function () {
     instances[0].get.withArgs('id').returns(id);
     instances[1].get.withArgs('id').returns(id + 1); // different id, different user
 
-    biz.authenticate(emailAddress, password).user(1).update({
+    biz(emailAddress, password).user(1).update({
       active: false
     }).then(function (user) {
       done(new Error('Updating another user succeeded.'));
+    }).catch(AuthenticationError, function (err) {
+      done(err);
     }).catch(function (err) {
       done();
     });
@@ -285,10 +282,11 @@ describe('user', function () {
       active: true
     };
     var instances = Model.queueInstances(2);
+    instances[0].verifyPassword.returns(true);
     instances[1].serialize.returns(expectedUser);
     var trx = mockBookshelf.queueTrxs(1)[0];
 
-    biz.authenticate(emailAddress, password).user(1).update({
+    biz(emailAddress, password).user(1).update({
       givenName: givenName,
       familyName: familyName
     }).then(function (user) {
@@ -325,7 +323,7 @@ describe('user', function () {
       instance.verifyPasswordResetKey.returns(true);
       instance.set.throws(new MyCustomError());
 
-      biz.anonymous.user(1).update({
+      biz().user(1).update({
         password: password,
         passwordResetKey: passwordResetKey
       }).then(function (user) {
@@ -343,9 +341,10 @@ describe('user', function () {
 
       var mod = emailAddress + 'a';
       var instances = Model.queueInstances(2);
+      instances[0].verifyPassword.returns(true);
       instances[1].set.throws(new MyCustomError());
 
-      biz.authenticate(emailAddress, password).user(1).update({
+      biz(emailAddress, password).user(1).update({
         emailAddress: mod
       }).then(function (user) {
         assert(false, 'The creation succeeded.');
@@ -357,6 +356,7 @@ describe('user', function () {
     });
 
   });
+
   context('when the model fails to save', function () {
 
     it('should fail to create', function (done) {
@@ -368,7 +368,7 @@ describe('user', function () {
       instance.save.throws(new MyCustomError());
       instance.get.withArgs('id').returns(id);
 
-      biz.anonymous.user().create({
+      biz().user().create({
         emailAddress: emailAddress
       }).then(function (user) {
         assert(false, 'The creation succeeded.');
@@ -389,7 +389,7 @@ describe('user', function () {
       instance.get.withArgs('emailAddress').returns(emailAddress);
       instance.get.withArgs('id').returns(id);
 
-      biz.anonymous.user(id).update({
+      biz().user(id).update({
         passwordResetKey: true
       }).then(function (user) {
         assert(false, 'The creation succeeded.');
@@ -408,7 +408,7 @@ describe('user', function () {
       instance.verifyPasswordResetKey.returns(true);
       instance.save.throws(new MyCustomError());
 
-      biz.anonymous.user(1).update({
+      biz().user(1).update({
         password: password,
         passwordResetKey: passwordResetKey
       }).then(function (user) {
@@ -426,9 +426,10 @@ describe('user', function () {
 
       var mod = emailAddress + 'a';
       var instances = Model.queueInstances(2);
+      instances[0].verifyPassword.returns(true);
       instances[1].save.throws(new MyCustomError());
 
-      biz.authenticate(emailAddress, password).user(1).update({
+      biz(emailAddress, password).user(1).update({
         emailAddress: mod
       }).then(function (user) {
         assert(false, 'The creation succeeded.');
@@ -463,7 +464,7 @@ describe('user', function () {
       instance.generatePasswordResetKey.returns(passwordResetKey);
       instance.get.withArgs('id').returns(id);
 
-      biz.anonymous.user().create({
+      biz().user().create({
         emailAddress: emailAddress
       }).then(function (user) {
         assert(!mockEmailer.called, 'The password setting email was sent.');
@@ -481,10 +482,12 @@ describe('user', function () {
       instance.get.withArgs('emailAddress').returns(emailAddress);
       instance.get.withArgs('id').returns(id);
 
-      biz.anonymous.user(id).update({
+      biz().user(id).update({
         passwordResetKey: true
       }).then(function (user) {
-        done(new Error('The email was sent.'));
+        assert(false, 'The email was sent.');
+      }).catch(AuthenticationError, function (err) {
+        done(err);
       }).catch(function (err) {
         done();
       });

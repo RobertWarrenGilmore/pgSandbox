@@ -1,90 +1,91 @@
-var GeneralBiz = require('./general');
-var User = require('../models/bookshelf').model('User');
-var emailer = require('./emailer');
+var generalBiz = require('./general');
 var appUrl = require('../../package.json').appUrl;
 
-var sendPasswordResetEmail = function (emailAddress, id, key) {
-  var emailMessage = 'Set your password at the following URL: ' + appUrl + '/users/' + id + '/setPassword?key=' + key;
-  emailer(emailAddress, emailMessage);
-};
+module.exports = function (bookshelf, emailer, authUser, password) {
+  var User = bookshelf.model('User');
 
-var operations = {
+  var sendPasswordResetEmail = function (emailAddress, id, key) {
+    var emailMessage = 'Set your password at the following URL: ' + appUrl + '/users/' + id + '/setPassword?key=' + key;
+    emailer(emailAddress, emailMessage);
+  };
 
-  create: {
-    beforeCommit: function (trx, authUser, model, body) {
-      var user = new User(body);
-      var key = user.generatePasswordResetKey();
-      return user.save(null, null, null, {
-        transacting: trx
-      }).tap(function (savedUser) {
-        sendPasswordResetEmail(body.emailAddress, savedUser.get('id'), key);
-      });
-    },
-    afterCommit: function (result) {
-      return result.serialize();
-    }
-  },
+  var operations = {
 
-  read: {
-    beforeCommit: function (trx, authUser, model, body) {
-      return model;
-    },
-    afterCommit: function (result) {
-      return result.serialize();
-    }
-  },
-
-  update: {
-    beforeCommit: function (trx, authUser, model, body) {
-      if (body.passwordResetKey && body.password) {
-        if (model.verifyPasswordResetKey(body.passwordResetKey)) {
-          model.setPassword(body.password);
-        }
-      } else if (body.passwordResetKey) {
-        var key = model.generatePasswordResetKey();
-        sendPasswordResetEmail(model.get('emailAddress'), model.get('id'), key);
-      } else if (authUser.get('id') === model.get('id')) {
-        if (body.password) {
-          model.setPassword(body.password);
-          delete body.password;
-        }
-      } else {
-        throw new Error('The authenticated user is not the specified user.');
+    create: {
+      beforeCommit: function (trx, model, body) {
+        var user = new User(body);
+        var key = user.generatePasswordResetKey();
+        return user.save(null, null, null, {
+          transacting: trx
+        }).tap(function (savedUser) {
+          sendPasswordResetEmail(body.emailAddress, savedUser.get('id'), key);
+        });
+      },
+      afterCommit: function (result) {
+        return result.serialize();
       }
-      return model.set(body).save(null, null, null, {
-        transacting: trx
-      });
     },
 
-    afterCommit: function (result) {
-      return result.serialize();
-    }
-  },
-
-  destroy: {
-    beforeCommit: function (trx, authUser, model, body) {
-      throw new Error('Deletion of users is not supported. Mark a user inactive instead.');
+    read: {
+      beforeCommit: function (trx, model) {
+        return model;
+      },
+      afterCommit: function (result) {
+        return result.serialize();
+      }
     },
-    afterCommit: function (result) {}
-  }
-};
 
-var modelSpecifier = function (idOrEmailAddress) {
-  var result;
-  if (idOrEmailAddress) {
-    if (typeof idOrEmailAddress === 'string') {
-      result = new User({
-        emailAddress: idOrEmailAddress
-      });
-    } else {
-      result = new User({
-        id: idOrEmailAddress
-      });
+    update: {
+      beforeCommit: function (trx, model, body) {
+        if (body.passwordResetKey && body.password) {
+          if (model.verifyPasswordResetKey(body.passwordResetKey)) {
+            model.setPassword(body.password);
+          }
+        } else if (body.passwordResetKey) {
+          var key = model.generatePasswordResetKey();
+          sendPasswordResetEmail(model.get('emailAddress'), model.get('id'), key);
+        } else if (authUser.get('id') === model.get('id')) {
+          if (body.password) {
+            model.setPassword(body.password);
+            delete body.password;
+          }
+        } else {
+          throw new Error('The authenticated user is not the specified user.');
+        }
+        return model.set(body).save(null, null, null, {
+          transacting: trx
+        });
+      },
+
+      afterCommit: function (result) {
+        return result.serialize();
+      }
+    },
+
+    destroy: {
+      beforeCommit: function (trx, model) {
+        throw new Error('Deletion of users is not supported. Mark a user inactive instead.');
+      },
+      afterCommit: function (result) {}
     }
-  }
-  return result;
+  };
+
+  return function (idOrEmailAddress) {
+    function modelSpecifier() {
+      var model;
+      if (idOrEmailAddress) {
+        if (typeof idOrEmailAddress === 'string') {
+          model = new User({
+            emailAddress: idOrEmailAddress
+          });
+        } else {
+          model = new User({
+            id: idOrEmailAddress
+          });
+        }
+      }
+      return model;
+    };
+    return generalBiz(bookshelf, authUser, password, modelSpecifier, operations);
+  };
 };
-
-var UserBiz = GeneralBiz(modelSpecifier, operations);
-
-module.exports = UserBiz;

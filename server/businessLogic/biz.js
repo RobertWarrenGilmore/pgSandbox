@@ -1,21 +1,20 @@
-var Bookshelf = require('../models/bookshelf');
-var User = Bookshelf.model('User');
-var UserBiz = require('./user');
+var userBiz = require('./user');
 
-var BizModules = function (authUser, password) {
-  this.user = new UserBiz(authUser, password);
+module.exports = function (bookshelf, emailer) {
+
+  return function authenticate(emailAddress, password, authUser, password) {
+    var authUser;
+    if (emailAddress) {
+      var User = bookshelf.model('User');
+      authUser = new User({
+        emailAddress: emailAddress
+      });
+    }
+
+    return {
+      user: userBiz(bookshelf, emailer, authUser, password)
+    };
+
+  };
+
 };
-
-var authenticator = {
-
-  anonymous: new BizModules(),
-
-  authenticate: function (emailAddress, password) {
-    return new BizModules(new User({
-      emailAddress: emailAddress
-    }), password);
-  }
-
-};
-
-module.exports = authenticator;
