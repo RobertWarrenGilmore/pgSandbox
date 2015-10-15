@@ -460,7 +460,7 @@ describe('user', function () {
         done(err);
       });
     });
-    
+
     it('should fail to set an email address on a non-existent user');
   });
 
