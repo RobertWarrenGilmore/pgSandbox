@@ -38,7 +38,7 @@ var createModelClass = function (extraStubs) {
       instances.push(queued[i]);
     }
     return queued;
-  }
+  };
   Model.clearInstances = function () {
     instances.length = 0;
   };

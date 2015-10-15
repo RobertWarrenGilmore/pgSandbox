@@ -37,6 +37,6 @@ function generalBiz(bookshelf, authUser, password, modelSpecifier, operations) {
       };
   });
   return methods;
-};
+}
 
 module.exports = generalBiz;

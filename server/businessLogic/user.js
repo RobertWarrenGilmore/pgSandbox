@@ -85,7 +85,7 @@ module.exports = function (bookshelf, emailer, authUser, password) {
         }
       }
       return model;
-    };
+    }
     return generalBiz(bookshelf, authUser, password, modelSpecifier, operations);
   };
 };
