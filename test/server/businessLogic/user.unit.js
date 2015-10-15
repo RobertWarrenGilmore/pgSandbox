@@ -311,19 +311,134 @@ describe('user', function () {
     });
   });
 
+  it('should be able to list all users');
   it('should be able to search by family name');
   it('should be able to search by family name and given name');
 
   context('when the model fails to set an attribute', function () {
-    it('should fail to create');
-    it('should fail to set a password');
-    it('should fail to set an email address');
+
+    it('should fail to set a password', function (done) {
+      function MyCustomError() {}
+      MyCustomError.prototype = Object.create(Error.prototype);
+
+      var instance = Model.queueInstances(1)[0];
+      instance.verifyPasswordResetKey.returns(true);
+      instance.set.throws(new MyCustomError());
+
+      biz.anonymous.user(1).update({
+        password: password,
+        passwordResetKey: passwordResetKey
+      }).then(function (user) {
+        assert(false, 'The creation succeeded.');
+      }).catch(MyCustomError, function (err) {
+        done();
+      }).catch(function (err) {
+        done(err);
+      });
+    });
+
+    it('should fail to set an email address', function (done) {
+      function MyCustomError() {}
+      MyCustomError.prototype = Object.create(Error.prototype);
+
+      var mod = emailAddress + 'a';
+      var instances = Model.queueInstances(2);
+      instances[1].set.throws(new MyCustomError());
+
+      biz.authenticate(emailAddress, password).user(1).update({
+        emailAddress: mod
+      }).then(function (user) {
+        assert(false, 'The creation succeeded.');
+      }).catch(MyCustomError, function (err) {
+        done();
+      }).catch(function (err) {
+        done(err);
+      });
+    });
+
   });
   context('when the model fails to save', function () {
-    it('should fail to create');
-    it('should fail to generate a password reset key');
-    it('should fail to set a password');
-    it('should fail to set an email address');
+
+    it('should fail to create', function (done) {
+      function MyCustomError() {}
+      MyCustomError.prototype = Object.create(Error.prototype);
+
+      var instance = Model.queueInstances(1)[0];
+      instance.generatePasswordResetKey.returns(passwordResetKey);
+      instance.save.throws(new MyCustomError());
+      instance.get.withArgs('id').returns(id);
+
+      biz.anonymous.user().create({
+        emailAddress: emailAddress
+      }).then(function (user) {
+        assert(false, 'The creation succeeded.');
+      }).catch(MyCustomError, function (err) {
+        done();
+      }).catch(function (err) {
+        done(err);
+      });
+    });
+
+    it('should fail to send a password reset email', function (done) {
+      function MyCustomError() {}
+      MyCustomError.prototype = Object.create(Error.prototype);
+
+      var instance = Model.queueInstances(1)[0];
+      instance.generatePasswordResetKey.returns(passwordResetKey);
+      instance.save.throws(new MyCustomError());
+      instance.get.withArgs('emailAddress').returns(emailAddress);
+      instance.get.withArgs('id').returns(id);
+
+      biz.anonymous.user(id).update({
+        passwordResetKey: true
+      }).then(function (user) {
+        assert(false, 'The creation succeeded.');
+      }).catch(MyCustomError, function (err) {
+        done();
+      }).catch(function (err) {
+        done(err);
+      });
+    });
+
+    it('should fail to set a password', function (done) {
+      function MyCustomError() {}
+      MyCustomError.prototype = Object.create(Error.prototype);
+
+      var instance = Model.queueInstances(1)[0];
+      instance.verifyPasswordResetKey.returns(true);
+      instance.save.throws(new MyCustomError());
+
+      biz.anonymous.user(1).update({
+        password: password,
+        passwordResetKey: passwordResetKey
+      }).then(function (user) {
+        assert(false, 'The creation succeeded.');
+      }).catch(MyCustomError, function (err) {
+        done();
+      }).catch(function (err) {
+        done(err);
+      });
+    });
+
+    it('should fail to set an email address', function (done) {
+      function MyCustomError() {}
+      MyCustomError.prototype = Object.create(Error.prototype);
+
+      var mod = emailAddress + 'a';
+      var instances = Model.queueInstances(2);
+      instances[1].save.throws(new MyCustomError());
+
+      biz.authenticate(emailAddress, password).user(1).update({
+        emailAddress: mod
+      }).then(function (user) {
+        assert(false, 'The creation succeeded.');
+      }).catch(MyCustomError, function (err) {
+        done();
+      }).catch(function (err) {
+        done(err);
+      });
+    });
+
   });
   context('when the model fails another operation', function () {
     it('should fail to verify a wrong password');

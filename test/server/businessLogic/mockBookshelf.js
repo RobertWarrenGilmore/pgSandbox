@@ -11,10 +11,10 @@ var createModelClass = function (extraStubs) {
     if (instances.length) {
       instance = instances.shift();
     } else {
-      sinon.spy(this, 'save');
-      sinon.spy(this, 'fetch');
-      sinon.spy(this, 'destroy');
-      sinon.spy(this, 'set');
+      sinon.stub(this, 'save').returns(Promise.resolve(this));
+      sinon.stub(this, 'fetch').returns(Promise.resolve(this));
+      sinon.stub(this, 'destroy').returns(Promise.resolve(this));
+      sinon.stub(this, 'set').returns(this);
       sinon.stub(this, 'get');
       sinon.stub(this, 'serialize');
       if (extraStubs) {
@@ -43,22 +43,22 @@ var createModelClass = function (extraStubs) {
     instances.length = 0;
   };
   Model.prototype.save = function () {
-    return Promise.resolve(this);
+    throw new Error('This method should have been stubbed.');
   };
   Model.prototype.fetch = function () {
-    return Promise.resolve(this);
+    throw new Error('This method should have been stubbed.');
   };
   Model.prototype.destroy = function () {
-    return Promise.resolve(this);
+    throw new Error('This method should have been stubbed.');
   };
   Model.prototype.set = function () {
-    return this;
+    throw new Error('This method should have been stubbed.');
   };
   Model.prototype.get = function () {
     throw new Error('This method should have been stubbed.');
   };
   Model.prototype.serialize = function () {
-    //throw new Error('This method should have been stubbed.');
+    throw new Error('This method should have been stubbed.');
   };
   if (extraStubs) {
     for (var i in extraStubs) {
