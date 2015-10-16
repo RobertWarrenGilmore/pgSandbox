@@ -17,15 +17,14 @@ describe('user', function () {
     var givenName = 'Victor';
     var familyName = 'Frankenstein';
 
-    beforeEach(function (done) {
+    beforeEach(function () {
       Model.clearInstances();
       Model.reset();
       mockBookshelf.clearTrxs();
       mockEmailer.reset();
-      done();
     });
 
-    it('should be able to create', function (done) {
+    it('should be able to create', function () {
       var expectedUser = {
         id: id,
         emailAddress: emailAddress
@@ -37,7 +36,7 @@ describe('user', function () {
       var trx = mockBookshelf.queueTrxs(1)[0];
       var emailMessage = 'Set your password at the following URL: ' + appUrl + '/users/' + id + '/setPassword?key=' + passwordResetKey;
 
-      biz().user().create({
+      return biz().user().create({
         emailAddress: emailAddress
       }).then(function (user) {
 
@@ -51,15 +50,10 @@ describe('user', function () {
         ).calledOnce, 'The model was not saved properly.');
         assert.deepStrictEqual(user, expectedUser, 'The returned user was wrong.');
         assert(mockEmailer.withArgs(emailAddress, emailMessage).calledOnce, 'The password setting email was not sent properly.');
-
-        done();
-
-      }).catch(function (err) {
-        done(err);
       });
     });
 
-    it('should be able to send a password reset email', function (done) {
+    it('should be able to send a password reset email', function () {
       var instance = Model.queueInstances(1)[0];
       instance.generatePasswordResetKey.returns(passwordResetKey);
       instance.get.withArgs('emailAddress').returns(emailAddress);
@@ -67,7 +61,7 @@ describe('user', function () {
       var trx = mockBookshelf.queueTrxs(1)[0];
       var emailMessage = 'Set your password at the following URL: ' + appUrl + '/users/' + id + '/setPassword?key=' + passwordResetKey;
 
-      biz().user(id).update({
+      return biz().user(id).update({
         passwordResetKey: true
       }).then(function (user) {
 
@@ -83,15 +77,10 @@ describe('user', function () {
           })
         ).calledOnce, 'The model was not saved properly.');
         assert(mockEmailer.withArgs(emailAddress, emailMessage).calledOnce, 'The password setting email was not sent properly.');
-
-        done();
-
-      }).catch(function (err) {
-        done(err);
       });
     });
 
-    it('should be able to set a password', function (done) {
+    it('should be able to set a password', function () {
       var expectedUser = {
         id: id,
         emailAddress: emailAddress
@@ -101,7 +90,7 @@ describe('user', function () {
       instance.serialize.returns(expectedUser);
       var trx = mockBookshelf.queueTrxs(1)[0];
 
-      biz().user(id).update({
+      return biz().user(id).update({
         password: password,
         passwordResetKey: passwordResetKey
       }).then(function (user) {
@@ -119,14 +108,10 @@ describe('user', function () {
           })
         ).calledOnce, 'The model was not saved properly.');
         assert.deepStrictEqual(user, expectedUser, 'The returned user was wrong.');
-        done();
-
-      }).catch(function (err) {
-        done(err);
       });
     });
 
-    it('should be able to set an email address', function (done) {
+    it('should be able to set an email address', function () {
       var mod = emailAddress + 'a';
       var expectedUser = {
         id: id,
@@ -137,7 +122,7 @@ describe('user', function () {
       instances[1].serialize.returns(expectedUser);
       var trx = mockBookshelf.queueTrxs(1)[0];
 
-      biz(emailAddress, password).user(id).update({
+      return biz(emailAddress, password).user(id).update({
         emailAddress: mod
       }).then(function (user) {
 
@@ -151,14 +136,10 @@ describe('user', function () {
         }).calledOnce, 'The email address was not set properly.');
         assert(instances[1].save.withArgs().calledOnce, 'The model was not saved properly.');
         assert.deepStrictEqual(user, expectedUser, 'The returned user was wrong.');
-
-        done();
-      }).catch(function (err) {
-        done(err);
       });
     });
 
-    it('should be able to read', function (done) {
+    it('should be able to read', function () {
       var expectedUser = {
         id: id,
         emailAddress: emailAddress
@@ -167,7 +148,7 @@ describe('user', function () {
       instance.serialize.returns(expectedUser);
       var trx = mockBookshelf.queueTrxs(1)[0];
 
-      biz().user(id).read().then(function (user) {
+      return biz().user(id).read().then(function (user) {
 
         assert(instance.fetch.withArgs(null, null, null,
           sinon.match({
@@ -175,10 +156,6 @@ describe('user', function () {
           })
         ).calledOnce, 'The model was not fetched properly.');
         assert.deepStrictEqual(user, expectedUser, 'The returned user was wrong.');
-        done();
-
-      }).catch(function (err) {
-        done(err);
       });
     });
 
@@ -195,7 +172,7 @@ describe('user', function () {
       });
     });
 
-    it('should be able to set inactive', function (done) {
+    it('should be able to set inactive', function () {
       var expectedUser = {
         id: id,
         emailAddress: emailAddress,
@@ -206,7 +183,7 @@ describe('user', function () {
       instances[1].serialize.returns(expectedUser);
       var trx = mockBookshelf.queueTrxs(1)[0];
 
-      biz(emailAddress, password).user(id).update({
+      return biz(emailAddress, password).user(id).update({
         active: false
       }).then(function (user) {
 
@@ -220,14 +197,10 @@ describe('user', function () {
         }).calledOnce, 'The property was not set properly.');
         assert(instances[1].save.withArgs().calledOnce, 'The model was not saved properly.');
         assert.deepStrictEqual(user, expectedUser, 'The returned user was wrong.');
-
-        done();
-      }).catch(function (err) {
-        done(err);
       });
     });
 
-    it('should be able to set active', function (done) {
+    it('should be able to set active', function () {
       var expectedUser = {
         id: id,
         emailAddress: emailAddress,
@@ -238,7 +211,7 @@ describe('user', function () {
       instances[1].serialize.returns(expectedUser);
       var trx = mockBookshelf.queueTrxs(1)[0];
 
-      biz(emailAddress, password).user(id).update({
+      return biz(emailAddress, password).user(id).update({
         active: true
       }).then(function (user) {
 
@@ -252,10 +225,6 @@ describe('user', function () {
         }).calledOnce, 'The property was not set properly.');
         assert(instances[1].save.withArgs().calledOnce, 'The model was not saved properly.');
         assert.deepStrictEqual(user, expectedUser, 'The returned user was wrong.');
-
-        done();
-      }).catch(function (err) {
-        done(err);
       });
     });
 
@@ -268,7 +237,7 @@ describe('user', function () {
       biz(emailAddress, password).user(id).update({
         active: false
       }).then(function (user) {
-        done(new Error('Updating another user succeeded.'));
+        assert(false, 'Updating another user succeeded.');
       }).catch(AuthenticationError, function (err) {
         done(err);
       }).catch(function (err) {
@@ -276,7 +245,7 @@ describe('user', function () {
       });
     });
 
-    it('should be able to set a given name and family name', function (done) {
+    it('should be able to set a given name and family name', function () {
       var expectedUser = {
         id: id,
         emailAddress: emailAddress,
@@ -289,7 +258,7 @@ describe('user', function () {
       instances[1].serialize.returns(expectedUser);
       var trx = mockBookshelf.queueTrxs(1)[0];
 
-      biz(emailAddress, password).user(id).update({
+      return biz(emailAddress, password).user(id).update({
         givenName: givenName,
         familyName: familyName
       }).then(function (user) {
@@ -305,20 +274,25 @@ describe('user', function () {
         }).calledOnce, 'The property was not set properly.');
         assert(instances[1].save.withArgs().calledOnce, 'The model was not saved properly.');
         assert.deepStrictEqual(user, expectedUser, 'The returned user was wrong.');
-
-        done();
-      }).catch(function (err) {
-        done(err);
       });
     });
 
-    it('should be able to list all users');
+    it('should be able to list all users', function () {
+      return biz().user().read({
+        orderBy: ['familyName', 'asc']
+      }).then(function (users) {
+        console.log(users)
+        assert(false, 'unfinished test')
+          // TODO The Bookshelf mock needs a Collection mock.
+      });
+    });
+
     it('should be able to search by family name');
     it('should be able to search by family name and given name');
 
     context('when the model fails to set an attribute', function () {
 
-      it('should fail to set a password', function (done) {
+      it('should fail to set a password', function () {
         function MyCustomError() {}
         MyCustomError.prototype = Object.create(Error.prototype);
 
@@ -326,19 +300,15 @@ describe('user', function () {
         instance.verifyPasswordResetKey.withArgs(passwordResetKey).returns(true);
         instance.set.throws(new MyCustomError());
 
-        biz().user(id).update({
+        return biz().user(id).update({
           password: password,
           passwordResetKey: passwordResetKey
         }).then(function (user) {
           assert(false, 'The creation succeeded.');
-        }).catch(MyCustomError, function (err) {
-          done();
-        }).catch(function (err) {
-          done(err);
-        });
+        }).catch(MyCustomError);
       });
 
-      it('should fail to set an email address', function (done) {
+      it('should fail to set an email address', function () {
         function MyCustomError() {}
         MyCustomError.prototype = Object.create(Error.prototype);
 
@@ -347,22 +317,18 @@ describe('user', function () {
         instances[0].verifyPassword.withArgs(password).returns(true);
         instances[1].set.throws(new MyCustomError());
 
-        biz(emailAddress, password).user(id).update({
+        return biz(emailAddress, password).user(id).update({
           emailAddress: mod
         }).then(function (user) {
           assert(false, 'The creation succeeded.');
-        }).catch(MyCustomError, function (err) {
-          done();
-        }).catch(function (err) {
-          done(err);
-        });
+        }).catch(MyCustomError);
       });
 
     });
 
     context('when the model fails to save', function () {
 
-      it('should fail to create', function (done) {
+      it('should fail to create', function () {
         function MyCustomError() {}
         MyCustomError.prototype = Object.create(Error.prototype);
 
@@ -371,18 +337,14 @@ describe('user', function () {
         instance.save.throws(new MyCustomError());
         instance.get.withArgs('id').returns(id);
 
-        biz().user().create({
+        return biz().user().create({
           emailAddress: emailAddress
         }).then(function (user) {
           assert(false, 'The creation succeeded.');
-        }).catch(MyCustomError, function (err) {
-          done();
-        }).catch(function (err) {
-          done(err);
-        });
+        }).catch(MyCustomError);
       });
 
-      it('should fail to send a password reset email', function (done) {
+      it('should fail to send a password reset email', function () {
         function MyCustomError() {}
         MyCustomError.prototype = Object.create(Error.prototype);
 
@@ -392,18 +354,14 @@ describe('user', function () {
         instance.get.withArgs('emailAddress').returns(emailAddress);
         instance.get.withArgs('id').returns(id);
 
-        biz().user(id).update({
+        return biz().user(id).update({
           passwordResetKey: true
         }).then(function (user) {
           assert(false, 'The creation succeeded.');
-        }).catch(MyCustomError, function (err) {
-          done();
-        }).catch(function (err) {
-          done(err);
-        });
+        }).catch(MyCustomError);
       });
 
-      it('should fail to set a password', function (done) {
+      it('should fail to set a password', function () {
         function MyCustomError() {}
         MyCustomError.prototype = Object.create(Error.prototype);
 
@@ -411,19 +369,15 @@ describe('user', function () {
         instance.verifyPasswordResetKey.withArgs(passwordResetKey).returns(true);
         instance.save.throws(new MyCustomError());
 
-        biz().user(id).update({
+        return biz().user(id).update({
           password: password,
           passwordResetKey: passwordResetKey
         }).then(function (user) {
           assert(false, 'The creation succeeded.');
-        }).catch(MyCustomError, function (err) {
-          done();
-        }).catch(function (err) {
-          done(err);
-        });
+        }).catch(MyCustomError);
       });
 
-      it('should fail to set an email address', function (done) {
+      it('should fail to set an email address', function () {
         function MyCustomError() {}
         MyCustomError.prototype = Object.create(Error.prototype);
 
@@ -432,27 +386,23 @@ describe('user', function () {
         instances[0].verifyPassword.withArgs(password).returns(true);
         instances[1].save.throws(new MyCustomError());
 
-        biz(emailAddress, password).user(id).update({
+        return biz(emailAddress, password).user(id).update({
           emailAddress: mod
         }).then(function (user) {
           assert(false, 'The creation succeeded.');
-        }).catch(MyCustomError, function (err) {
-          done();
-        }).catch(function (err) {
-          done(err);
-        });
+        }).catch(MyCustomError);
       });
 
     });
 
     context('when authentication fails', function () {
 
-      it('should fail to set a password with an incorrect key', function (done) {
+      it('should fail to set a password with an incorrect key', function () {
         var instance = Model.queueInstances(1)[0];
         instance.verifyPasswordResetKey.withArgs(passwordResetKey).returns(false);
         instance.get.withArgs('id').returns(id);
 
-        biz().user(id).update({
+        return biz().user(id).update({
           password: password,
           passwordResetKey: passwordResetKey
         }).then(function (user) {
@@ -460,56 +410,41 @@ describe('user', function () {
           assert(false, 'The password was set.');
         }).catch(AuthenticationError, function () {
           assert(instance.verifyPasswordResetKey.withArgs(passwordResetKey).called, 'The key was not verified.');
-          done();
-        }).catch(function (err) {
-          done(err);
         });
       });
 
-      it('should fail to authenticate with an unassigned email address', function (done) {
+      it('should fail to authenticate with an unassigned email address', function () {
         var instance = Model.queueInstances(2)[0];
         instance.fetch.returns(Promise.resolve(null));
         instance.verifyPassword.withArgs(password).returns(true);
         instance.get.withArgs('id').returns(id);
 
-        biz(emailAddress, password).user(id).read().then(function () {
+        return biz(emailAddress, password).user(id).read().then(function () {
           assert(false, 'Authentication succeeded.');
-        }).catch(AuthenticationError, function (err) {
-          done();
-        }).catch(function (err) {
-          done(err);
-        });
+        }).catch(AuthenticationError);
       });
 
-      it('should fail to authenticate with a wrong password', function (done) {
+      it('should fail to authenticate with a wrong password', function () {
         var instance = Model.queueInstances(1)[0];
         instance.verifyPassword.withArgs(password).returns(false);
         instance.get.withArgs('id').returns(id);
 
-        biz(emailAddress, password).user(id).read().then(function (user) {
+        return biz(emailAddress, password).user(id).read().then(function (user) {
           assert(false, 'Authentication succeeded.');
-        }).catch(AuthenticationError, function () {
-          done();
-        }).catch(function (err) {
-          done(err);
-        });
+        }).catch(AuthenticationError);
       });
 
-      it('should fail to set an email address on a non-existent user', function (done) {
+      it('should fail to set an email address on a non-existent user', function () {
         var instance = Model.queueInstances(2)[0];
         instance.fetch.returns(Promise.resolve(null));
         instance.verifyPassword.withArgs(password).returns(true);
         instance.get.withArgs('id').returns(id);
 
-        biz(emailAddress, password).user(id).update({
+        return biz(emailAddress, password).user(id).update({
           emailAddress: emailAddress
         }).then(function () {
           assert(false, 'The email address was set.');
-        }).catch(AuthenticationError, function (err) {
-          done();
-        }).catch(function (err) {
-          done(err);
-        });
+        }).catch(AuthenticationError);
       });
 
     });
@@ -518,26 +453,21 @@ describe('user', function () {
       function MyCustomError() {}
       MyCustomError.prototype = Object.create(Error.prototype);
 
-      beforeEach(function (done) {
+      beforeEach(function () {
         mockEmailer.throws(new MyCustomError());
-        done();
       });
 
-      it('should fail to create', function (done) {
+      it('should fail to create', function () {
         var instance = Model.queueInstances(1)[0];
         instance.generatePasswordResetKey.returns(passwordResetKey);
         instance.get.withArgs('id').returns(id);
 
-        biz().user().create({
+        return biz().user().create({
           emailAddress: emailAddress
         }).then(function (user) {
           assert(!mockEmailer.called, 'The password setting email was sent.');
           throw new Error('The creation did not fail.');
-        }).catch(MyCustomError, function () {
-          done();
-        }).catch(function (err) {
-          done(err);
-        });
+        }).catch(MyCustomError);
       });
 
       it('should fail to send a password reset email', function (done) {
@@ -559,6 +489,10 @@ describe('user', function () {
 
     });
 
+  });
+
+  context('integrated', function () {
+    it('tests needed');
   });
 
 });
