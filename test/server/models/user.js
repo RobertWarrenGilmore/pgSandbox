@@ -1,7 +1,9 @@
 var assert = require('assert');
 var Bookshelf = require('../../../server/models/bookshelf');
 var User = Bookshelf.model('User');
+var Collection = Bookshelf.Collection;
 var appUrl = require('../../../package.json').appUrl;
+var Promise = require('bluebird');
 
 describe('user', function () {
   var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
@@ -10,6 +12,44 @@ describe('user', function () {
   var passwordResetKey;
   var givenName = 'Victor';
   var familyName = 'Frankenstein';
+  var givenName1 = 'James';
+  var givenName2 = 'Paula';
+  var familyName1 = 'Deen';
+  var familyName2 = 'Poundstone';
+  var searchableUsers = new Collection([
+    new User({
+      emailAddress: '0' + emailAddress,
+      givenName: givenName1,
+      familyName: familyName1
+    }),
+    new User({
+      emailAddress: '1' + emailAddress,
+      givenName: givenName2,
+      familyName: familyName1
+    }),
+    new User({
+      emailAddress: '2' + emailAddress,
+      givenName: givenName2,
+      familyName: familyName2
+    })
+  ]);
+
+  before(function (done) {
+    searchableUsers.invokeThen('save').then(function () {
+      done();
+    });
+  });
+
+  after(function () {
+    new User({
+      emailAddress: emailAddress
+    }).fetch().then(function (user) {
+      if (user) {
+        user.destroy();
+      }
+    });
+    searchableUsers.invokeThen('destroy');
+  });
 
   it('should be able to be created', function (done) {
     new User({
@@ -22,11 +62,11 @@ describe('user', function () {
   });
 
   it('should be able to be created and deleted in a transaction', function (done) {
-    var t = Bookshelf.transaction(function (trx) {
+    Bookshelf.transaction(function (trx) {
       return new User({
         emailAddress: emailAddress + 'trx'
       }).save(null, null, null, {
-        transacting: t
+        transacting: trx
       }).then(function (user) {
         return user.destroy();
       }).then(function () {
@@ -409,49 +449,76 @@ describe('user', function () {
     });
   });
 
-  it('should fail to fetch with an improper email address', function (done) {
-    new User({
+  it('should fail to fetch with an improper email address', function () {
+    return new User({
       emailAddress: badEmailAddress
     }).fetch().then(function (user) {
       assert.strictEqual(user, null, 'A user was found.');
-      done();
-    }).catch(function (err) {
-      done(err);
     });
   });
 
-  it('should be able to generate its URI', function (done) {
-    new User({
+  it('should be able to generate its URI', function () {
+    return new User({
       emailAddress: emailAddress
     }).fetch().then(function (user) {
       var actualUri = user.get('uri');
       var expectedUri = appUrl + '/users/' + user.get('id');
       assert.strictEqual(actualUri, expectedUri, 'The URI was wrong.');
-      done();
-    }).catch(function (err) {
-      done(err);
     });
   });
 
-  it('should be able to be deleted', function (done) {
-    new User({
+  it('should be able to be deleted', function () {
+    return new User({
       emailAddress: emailAddress
     }).fetch().then(function (user) {
-      user.destroy().then(function () {
-        done();
-      }).catch(function (err) {
-        done(err);
+      return user.destroy();
+    });
+  });
+
+  it('should be able to list all users', function () {
+    return User.fetchAll().then(function (searchedUsers) {
+      assert.strictEqual(searchedUsers.length, 3, 'The wrong number of users was returned.');
+    });
+  });
+
+  it('should be able to sort the list by family name, descending', function () {
+    return User.query(function (qb) {
+      qb.orderBy('familyName', 'desc');
+    }).fetchAll().then(function (searchedUsers) {
+      assert.strictEqual(searchedUsers.length, 3, 'The wrong number of users was returned.');
+      assert.strictEqual(searchedUsers.at(0).get('familyName'), familyName2, 'The wrong family name was at the start of the list.');
+    });
+  });
+
+  it('should be able to sort the list by family name, ascending', function () {
+    return User.query(function (qb) {
+      qb.orderBy('familyName', 'asc');
+    }).fetchAll().then(function (searchedUsers) {
+      assert.strictEqual(searchedUsers.length, 3, 'The wrong number of users was returned.');
+      assert.strictEqual(searchedUsers.at(0).get('familyName'), familyName1, 'The wrong family name was at the start of the list.');
+    });
+  });
+
+  it('should be able to search by family name', function () {
+    return User.query(function (qb) {
+      qb.where('familyName', familyName1);
+    }).fetchAll().then(function (searchedUsers) {
+      assert.strictEqual(searchedUsers.length, 2, 'The wrong number of users was returned.');
+      assert.strictEqual(searchedUsers.at(0).get('familyName'), familyName1, 'A result did not satisfy the intended search.');
+      assert.strictEqual(searchedUsers.at(1).get('familyName'), familyName1, 'A result did not satisfy the intended search.');
+    });
+  });
+
+  it('should be able to search by family name and given name', function () {
+    return User.query(function (qb) {
+      qb.where({
+        givenName: givenName2,
+        familyName: familyName1
       });
-    });
-  });
-
-  after(function () {
-    new User({
-      emailAddress: emailAddress
-    }).fetch().then(function (user) {
-      if (user) {
-        user.destroy();
-      }
+    }).fetchAll().then(function (searchedUsers) {
+      assert.strictEqual(searchedUsers.length, 1, 'The wrong number of users was returned.');
+      assert.strictEqual(searchedUsers.at(0).get('givenName'), givenName2, 'The found user was not the right one.');
+      assert.strictEqual(searchedUsers.at(0).get('familyName'), familyName1, 'The found user was not the right one.');
     });
   });
 });
