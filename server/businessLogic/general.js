@@ -13,6 +13,9 @@ function generalBiz(bookshelf, authUser, password, modelSpecifier, operations) {
             promiseProps.authUser = authUser.fetch(null, null, null, {
               transacting: trx
             }).then(function (user) {
+              if(user === null){
+                throw new AuthenticationError('The provided email address does not belong to a user.');
+              }
               var authenticated = user.verifyPassword(password);
               if (!authenticated) {
                 throw new AuthenticationError();

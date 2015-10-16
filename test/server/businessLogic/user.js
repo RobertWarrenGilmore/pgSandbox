@@ -444,8 +444,21 @@ describe('user', function () {
   });
   context('when the model fails another operation', function () {
     it('should fail to verify a wrong password reset key');
-    it('should fail to authenticate with an improperly formatted email address');
-    it('should fail to authenticate with an unassigned email address');
+
+    it('should fail to authenticate with an unassigned email address', function (done) {
+      var instance = Model.queueInstances(2)[0];
+      instance.fetch.returns(Promise.resolve(null));
+      instance.verifyPassword.withArgs(password).returns(true);
+      instance.get.withArgs('id').returns(id);
+
+      biz(emailAddress, password).user(id).read().then(function () {
+        assert(false, 'Authentication succeeded.');
+      }).catch(AuthenticationError, function (err) {
+        done();
+      }).catch(function (err) {
+        done(err);
+      });
+    });
 
     it('should fail to authenticate with a wrong password', function (done) {
       var instance = Model.queueInstances(1)[0];
@@ -453,7 +466,7 @@ describe('user', function () {
       instance.get.withArgs('id').returns(id);
 
       biz(emailAddress, password).user(id).read().then(function (user) {
-        assert(false, 'Authentication did not fail.');
+        assert(false, 'Authentication succeeded.');
       }).catch(AuthenticationError, function () {
         done();
       }).catch(function (err) {

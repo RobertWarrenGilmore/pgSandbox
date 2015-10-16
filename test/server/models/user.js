@@ -409,6 +409,17 @@ describe('user', function () {
     });
   });
 
+  it('should fail to fetch with an improper email address', function (done) {
+    new User({
+      emailAddress: badEmailAddress
+    }).fetch().then(function (user) {
+      assert.strictEqual(user, null, 'A user was found.');
+      done();
+    }).catch(function (err) {
+      done(err);
+    });
+  });
+
   it('should be able to generate its URI', function (done) {
     new User({
       emailAddress: emailAddress
