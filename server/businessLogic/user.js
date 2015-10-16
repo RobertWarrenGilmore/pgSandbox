@@ -1,5 +1,6 @@
 var generalBiz = require('./general');
 var appUrl = require('../../package.json').appUrl;
+var AuthenticationError = require('./authenticationError');
 
 module.exports = function (bookshelf, emailer, authUser, password) {
   var User = bookshelf.model('User');
@@ -40,6 +41,8 @@ module.exports = function (bookshelf, emailer, authUser, password) {
         if (body.passwordResetKey && body.password) {
           if (model.verifyPasswordResetKey(body.passwordResetKey)) {
             model.setPassword(body.password);
+          } else {
+            throw new AuthenticationError('The password reset key was incorrect.');
           }
         } else if (body.passwordResetKey) {
           var key = model.generatePasswordResetKey();
