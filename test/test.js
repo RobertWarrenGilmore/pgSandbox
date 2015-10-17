@@ -1,8 +1,8 @@
-var bookshelf = require('../server/models/bookshelf');
+var knex = require('../server/database/knex');
 
 // Before we do any tests, migrate the database to the latest schema.
 before(function (done) {
-  bookshelf.knex.migrate.latest().then(function () {
+  knex.migrate.latest().then(function () {
     done();
   });
 });
