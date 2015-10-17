@@ -1,15 +1,17 @@
 var assert = require('assert');
 var sinon = require('sinon');
 var appUrl = require('../../../package.json').appUrl;
-var mockBookshelf = require('./mockBookshelf');
-var Model = mockBookshelf.model('User', ['setPassword', 'verifyPassword', 'verifyPasswordResetKey', 'generatePasswordResetKey']);
-var mockEmailer = require('./mockEmailer');
-var biz = require('../../../server/businessLogic/biz')(mockBookshelf, mockEmailer);
-var AuthenticationError = require('../../../server/businessLogic/authenticationError');
 
 describe('user', function () {
 
   context('unit', function () {
+    var mockBookshelf = require('./mockBookshelf');
+    var Model = mockBookshelf.model('User', ['setPassword', 'verifyPassword', 'verifyPasswordResetKey', 'generatePasswordResetKey']);
+    var Collection = mockBookshelf.Collection;
+    var mockEmailer = require('./mockEmailer');
+    var biz = require('../../../server/businessLogic/biz')(mockBookshelf, mockEmailer);
+    var AuthenticationError = require('../../../server/businessLogic/authenticationError');
+
     var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
     var id = 1;
     var password = 'taco tuesday';
@@ -80,7 +82,11 @@ describe('user', function () {
       });
     });
 
-    it('should be able to set a password', function () {
+    it('should be able to set a password while authenticated');
+    it('should fail to set a password while authenticated as someone else');
+    it('should fail to set a property that users do not have');
+
+    it('should be able to set a password anonymously with a key', function () {
       var expectedUser = {
         id: id,
         emailAddress: emailAddress
@@ -156,19 +162,6 @@ describe('user', function () {
           })
         ).calledOnce, 'The model was not fetched properly.');
         assert.deepStrictEqual(user, expectedUser, 'The returned user was wrong.');
-      });
-    });
-
-    it('should fail to delete', function (done) {
-      var instance = Model.queueInstances(1)[0];
-      instance.verifyPassword.withArgs(password).returns(true);
-      biz(emailAddress, password).user(id).destroy().then(function (user) {
-        assert.strictEqual(instance.destroy.callCount, 0, 'The model was destroyed.');
-        done(new Error('destroy() did not throw.'));
-      }).catch(AuthenticationError, function (err) {
-        done(err);
-      }).catch(function (err) {
-        done();
       });
     });
 
@@ -278,15 +271,31 @@ describe('user', function () {
     });
 
     it('should be able to list all users', function () {
-      return biz().user().read({
+      var collection = Collection.queueInstances(1)[0];
+      var expectedUsers = [{
+        id: 0
+      }, {
+        id: 1
+      }, {
+        id: 2
+      }];
+      collection.serialize.returns(expectedUsers);
+      var query = {
         orderBy: ['familyName', 'asc']
-      }).then(function (users) {
-        console.log(users)
-        assert(false, 'unfinished test')
-          // TODO The Bookshelf mock needs a Collection mock.
+      };
+      var qModel = new Model();
+      Model.query.withArgs(query).returns(qModel);
+
+      return biz().user().read(query).then(function (users) {
+        assert(Model.query.withArgs(query).calledOnce, 'The query was not made.');
+        assert(qModel.fetch.calledOnce, 'The models were not fetched.');
+        assert(collection.serialize.calledOnce, 'The collection was not serialized.');
+        assert.deepStrictEqual(users, expectedUsers, 'The returned user list was wrong.');
       });
     });
 
+    it('should be fail to search with a malformed query');
+    it('should be fail to search with a malformed query');
     it('should be able to search by family name');
     it('should be able to search by family name and given name');
 

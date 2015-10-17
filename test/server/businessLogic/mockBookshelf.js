@@ -70,6 +70,42 @@ var createModelClass = function (extraStubs) {
   return sinon.spy(Model);
 };
 
+var collectionInstances = [];
+var Collection = function () {
+  var instance;
+  // Return either a new instance or the next queued instance.
+  if (collectionInstances.length) {
+    collectionInstances = collectionInstances.shift();
+  } else {
+    sinon.stub(this, 'at');
+    sinon.stub(this, 'invokeThen').returns(Promise.resolve(this));
+    this._items = [];
+    instance = this;
+  }
+  return instance;
+};
+// This method allows us to queue up pre-made instances to be returned by subsequent constructor calls.
+Collection.queueInstances = function (count) {
+  var queued = [];
+  for (var i = 0; i < count; ++i) {
+    var collectionInstance = new Collection();
+    queued.push(collectionInstance);
+  }
+  for (var i in queued) {
+    collectionInstances.push(queued[i]);
+  }
+  return queued;
+};
+Collection.clearInstances = function () {
+  collectionInstances.length = 0;
+};
+Collection.prototype.at = function () {
+  throw new Error('This method should have been stubbed.');
+};
+Collection.prototype.invokeThen = function () {
+  throw new Error('This method should have been stubbed.');
+};
+
 var trxs = [];
 
 var mockBookshelf = {
@@ -107,7 +143,8 @@ var mockBookshelf = {
   },
   clearTrxs: function () {
     trxs.length = 0;
-  }
+  },
+  Collection: Collection
 };
 
 module.exports = mockBookshelf;

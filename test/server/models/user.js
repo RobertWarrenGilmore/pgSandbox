@@ -3,7 +3,6 @@ var Bookshelf = require('../../../server/models/bookshelf');
 var User = Bookshelf.model('User');
 var Collection = Bookshelf.Collection;
 var appUrl = require('../../../package.json').appUrl;
-var Promise = require('bluebird');
 
 describe('user', function () {
   var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';

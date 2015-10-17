@@ -28,7 +28,8 @@ module.exports = function (bookshelf, emailer, authUser, password) {
     },
 
     read: {
-      beforeCommit: function (trx, model) {
+      beforeCommit: function (trx, model, queryParams) {
+
         return model;
       },
       afterCommit: function (result) {
@@ -63,13 +64,6 @@ module.exports = function (bookshelf, emailer, authUser, password) {
       afterCommit: function (result) {
         return result.serialize();
       }
-    },
-
-    destroy: {
-      beforeCommit: function (trx, model) {
-        throw new Error('Deletion of users is not supported. Mark a user inactive instead.');
-      },
-      afterCommit: function (result) {}
     }
   };
 
