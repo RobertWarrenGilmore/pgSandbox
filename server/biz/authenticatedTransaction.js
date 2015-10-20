@@ -1,5 +1,5 @@
 var Promise = require('bluebird');
-var AuthenticationError = require('./authenticationError');
+var AuthenticationError = require('../errors/authenticationError');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
 
 function verifyPassword(password, hash) {
