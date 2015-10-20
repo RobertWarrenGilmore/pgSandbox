@@ -191,6 +191,10 @@ module.exports = function (knex, emailer) {
               .returning('id')
               .then(function (id) {
                 sendPasswordResetEmail(emailer, newUser.emailAddress, id, passwordResetKey.key);
+              }).catch(function (err) {
+                return err.code === '23502';
+              }, function (err) {
+                throw new MalformedRequestError();
               });
           });
         });
@@ -199,10 +203,23 @@ module.exports = function (knex, emailer) {
     read: function (args) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
         // TODO Strip some information depending on who the authUser is.
-        return trx
-          .from('users')
-          .select(readableAttributes);
-        // TODO Modify the query based on the search or individual user requested.
+        if (args.params.userId) {
+          return trx
+            .from('users')
+            .where('id', args.params.userId)
+            .select(readableAttributes)
+            .then(function (users) {
+              if (!users.length) {
+                throw new NoSuchResourceError();
+              }
+              return users[0];
+            });
+        } else {
+          return trx
+            .from('users')
+            .select(readableAttributes);
+          // TODO Modify the query based on the search or individual user requested.
+        }
       });
     },
 

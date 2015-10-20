@@ -4,6 +4,7 @@ var sinon = require('sinon');
 var mockEmailer = sinon.stub();
 var User = require('../../server/biz/user')(knex, mockEmailer);
 var appUrl = require('../../package.json').appUrl;
+var MalformedRequestError = require('../../server/errors/malformedRequestError');
 
 var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
 var ids = [];
@@ -68,11 +69,19 @@ describe('user', function () {
         userId: ids[0]
       }
     }).then(function (user) {
-      assert(user[0].active, 'The user is not active.');
+      assert(!(user instanceof Array), 'The result was an array rather than a single user.');
+      assert(user.active, 'The user is not active.');
     });
   });
 
-  it('should fail to be created when its email address is omitted');
+  it('should fail to be created when its email address is omitted', function () {
+    return User.create({
+      auth: {},
+      params: {},
+      body: {}
+    }).catch(MalformedRequestError, function () {});
+  });
+
   it('should fail to be created when its email address is not unique');
   it('should fail to be created with an invalid email address');
   it('should be able to send a password reset email');
