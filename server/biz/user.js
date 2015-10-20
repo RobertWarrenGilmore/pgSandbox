@@ -4,6 +4,7 @@ var AuthenticationError = require('../errors/authenticationError');
 var AuthorisationError = require('../errors/authorisationError');
 var NoSuchResourceError = require('../errors/noSuchResourceError');
 var MalformedRequestError = require('../errors/malformedRequestError');
+var ConflictingEditError = require('../errors/conflictingEditError');
 var Promise = require('bluebird');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
 var appUrl = require('../../package.json').appUrl;
@@ -198,9 +199,17 @@ module.exports = function (knex, emailer) {
               }).catch(function (err) {
                 return err.code === '23505';
               }, function (err) {
-                throw new MalformedRequestError('That email address is already in use by another user.');
+                throw new ConflictingEditError('That email address is already in use by another user.');
               });
           });
+        })
+        .catch(Checkit.Error, function (err) {
+          var message = '';
+          for (var key in err.errors) {
+            message += err.errors[key].message + '. ';
+          }
+          message = message.trim();
+          throw new MalformedRequestError(message);
         });
     },
 

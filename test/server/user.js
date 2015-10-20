@@ -5,8 +5,10 @@ var mockEmailer = sinon.stub();
 var User = require('../../server/biz/user')(knex, mockEmailer);
 var appUrl = require('../../package.json').appUrl;
 var MalformedRequestError = require('../../server/errors/malformedRequestError');
+var ConflictingEditError = require('../../server/errors/conflictingEditError');
 
 var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
+var badEmailAddress = 'NotAValidEmailAddress.com';
 var ids = [];
 var password = 'taco tuesday';
 var passwordResetKey;
@@ -30,10 +32,6 @@ var searchableUsers = [{
   givenName: givenName2,
   familyName: familyName2
 }];
-
-function genericError(err) {
-  return !err.errorCode || err.errorCode === 500;
-}
 
 describe('user', function () {
 
@@ -74,7 +72,7 @@ describe('user', function () {
     });
   });
 
-  it('should fail to be created when its email address is omitted', function () {
+  it('should fail to create when the email address is omitted', function () {
     return User.create({
       auth: {},
       params: {},
@@ -82,17 +80,26 @@ describe('user', function () {
     }).catch(MalformedRequestError, function () {});
   });
 
-  it('should fail to be created when its email address is not unique', function () {
+  it('should fail to create when the email address is not unique', function () {
     return User.create({
       auth: {},
       params: {},
       body: {
         emailAddress: emailAddress
       }
+    }).catch(ConflictingEditError, function () {});
+  });
+
+  it('should fail to create with an invalid email address', function () {
+    return User.create({
+      auth: {},
+      params: {},
+      body: {
+        emailAddress: badEmailAddress
+      }
     }).catch(MalformedRequestError, function () {});
   });
 
-  it('should fail to be created with an invalid email address');
   it('should be able to send a password reset email');
   it('should be able to set a password while authenticated');
   it('should fail to set a password while authenticated as someone else');
