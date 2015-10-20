@@ -194,7 +194,11 @@ module.exports = function (knex, emailer) {
               }).catch(function (err) {
                 return err.code === '23502';
               }, function (err) {
-                throw new MalformedRequestError();
+                throw new MalformedRequestError('You must supply an email address to create a user.');
+              }).catch(function (err) {
+                return err.code === '23505';
+              }, function (err) {
+                throw new MalformedRequestError('That email address is already in use by another user.');
               });
           });
         });

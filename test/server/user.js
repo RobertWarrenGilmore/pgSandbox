@@ -82,7 +82,16 @@ describe('user', function () {
     }).catch(MalformedRequestError, function () {});
   });
 
-  it('should fail to be created when its email address is not unique');
+  it('should fail to be created when its email address is not unique', function () {
+    return User.create({
+      auth: {},
+      params: {},
+      body: {
+        emailAddress: emailAddress
+      }
+    }).catch(MalformedRequestError, function () {});
+  });
+
   it('should fail to be created with an invalid email address');
   it('should be able to send a password reset email');
   it('should be able to set a password while authenticated');
