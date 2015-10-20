@@ -91,7 +91,17 @@ describe('user', function () {
     }).catch(MalformedRequestError, function () {});
   });
 
-  it('should be able to send a password reset email');
+  it('should be able to send a password reset email', function () {
+    return User.update({
+      body: {
+        emailAddress: emailAddress,
+        passwordResetKey: true
+      }
+    }).then(function () {
+      assert(mockEmailer.calledOnce, 'The emailer was not called.');
+    });
+  });
+
   it('should be able to set a password while authenticated');
   it('should fail to set a password while authenticated as someone else');
   it('should be able to set a password anonymously with a key');
