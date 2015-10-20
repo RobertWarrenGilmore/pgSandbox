@@ -45,8 +45,6 @@ describe('user', function () {
 
   it('should be able to create', function () {
     return User.create({
-      auth: {},
-      params: {},
       body: {
         emailAddress: emailAddress
       }
@@ -62,7 +60,6 @@ describe('user', function () {
 
   it('should be active by default', function () {
     return User.read({
-      auth: {},
       params: {
         userId: ids[0]
       }
@@ -74,16 +71,12 @@ describe('user', function () {
 
   it('should fail to create when the email address is omitted', function () {
     return User.create({
-      auth: {},
-      params: {},
       body: {}
     }).catch(MalformedRequestError, function () {});
   });
 
   it('should fail to create when the email address is not unique', function () {
     return User.create({
-      auth: {},
-      params: {},
       body: {
         emailAddress: emailAddress
       }
@@ -92,8 +85,6 @@ describe('user', function () {
 
   it('should fail to create with an invalid email address', function () {
     return User.create({
-      auth: {},
-      params: {},
       body: {
         emailAddress: badEmailAddress
       }
@@ -136,8 +127,6 @@ describe('user', function () {
 
     it('should fail to create', function () {
       return User.create({
-        auth: {},
-        params: {},
         body: {
           emailAddress: emailAddress + 'a'
         }
@@ -150,8 +139,6 @@ describe('user', function () {
 
     it('should fail to send a password reset email', function () {
       return User.update({
-        auth: {},
-        params: {},
         body: {
           emailAddress: emailAddress,
           passwordResetKey: true

@@ -237,7 +237,10 @@ module.exports = function (knex, emailer) {
     },
 
     update: function (args) {
-      var id = args.params.userId;
+      var id;
+      if (args.params) {
+        id = args.params.userId;
+      }
       var newUser = Object.assign({}, args.body);
 
       return validationRules.run(newUser)
