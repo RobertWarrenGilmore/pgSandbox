@@ -91,7 +91,7 @@ describe('user', function () {
   it('should fail to authenticate with a wrong password');
   it('should fail to set an email address on a non-existent user');
 
-  context('when the emailer fails', function () {
+  context('with a failing emailer', function () {
     function MyCustomError() {}
     MyCustomError.prototype = Object.create(Error.prototype);
 
@@ -101,6 +101,8 @@ describe('user', function () {
 
     it('should fail to create', function () {
       return User.create({
+        auth: {},
+        params: {},
         body: {
           emailAddress: emailAddress + 'a'
         }
@@ -108,18 +110,20 @@ describe('user', function () {
         assert(!mockEmailer.called, 'The password setting email was sent.');
         ids.push(user.id);
         throw new Error('The creation did not fail.');
-      }).catch(MyCustomError, null);
+      }).catch(MyCustomError, function () {});
     });
 
     it('should fail to send a password reset email', function () {
       return User.update({
+        auth: {},
         params: {},
         body: {
+          emailAddress: emailAddress,
           passwordResetKey: true
         }
       }).then(function (user) {
         assert(false, 'The email was sent.');
-      }).catch(MyCustomError, null);
+      }).catch(MyCustomError, function () {});
     });
 
   });
