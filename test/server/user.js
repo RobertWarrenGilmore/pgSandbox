@@ -46,8 +46,8 @@ describe('user', function () {
 
   it('should be able to create', function () {
     return User.create({
-      auth: null,
-      params: null,
+      auth: {},
+      params: {},
       body: {
         emailAddress: emailAddress
       }
@@ -61,7 +61,17 @@ describe('user', function () {
     });
   });
 
-  it('should be active by default');
+  it('should be active by default', function () {
+    return User.read({
+      auth: {},
+      params: {
+        userId: ids[0]
+      }
+    }).then(function (user) {
+      assert(user[0].active, 'The user is not active.');
+    });
+  });
+
   it('should fail to be created when its email address is omitted');
   it('should fail to be created when its email address is not unique');
   it('should fail to be created with an invalid email address');
