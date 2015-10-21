@@ -6,6 +6,7 @@ var User = require('../../server/biz/user')(knex, mockEmailer);
 var appUrl = require('../../package.json').appUrl;
 var MalformedRequestError = require('../../server/errors/malformedRequestError');
 var ConflictingEditError = require('../../server/errors/conflictingEditError');
+var AuthenticationError = require('../../server/errors/authenticationError');
 var AuthorisationError = require('../../server/errors/authorisationError');
 
 var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
@@ -144,28 +145,40 @@ describe('user', function () {
   });
 
   it('should fail to set a password while authenticated as someone else', function () {
-    User.create({
+    return User.create({
       body: {
         emailAddress: 'someoneElse' + emailAddress
       }
     }).then(function (user) {
-      ids.push(user.id);
+      return knex.select('id').from('users').where('emailAddress', 'someoneElse' + emailAddress);
+    }).then(function (users) {
+      ids.push(users[0].id);
       return User.update({
         auth: {
           emailAddress: emailAddress,
           password: password
         },
         params: {
-          userId: user.id
+          userId: users[0].id
         },
         body: {
           password: password
         }
       });
-    }).catch(AuthorisationError, function(){});
+    }).catch(AuthorisationError, function () {});
   });
 
-  it('should fail to set a password with an incorrect key');
+  it('should fail to set a password with an incorrect key', function () {
+    return User.update({
+      params: {
+        userId: ids[0]
+      },
+      body: {
+        passwordResetKey: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd'
+      }
+    }).catch(AuthenticationError, function () {});
+  });
+
   it('should fail to set a too short password');
   it('should fail to set a too long password');
   it('should fail to set a property that users do not have');
