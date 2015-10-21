@@ -42,7 +42,7 @@ describe('user', function () {
   });
 
   after(function () {
-    return knex.from('users').where('id', 'in', ids).del();
+    return knex.from('users').where('id', 'in', ids).orWhere('id', 'in', searchableIds).del();
   });
 
   it('should be able to create', function () {
