@@ -50,7 +50,7 @@ describe('user', function () {
       }
     }).then(function (user) {
       assert(mockEmailer.withArgs(emailAddress).calledOnce, 'The emailer was not called.');
-      passwordResetKey = mockEmailer.getCall(0).args[1].match(/(?:setPassword\?key=)([A-Za-z\d]+)/)[0];
+      passwordResetKey = mockEmailer.getCall(0).args[1].match(/(?:setPassword\?key=)([A-Za-z\d]+)/)[1];
       return knex.select().from('users').where('emailAddress', emailAddress);
     }).then(function (user) {
       assert(user[0], 'No user was created.');
@@ -91,6 +91,18 @@ describe('user', function () {
     }).catch(MalformedRequestError, function () {});
   });
 
+  it('should be able to set a password anonymously with a key', function () {
+    return User.update({
+      params: {
+        userId: ids[0]
+      },
+      body: {
+        passwordResetKey: passwordResetKey,
+        password: password
+      }
+    });
+  });
+
   it('should be able to send a password reset email', function () {
     return User.update({
       body: {
@@ -102,9 +114,35 @@ describe('user', function () {
     });
   });
 
-  it('should be able to set a password while authenticated');
+  it('should be able to set a password while authenticated', function () {
+    return User.update({
+      auth: {
+        emailAddress: emailAddress,
+        password: password
+      },
+      params: {
+        userId: ids[0]
+      },
+      body: {
+        password: password + 'a'
+      }
+    }).then(function () {
+      return User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password + 'a'
+        },
+        params: {
+          userId: ids[0]
+        },
+        body: {
+          password: password
+        }
+      });
+    });
+  });
+
   it('should fail to set a password while authenticated as someone else');
-  it('should be able to set a password anonymously with a key');
   it('should fail to set a password with an incorrect key');
   it('should fail to set a too short password');
   it('should fail to set a too long password');

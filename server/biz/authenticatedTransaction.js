@@ -16,8 +16,9 @@ function authenticatedTransaction(knex, auth, callback) {
         .from('users')
         .select()
         .where('emailAddress', auth.emailAddress)
-        .then(function (authUser) {
-          if (authUser && veryifyPassword(auth.password, authUser.passwordHash)) {
+        .then(function (users) {
+          var authUser = users[0];
+          if (authUser && verifyPassword(auth.password, authUser.passwordHash)) {
             return authUser;
           } else {
             throw new AuthenticationError();
