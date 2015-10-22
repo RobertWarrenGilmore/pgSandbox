@@ -84,7 +84,7 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
       if (!users.length) {
         throw new NoSuchResourceError();
       }
-      var oldUser = users[0];
+      // var oldUser = users[0];
 
       // Reject unauthorised updates.
       if (authUser.id !== id) {
