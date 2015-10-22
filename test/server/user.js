@@ -74,6 +74,8 @@ describe('user', function () {
   it('should fail to create when the email address is omitted', function () {
     return User.create({
       body: {}
+    }).then(function () {
+      assert(false, 'The update succeeded.');
     }).catch(MalformedRequestError, function () {});
   });
 
@@ -165,6 +167,8 @@ describe('user', function () {
           password: password
         }
       });
+    }).then(function () {
+      assert(false, 'The update succeeded.');
     }).catch(AuthorisationError, function () {});
   });
 
@@ -182,6 +186,8 @@ describe('user', function () {
           strike us twice.
           */
       }
+    }).then(function () {
+      assert(false, 'The update succeeded.');
     }).catch(AuthenticationError, function () {});
   });
 
@@ -197,6 +203,8 @@ describe('user', function () {
       body: {
         password: '1234567'
       }
+    }).then(function () {
+      assert(false, 'The update succeeded.');
     }).catch(MalformedRequestError, function () {});
   });
 
@@ -212,6 +220,8 @@ describe('user', function () {
       body: {
         password: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcde'
       }
+    }).then(function () {
+      assert(false, 'The update succeeded.');
     }).catch(MalformedRequestError, function () {});
   });
 
@@ -227,6 +237,8 @@ describe('user', function () {
       body: {
         notARealProperty: 'hello'
       }
+    }).then(function () {
+      assert(false, 'The update succeeded.');
     }).catch(MalformedRequestError, function () {});
   });
 
@@ -243,7 +255,7 @@ describe('user', function () {
         emailAddress: 'different' + emailAddress
       }
     }).then(function () {
-      User.update({
+      return User.update({
         auth: {
           emailAddress: 'different' + emailAddress,
           password: password
@@ -254,13 +266,57 @@ describe('user', function () {
         body: {
           emailAddress: emailAddress
         }
-      })
-    })
+      });
+    });
   });
 
-  it('should be able to set inactive');
-  it('should be able to set active');
-  it('should fail to set inactive while authenticated as someone else');
+  it('should be able to set inactive', function () {
+    return User.update({
+      auth: {
+        emailAddress: emailAddress,
+        password: password
+      },
+      params: {
+        userId: ids[0]
+      },
+      body: {
+        active: false
+      }
+    });
+  });
+
+  it('should be able to set active', function () {
+    return User.update({
+      auth: {
+        emailAddress: emailAddress,
+        password: password
+      },
+      params: {
+        userId: ids[0]
+      },
+      body: {
+        active: true
+      }
+    });
+  });
+
+  it('should fail to set inactive while authenticated as someone else', function () {
+    return User.update({
+      auth: {
+        emailAddress: emailAddress,
+        password: password
+      },
+      params: {
+        userId: ids[1]
+      },
+      body: {
+        active: false
+      }
+    }).then(function () {
+      assert(false, 'The update succeeded.');
+    }).catch(AuthorisationError, function () {});
+  });
+
   it('should be able to set a given name and family name');
   it('should be able to read');
   it('should be able to list all users');
