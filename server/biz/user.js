@@ -218,8 +218,8 @@ module.exports = function (knex, emailer) {
         });
       }).catch(Checkit.Error, function (err) {
         var message = '';
-        for (var key in err.errors) {
-          message += err.errors[key].message + '. ';
+        for (var attribute in err.errors) {
+          message += err.errors[attribute].message + '. ';
         }
         message = message.trim();
         throw new MalformedRequestError(message);
