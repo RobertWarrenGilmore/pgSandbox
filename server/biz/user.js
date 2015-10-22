@@ -164,8 +164,12 @@ function anonymousPasswordResetKeyUpdate(trx, newUser, emailer) {
       return trx.from('users').where('emailAddress', newUser.emailAddress).select('id');
     })
     .then(function (users) {
-      var oldUser = users[0];
-      sendPasswordResetEmail(emailer, newUser.emailAddress, oldUser.id, key.key);
+      if (users.length) {
+        var oldUser = users[0];
+        sendPasswordResetEmail(emailer, newUser.emailAddress, oldUser.id, key.key);
+      } else {
+        throw new NoSuchResourceError();
+      }
     });
 }
 

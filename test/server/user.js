@@ -43,6 +43,8 @@ describe('user', function () {
     });
   });
 
+  it('should fail to create with attributes that are not accepted on creation');
+
   it('should be active by default', function () {
     return User.read({
       params: {
@@ -133,6 +135,8 @@ describe('user', function () {
       assert(false, 'The update succeeded.');
     }).catch(MalformedRequestError, function () {});
   });
+
+  it('should fail to send a password reset email with extra attributes');
 
   it('should fail to set a password while authenticated as someone else', function () {
     return User.create({
@@ -288,6 +292,8 @@ describe('user', function () {
     });
   });
 
+  it('should fail to set an email address without authenticating.');
+
   it('should be able to set inactive', function () {
     return User.update({
       auth: {
@@ -399,24 +405,59 @@ describe('user', function () {
     }).catch(AuthenticationError, function () {});
   });
 
-  it('should fail to set an email address on a non-existent user', function () {
-    return knex.from('users').where('id', ids[1]).del()
-      .then(function () {
-        return User.update({
-          auth: {
-            emailAddress: emailAddress,
-            password: password
-          },
-          params: {
-            userId: ids[1]
-          },
-          body: {
-            emailAddress: 'different' + emailAddress
-          }
-        }).catch(NoSuchResourceError, function () {
+  context('when the user does not exist', function () {
+    var badId;
+
+    before('Create the searchable users.', function () {
+      return knex.from('users').where('id', ids[1]).returning('id').del()
+        .then(function (deletedIds) {
+          badId = deletedIds[0];
           ids.splice(1, 1);
         });
-      });
+    });
+
+    it('should fail to set an email address', function () {
+      return User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          userId: badId
+        },
+        body: {
+          emailAddress: 'different' + emailAddress
+        }
+      }).then(function () {
+        assert(false, 'The update did not fail.');
+      }).catch(NoSuchResourceError, function () {});
+    });
+
+    it('should fail to do an anonymous password reset', function () {
+      return User.update({
+        params: {
+          userId: badId
+        },
+        body: {
+          passwordResetKey: passwordResetKey,
+          password: password
+        }
+      }).then(function () {
+        assert(false, 'The update did not fail.');
+      }).catch(NoSuchResourceError, function () {});
+    });
+
+    it('should fail to send a password reset email', function () {
+      return User.update({
+        body: {
+          emailAddress: 'notAssigned' + emailAddress,
+          passwordResetKey: true
+        }
+      }).then(function () {
+        assert(!mockEmailer.called, 'The emailer was called.');
+        assert(false, 'The update did not fail.');
+      }).catch(NoSuchResourceError, function () {});
+    });
 
   });
 
