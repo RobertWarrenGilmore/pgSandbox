@@ -175,19 +175,94 @@ describe('user', function () {
       },
       body: {
         passwordResetKey: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd'
+          /*
+          Cross your fingers and hope that the correct password reset key is one
+          of the other 3.8*10^91 possibilities. If it does happen to be this
+          one, we can just run the test again. Surely lightning won't
+          strike us twice.
+          */
       }
     }).catch(AuthenticationError, function () {});
   });
 
-  it('should fail to set a too short password');
-  it('should fail to set a too long password');
-  it('should fail to set a property that users do not have');
-  it('should be able to set an email address');
-  it('should be able to read');
+  it('should fail to set a too short password', function () {
+    return User.update({
+      auth: {
+        emailAddress: emailAddress,
+        password: password
+      },
+      params: {
+        userId: ids[0]
+      },
+      body: {
+        password: '1234567'
+      }
+    }).catch(MalformedRequestError, function () {});
+  });
+
+  it('should fail to set a too long password', function () {
+    return User.update({
+      auth: {
+        emailAddress: emailAddress,
+        password: password
+      },
+      params: {
+        userId: ids[0]
+      },
+      body: {
+        password: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcde'
+      }
+    }).catch(MalformedRequestError, function () {});
+  });
+
+  it('should fail to set a property that users do not have', function () {
+    return User.update({
+      auth: {
+        emailAddress: emailAddress,
+        password: password
+      },
+      params: {
+        userId: ids[0]
+      },
+      body: {
+        notARealProperty: 'hello'
+      }
+    }).catch(MalformedRequestError, function () {});
+  });
+
+  it('should be able to set an email address', function () {
+    return User.update({
+      auth: {
+        emailAddress: emailAddress,
+        password: password
+      },
+      params: {
+        userId: ids[0]
+      },
+      body: {
+        emailAddress: 'different' + emailAddress
+      }
+    }).then(function () {
+      User.update({
+        auth: {
+          emailAddress: 'different' + emailAddress,
+          password: password
+        },
+        params: {
+          userId: ids[0]
+        },
+        body: {
+          emailAddress: emailAddress
+        }
+      })
+    })
+  });
+
   it('should be able to set inactive');
   it('should be able to set active');
   it('should fail to set inactive while authenticated as someone else');
   it('should be able to set a given name and family name');
+  it('should be able to read');
   it('should be able to list all users');
   it('should be able to sort the list by family name, descending');
   it('should be able to sort the list by family name, ascending');
@@ -216,7 +291,7 @@ describe('user', function () {
       }).then(function (user) {
         assert(!mockEmailer.called, 'The password setting email was sent.');
         ids.push(user.id);
-        throw new Error('The creation did not fail.');
+        assert(false, 'The creation did not fail.');
       }).catch(MyCustomError, function () {});
     });
 

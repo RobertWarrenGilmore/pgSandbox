@@ -66,7 +66,7 @@ function acceptOnlyAttributes(object, acceptible, error) {
 function authenticatedUpdate(authUser, trx, id, newUser) {
   // Reject bad attributes.
   acceptOnlyAttributes(newUser, updatableAttributes, function (key) {
-    return new Error('The attribute ' + key + ' cannot be written.');
+    return new MalformedRequestError('The attribute ' + key + ' cannot be written.');
   });
 
   // Get the existing user.
@@ -179,11 +179,6 @@ module.exports = function (knex, emailer) {
       newUser.passwordResetKeyHash = passwordResetKey.hash;
       // TODO Do validation before insert.
       return validationRules.run(newUser)
-        .then(function (validated) {
-          if (!validated) {
-            throw new MalformedRequestError();
-          }
-        })
         .then(function () {
           return knex.transaction(function (trx) {
             return trx
@@ -244,11 +239,6 @@ module.exports = function (knex, emailer) {
       var newUser = Object.assign({}, args.body);
 
       return validationRules.run(newUser)
-        .then(function (validated) {
-          if (!validated) {
-            throw new MalformedRequestError();
-          }
-        })
         .then(function () {
           return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
 
@@ -270,6 +260,14 @@ module.exports = function (knex, emailer) {
             }
           });
 
+        })
+        .catch(Checkit.Error, function (err) {
+          var message = '';
+          for (var key in err.errors) {
+            message += err.errors[key].message + '. ';
+          }
+          message = message.trim();
+          throw new MalformedRequestError(message);
         });
 
       // TODO gather all of these trx promises and return an Promise.all() of them.
