@@ -101,7 +101,7 @@ describe('user', function () {
       }).catch(MalformedRequestError, function () {});
     });
 
-    it('should fail to create when the email address is omitted', function () {
+    it('should fail when the email address is omitted', function () {
       return User.create({
         body: {}
       }).then(function (user) {
@@ -112,7 +112,7 @@ describe('user', function () {
       }).catch(MalformedRequestError, function () {});
     });
 
-    it('should fail to create when the email address is not unique', function () {
+    it('should fail when the email address is not unique', function () {
       return knex.into('users').insert({
         emailAddress: emailAddress
       }).returning('id').then(function (ids) {
@@ -128,7 +128,7 @@ describe('user', function () {
       }).catch(ConflictingEditError, function () {});
     });
 
-    it('should fail to create with an invalid email address', function () {
+    it('should fail with an invalid email address', function () {
       return User.create({
         body: {
           emailAddress: badEmailAddress
