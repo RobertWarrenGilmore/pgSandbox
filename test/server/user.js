@@ -8,6 +8,7 @@ var MalformedRequestError = require('../../server/errors/malformedRequestError')
 var ConflictingEditError = require('../../server/errors/conflictingEditError');
 var AuthenticationError = require('../../server/errors/authenticationError');
 var AuthorisationError = require('../../server/errors/authorisationError');
+var NoSuchResourceError = require('../../server/errors/noSuchResourceError');
 
 var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
 var badEmailAddress = 'NotAValidEmailAddress.com';
@@ -93,6 +94,20 @@ describe('user', function () {
     });
   });
 
+  it('should not be able to resuse the password reset key', function () {
+    return User.update({
+      params: {
+        userId: ids[0]
+      },
+      body: {
+        passwordResetKey: passwordResetKey,
+        password: password
+      }
+    }).then(function () {
+      assert(false, 'The update succeeded.');
+    }).catch(AuthenticationError, function () {});
+  });
+
   it('should be able to send a password reset email', function () {
     return User.update({
       body: {
@@ -104,32 +119,19 @@ describe('user', function () {
     });
   });
 
-  it('should be able to set a password while authenticated', function () {
+  it('should fail to set a password anonymously with extra attributes', function () {
     return User.update({
-      auth: {
-        emailAddress: emailAddress,
-        password: password
-      },
       params: {
         userId: ids[0]
       },
       body: {
-        password: password + 'a'
+        passwordResetKey: passwordResetKey,
+        password: password,
+        emailAddress: emailAddress // This attribute is not expected.
       }
     }).then(function () {
-      return User.update({
-        auth: {
-          emailAddress: emailAddress,
-          password: password + 'a'
-        },
-        params: {
-          userId: ids[0]
-        },
-        body: {
-          password: password
-        }
-      });
-    });
+      assert(false, 'The update succeeded.');
+    }).catch(MalformedRequestError, function () {});
   });
 
   it('should fail to set a password while authenticated as someone else', function () {
@@ -164,6 +166,7 @@ describe('user', function () {
         userId: ids[0]
       },
       body: {
+        password: password,
         passwordResetKey: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd'
           /*
           Cross your fingers and hope that the correct password reset key is one
@@ -175,6 +178,34 @@ describe('user', function () {
     }).then(function () {
       assert(false, 'The update succeeded.');
     }).catch(AuthenticationError, function () {});
+  });
+
+  it('should be able to set a password while authenticated', function () {
+    return User.update({
+      auth: {
+        emailAddress: emailAddress,
+        password: password
+      },
+      params: {
+        userId: ids[0]
+      },
+      body: {
+        password: password + 'a'
+      }
+    }).then(function () {
+      return User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password + 'a'
+        },
+        params: {
+          userId: ids[0]
+        },
+        body: {
+          password: password
+        }
+      });
+    });
   });
 
   it('should fail to set a too short password', function () {
@@ -340,9 +371,54 @@ describe('user', function () {
     });
   });
 
-  it('should fail to authenticate with an unassigned email address');
-  it('should fail to authenticate with a wrong password');
-  it('should fail to set an email address on a non-existent user');
+  it('should fail to authenticate with an unassigned email address', function () {
+    return User.read({
+      auth: {
+        emailAddress: 'notAssigned' + emailAddress,
+        password: password
+      },
+      params: {
+        userId: ids[0]
+      }
+    }).then(function (user) {
+      assert(false, 'Authentication did not fail.');
+    }).catch(AuthenticationError, function () {});
+  });
+
+  it('should fail to authenticate with a wrong password', function () {
+    return User.read({
+      auth: {
+        emailAddress: emailAddress,
+        password: password + 'wrong'
+      },
+      params: {
+        userId: ids[0]
+      }
+    }).then(function (user) {
+      assert(false, 'Authentication did not fail.');
+    }).catch(AuthenticationError, function () {});
+  });
+
+  it('should fail to set an email address on a non-existent user', function () {
+    return knex.from('users').where('id', ids[1]).del()
+      .then(function () {
+        return User.update({
+          auth: {
+            emailAddress: emailAddress,
+            password: password
+          },
+          params: {
+            userId: ids[1]
+          },
+          body: {
+            emailAddress: 'different' + emailAddress
+          }
+        }).catch(NoSuchResourceError, function () {
+          ids.splice(1, 1);
+        });
+      });
+
+  });
 
   context('with searchable users', function () {
     var searchableIds = [];

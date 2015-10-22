@@ -123,7 +123,7 @@ function anonymousPasswordUpdate(trx, id, newUser) {
       var oldUser = users[0];
 
       // Verify the provided password reset key against the hash in the existing user.
-      if (!newUser.passwordResetKey || !verifyPasswordResetKey(newUser.passwordResetKey, oldUser.passwordResetKeyHash)) {
+      if (!newUser.passwordResetKey || !oldUser.passwordResetKeyHash || !verifyPasswordResetKey(newUser.passwordResetKey, oldUser.passwordResetKeyHash)) {
         throw new AuthenticationError();
       }
 
@@ -236,8 +236,7 @@ module.exports = function (knex, emailer) {
             .select(readableAttributes);
           // TODO Modify the query based on the search or individual user requested.
         }
-      })
-      .then(function (user) {
+      }).then(function (user) {
         if (user instanceof Object || user instanceof Array) {
           return JSON.parse(JSON.stringify(user));
         }
