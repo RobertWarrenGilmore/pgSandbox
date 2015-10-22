@@ -16,33 +16,15 @@ var password = 'taco tuesday';
 var passwordResetKey;
 var givenName = 'Victor';
 var familyName = 'Frankenstein';
-var searchableIds = [];
-var givenName1 = 'James';
-var givenName2 = 'Paula';
-var familyName1 = 'Deen';
-var familyName2 = 'Poundstone';
-var searchableUsers = [{
-  emailAddress: '0' + emailAddress,
-  givenName: givenName1,
-  familyName: familyName1
-}, {
-  emailAddress: '1' + emailAddress,
-  givenName: givenName2,
-  familyName: familyName1
-}, {
-  emailAddress: '2' + emailAddress,
-  givenName: givenName2,
-  familyName: familyName2
-}];
 
 describe('user', function () {
 
-  beforeEach(function () {
+  beforeEach('Reset the mock emailer.', function () {
     mockEmailer.reset();
   });
 
-  after(function () {
-    return knex.from('users').where('id', 'in', ids).orWhere('id', 'in', searchableIds).del();
+  after('Delete the test users.', function () {
+    return knex.from('users').where('id', 'in', ids).del();
   });
 
   it('should be able to create', function () {
@@ -357,17 +339,57 @@ describe('user', function () {
       }, 'The returned user was incorrect.');
     });
   });
-  it('should be able to list all users');
-  it('should be able to sort the list by family name, descending');
-  it('should be able to sort the list by family name, ascending');
-  it('should be able to search by id');
-  it('should be able to search by family name');
-  it('should be able to search by family name and given name');
-  it('should be fail to search with a malformed query');
-  it('should be fail to search with a malformed query');
+
   it('should fail to authenticate with an unassigned email address');
   it('should fail to authenticate with a wrong password');
   it('should fail to set an email address on a non-existent user');
+
+  context('with searchable users', function () {
+    var searchableIds = [];
+    var givenName1 = 'James';
+    var givenName2 = 'Paula';
+    var familyName1 = 'Deen';
+    var familyName2 = 'Poundstone';
+    var searchableUsers = [{
+      emailAddress: '0' + emailAddress,
+      givenName: givenName1,
+      familyName: familyName1
+    }, {
+      emailAddress: '1' + emailAddress,
+      givenName: givenName2,
+      familyName: familyName1
+    }, {
+      emailAddress: '2' + emailAddress,
+      givenName: givenName2,
+      familyName: familyName2
+    }];
+
+    before('Create the searchable users.', function () {
+      return knex.into('users').insert(searchableUsers).returning('id').then(function (returnedIds) {
+        Array.prototype.push.apply(ids, returnedIds);
+        Array.prototype.push.apply(searchableIds, returnedIds);
+      });
+    });
+
+    after('Destroy the searchable users.', function () {
+      return knex.from('users').where('id', 'in', searchableIds).del();
+    });
+
+    it('should be able to list all users', function () {
+      return User.read({})
+        .then(function (users) {
+          assert.strictEqual(users.length, ids.length, 'The wrong number of users was returned.');
+        });
+    });
+
+    it('should be able to sort the list by family name, descending');
+    it('should be able to sort the list by family name, ascending');
+    it('should be able to search by id');
+    it('should be able to search by family name');
+    it('should be able to search by family name and given name');
+    it('should be fail to search with a malformed query');
+    it('should be fail to search with a malformed query');
+  });
 
   context('with a failing emailer', function () {
     function MyCustomError() {}
