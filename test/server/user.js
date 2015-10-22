@@ -1,9 +1,10 @@
 var knex = require('../../server/database/knex');
 var assert = require('assert');
 var sinon = require('sinon');
+var Promise = require('bluebird');
+var bcrypt = Promise.promisifyAll(require('bcrypt'));
 var mockEmailer = sinon.stub();
 var User = require('../../server/biz/user')(knex, mockEmailer);
-var appUrl = require('../../package.json').appUrl;
 var MalformedRequestError = require('../../server/errors/malformedRequestError');
 var ConflictingEditError = require('../../server/errors/conflictingEditError');
 var AuthenticationError = require('../../server/errors/authenticationError');
@@ -12,488 +13,150 @@ var NoSuchResourceError = require('../../server/errors/noSuchResourceError');
 
 var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
 var badEmailAddress = 'NotAValidEmailAddress.com';
-var ids = [];
+var createdIds = [];
 var password = 'taco tuesday';
-var passwordResetKey;
 var givenName = 'Victor';
 var familyName = 'Frankenstein';
+
+function EmailerError(message) {
+  Error.call(this);
+  this.name = this.constructor.name;
+  this.message = message || 'The emailer failed.';
+  this.errorCode = 401;
+  Error.captureStackTrace(this, this.constructor);
+}
+EmailerError.prototype = Object.create(Error.prototype);
+EmailerError.prototype.constructor = EmailerError;
 
 describe('user', function () {
 
   beforeEach('Reset the mock emailer.', function () {
     mockEmailer.reset();
+    mockEmailer.resetBehavior();
   });
 
-  after('Delete the test users.', function () {
-    return knex.from('users').where('id', 'in', ids).del();
-  });
-
-  it('should be able to create', function () {
-    return User.create({
-      body: {
-        emailAddress: emailAddress
-      }
-    }).then(function (user) {
-      assert(mockEmailer.withArgs(emailAddress).calledOnce, 'The emailer was not called.');
-      passwordResetKey = mockEmailer.getCall(0).args[1].match(/(?:setPassword\?key=)([A-Za-z\d]+)/)[1];
-      return knex.select().from('users').where('emailAddress', emailAddress);
-    }).then(function (user) {
-      assert(user[0], 'No user was created.');
-      ids.push(user[0].id);
+  afterEach('Delete any created test users.', function () {
+    return knex.from('users').where('id', 'in', createdIds).del().then(function () {
+      createdIds.length = 0;
     });
   });
 
-  it('should fail to create with attributes that are not accepted on creation', function () {
-    return User.create({
-      body: {
-        emailAddress: emailAddress,
-        active: false
-      }
-    }).then(function () {
-      assert(false, 'The creation succeeded.');
-    }).catch(MalformedRequestError, function () {});
-  });
+  describe('create', function () {
 
-  it('should be active by default', function () {
-    return User.read({
-      params: {
-        userId: ids[0]
-      }
-    }).then(function (user) {
-      assert(!(user instanceof Array), 'The result was an array rather than a single user.');
-      assert(user.active, 'The user is not active.');
-    });
-  });
-
-  it('should fail to create when the email address is omitted', function () {
-    return User.create({
-      body: {}
-    }).then(function () {
-      assert(false, 'The update succeeded.');
-    }).catch(MalformedRequestError, function () {});
-  });
-
-  it('should fail to create when the email address is not unique', function () {
-    return User.create({
-      body: {
-        emailAddress: emailAddress
-      }
-    }).then(function (user) {
-      assert(false, 'The creation succeeded.');
-    }).catch(ConflictingEditError, function () {});
-  });
-
-  it('should fail to create with an invalid email address', function () {
-    return User.create({
-      body: {
-        emailAddress: badEmailAddress
-      }
-    }).then(function (user) {
-      assert(false, 'The creation succeeded.');
-    }).catch(MalformedRequestError, function () {});
-  });
-
-  it('should fail to set a password with an incorrect key', function () {
-    return User.update({
-      params: {
-        userId: ids[0]
-      },
-      body: {
-        password: password,
-        passwordResetKey: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd'
-          /*
-          Cross your fingers and hope that the correct password reset key is one
-          of the other 3.8*10^91 possibilities. If it does happen to be this
-          one, we can just run the test again. Surely lightning won't
-          strike us twice.
-          */
-      }
-    }).then(function () {
-      assert(false, 'The update succeeded.');
-    }).catch(AuthenticationError, function () {});
-  });
-
-  it('should be able to set a password anonymously with a key', function () {
-    return User.update({
-      params: {
-        userId: ids[0]
-      },
-      body: {
-        passwordResetKey: passwordResetKey,
-        password: password
-      }
-    });
-  });
-
-  it('should not be able to resuse the password reset key', function () {
-    return User.update({
-      params: {
-        userId: ids[0]
-      },
-      body: {
-        passwordResetKey: passwordResetKey,
-        password: password
-      }
-    }).then(function () {
-      assert(false, 'The update succeeded.');
-    }).catch(AuthenticationError, function () {});
-  });
-
-  it('should be able to send a password reset email', function () {
-    return User.update({
-      body: {
-        emailAddress: emailAddress,
-        passwordResetKey: true
-      }
-    }).then(function () {
-      assert(mockEmailer.calledOnce, 'The emailer was not called.');
-    });
-  });
-
-  it('should fail to set a password anonymously with extra attributes', function () {
-    return User.update({
-      params: {
-        userId: ids[0]
-      },
-      body: {
-        passwordResetKey: passwordResetKey,
-        password: password,
-        emailAddress: emailAddress // This attribute is not expected.
-      }
-    }).then(function () {
-      assert(false, 'The update succeeded.');
-    }).catch(MalformedRequestError, function () {});
-  });
-
-  it('should fail to send a password reset email with extra attributes', function () {
-    return User.update({
-      body: {
-        emailAddress: emailAddress,
-        passwordResetKey: true,
-        familyName: familyName
-      }
-    }).then(function () {
-      assert(!mockEmailer.called, 'The emailer was called.');
-      assert(false, 'The update did not fail.');
-    }).catch(MalformedRequestError, function () {});
-  });
-
-  it('should fail to set a password while authenticated as someone else', function () {
-    return User.create({
-      body: {
-        emailAddress: 'someoneElse' + emailAddress
-      }
-    }).then(function (user) {
-      return knex.select('id').from('users').where('emailAddress', 'someoneElse' + emailAddress);
-    }).then(function (users) {
-      ids.push(users[0].id);
-      return User.update({
-        auth: {
-          emailAddress: emailAddress,
-          password: password
-        },
-        params: {
-          userId: users[0].id
-        },
-        body: {
-          password: password
-        }
-      });
-    }).then(function () {
-      assert(false, 'The update succeeded.');
-    }).catch(AuthorisationError, function () {});
-  });
-
-  it('should be able to set a password while authenticated', function () {
-    return User.update({
-      auth: {
-        emailAddress: emailAddress,
-        password: password
-      },
-      params: {
-        userId: ids[0]
-      },
-      body: {
-        password: password + 'a'
-      }
-    }).then(function () {
-      return User.update({
-        auth: {
-          emailAddress: emailAddress,
-          password: password + 'a'
-        },
-        params: {
-          userId: ids[0]
-        },
-        body: {
-          password: password
-        }
-      });
-    });
-  });
-
-  it('should fail to set a too short password', function () {
-    return User.update({
-      auth: {
-        emailAddress: emailAddress,
-        password: password
-      },
-      params: {
-        userId: ids[0]
-      },
-      body: {
-        password: '1234567'
-      }
-    }).then(function () {
-      assert(false, 'The update succeeded.');
-    }).catch(MalformedRequestError, function () {});
-  });
-
-  it('should fail to set a too long password', function () {
-    return User.update({
-      auth: {
-        emailAddress: emailAddress,
-        password: password
-      },
-      params: {
-        userId: ids[0]
-      },
-      body: {
-        password: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcde'
-      }
-    }).then(function () {
-      assert(false, 'The update succeeded.');
-    }).catch(MalformedRequestError, function () {});
-  });
-
-  it('should fail to set a property that users do not have', function () {
-    return User.update({
-      auth: {
-        emailAddress: emailAddress,
-        password: password
-      },
-      params: {
-        userId: ids[0]
-      },
-      body: {
-        notARealAttribute: 'hello'
-      }
-    }).then(function () {
-      assert(false, 'The update succeeded.');
-    }).catch(MalformedRequestError, function () {});
-  });
-
-  it('should be able to set an email address', function () {
-    return User.update({
-      auth: {
-        emailAddress: emailAddress,
-        password: password
-      },
-      params: {
-        userId: ids[0]
-      },
-      body: {
-        emailAddress: 'different' + emailAddress
-      }
-    }).then(function (user) {
-      assert(user.emailAddress === 'different' + emailAddress, 'The email address is wrong.');
-      return User.update({
-        auth: {
-          emailAddress: 'different' + emailAddress,
-          password: password
-        },
-        params: {
-          userId: ids[0]
-        },
+    it('should work with a good email address', function () {
+      return User.create({
         body: {
           emailAddress: emailAddress
         }
+      }).then(function (user) {
+        return knex.select().from('users').where('emailAddress', emailAddress);
+      }).then(function (users) {
+        createdIds.push(users[0].id);
+        assert(users[0], 'No user was created.');
+        assert(mockEmailer.withArgs(emailAddress).calledOnce, 'The emailer was not called.');
       });
     });
-  });
 
-  it('should fail to set an email address without authenticating', function () {
-    return User.update({
-      params: {
-        userId: ids[0]
-      },
-      body: {
-        emailAddress: emailAddress
-      }
-    }).then(function () {
-      assert(false, 'The update succeeded.');
-    }).catch(AuthenticationError, function () {});
-  });
-
-  it('should be able to set inactive', function () {
-    return User.update({
-      auth: {
-        emailAddress: emailAddress,
-        password: password
-      },
-      params: {
-        userId: ids[0]
-      },
-      body: {
-        active: false
-      }
-    }).then(function (user) {
-      assert(!user.active, 'The user is not active.');
-    });
-  });
-
-  it('should be able to set active', function () {
-    return User.update({
-      auth: {
-        emailAddress: emailAddress,
-        password: password
-      },
-      params: {
-        userId: ids[0]
-      },
-      body: {
-        active: true
-      }
-    }).then(function (user) {
-      assert(user.active, 'The user is not active.');
-    });
-  });
-
-  it('should fail to set inactive while authenticated as someone else', function () {
-    return User.update({
-      auth: {
-        emailAddress: emailAddress,
-        password: password
-      },
-      params: {
-        userId: ids[1]
-      },
-      body: {
-        active: false
-      }
-    }).then(function () {
-      assert(false, 'The update succeeded.');
-    }).catch(AuthorisationError, function () {});
-  });
-
-  it('should be able to set a given name and family name', function () {
-    return User.update({
-      auth: {
-        emailAddress: emailAddress,
-        password: password
-      },
-      params: {
-        userId: ids[0]
-      },
-      body: {
-        givenName: givenName,
-        familyName: familyName
-      }
-    });
-  });
-
-  it('should be able to read', function () {
-    return User.read({
-      params: {
-        userId: ids[0]
-      }
-    }).then(function (user) {
-      assert.deepStrictEqual(user, {
-        id: ids[0],
-        emailAddress: emailAddress,
-        givenName: givenName,
-        familyName: familyName,
-        active: true
-      }, 'The returned user was incorrect.');
-    });
-  });
-
-  it('should fail to authenticate with an unassigned email address', function () {
-    return User.read({
-      auth: {
-        emailAddress: 'notAssigned' + emailAddress,
-        password: password
-      },
-      params: {
-        userId: ids[0]
-      }
-    }).then(function (user) {
-      assert(false, 'Authentication did not fail.');
-    }).catch(AuthenticationError, function () {});
-  });
-
-  it('should fail to authenticate with a wrong password', function () {
-    return User.read({
-      auth: {
-        emailAddress: emailAddress,
-        password: password + 'wrong'
-      },
-      params: {
-        userId: ids[0]
-      }
-    }).then(function (user) {
-      assert(false, 'Authentication did not fail.');
-    }).catch(AuthenticationError, function () {});
-  });
-
-  context('when the user does not exist', function () {
-    var badId;
-
-    before('Create the searchable users.', function () {
-      return knex.from('users').where('id', ids[1]).returning('id').del()
-        .then(function (deletedIds) {
-          badId = deletedIds[0];
-          ids.splice(1, 1);
-        });
+    it('should send a correct password reset email', function () {
+      return User.create({
+        body: {
+          emailAddress: emailAddress
+        }
+      }).then(function (user) {
+        return knex.select().from('users').where('emailAddress', emailAddress);
+      }).then(function (users) {
+        var user = users[0];
+        assert(user, 'No user was created.');
+        createdIds.push(user.id);
+        assert(mockEmailer.withArgs(emailAddress).calledOnce, 'The emailer was not called.');
+        var passwordResetKey = mockEmailer.getCall(0).args[1].match(/(?:setPassword\?key=)([A-Za-z\d]{30})/)[1];
+        assert(bcrypt.compareSync(passwordResetKey, user.passwordResetKeyHash), 'The email contained the wrong password reset key.');
+      });
     });
 
-    it('should fail to set an email address', function () {
-      return User.update({
-        auth: {
+    it('should make a user active by default', function () {
+      return User.create({
+        body: {
+          emailAddress: emailAddress
+        }
+      }).then(function (user) {
+        return knex.select().from('users').where('emailAddress', emailAddress);
+      }).then(function (users) {
+        createdIds.push(users[0].id);
+        assert(users[0].active, 'The user is not active.');
+      });
+    });
+
+    it('should reject non-creation attributes', function () {
+      return User.create({
+        body: {
           emailAddress: emailAddress,
-          password: password
-        },
-        params: {
-          userId: badId
-        },
-        body: {
-          emailAddress: 'different' + emailAddress
+          active: false
         }
-      }).then(function () {
-        assert(false, 'The update did not fail.');
-      }).catch(NoSuchResourceError, function () {});
+      }).then(function (user) {
+        return knex.select().from('users').where('emailAddress', emailAddress);
+      }).then(function (users) {
+        createdIds.push(users[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(MalformedRequestError, function () {});
     });
 
-    it('should fail to do an anonymous password reset', function () {
-      return User.update({
-        params: {
-          userId: badId
-        },
-        body: {
-          passwordResetKey: passwordResetKey,
-          password: password
-        }
-      }).then(function () {
-        assert(false, 'The update did not fail.');
-      }).catch(NoSuchResourceError, function () {});
+    it('should fail to create when the email address is omitted', function () {
+      return User.create({
+        body: {}
+      }).then(function (user) {
+        return knex.select().from('users').where('emailAddress', emailAddress);
+      }).then(function (users) {
+        createdIds.push(users[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(MalformedRequestError, function () {});
     });
 
-    it('should fail to send a password reset email', function () {
-      return User.update({
+    it('should fail to create when the email address is not unique', function () {
+      return knex.into('users').insert({
+        emailAddress: emailAddress
+      }).returning('id').then(function (ids) {
+        createdIds.push(ids[0]);
+        return User.create({
+          body: {
+            emailAddress: emailAddress
+          }
+        });
+      }).then(function (user) {
+        createdIds.push(user.id);
+        assert(false, 'The creation succeeded.');
+      }).catch(ConflictingEditError, function () {});
+    });
+
+    it('should fail to create with an invalid email address', function () {
+      return User.create({
         body: {
-          emailAddress: 'notAssigned' + emailAddress,
-          passwordResetKey: true
+          emailAddress: badEmailAddress
         }
-      }).then(function () {
-        assert(!mockEmailer.called, 'The emailer was called.');
-        assert(false, 'The update did not fail.');
-      }).catch(NoSuchResourceError, function () {});
+      }).then(function (user) {
+        createdIds.push(user.id);
+        assert(false, 'The creation succeeded.');
+      }).catch(MalformedRequestError, function () {});
+    });
+
+    it('should fail with a failing emailer', function () {
+      mockEmailer.throws(new EmailerError());
+      return User.create({
+        body: {
+          emailAddress: emailAddress
+        }
+      }).then(function (user) {
+        return knex.select().from('users').where('emailAddress', emailAddress);
+      }).then(function (users) {
+        createdIds.push(users[0].id);
+        assert(!mockEmailer.called, 'The password setting email was sent.');
+        assert(false, 'The creation did not fail.');
+      }).catch(EmailerError, function () {});
     });
 
   });
 
-  context('with searchable users', function () {
-    var searchableIds = [];
+  describe('read', function () {
     var givenName1 = 'James';
     var givenName2 = 'Paula';
     var familyName1 = 'Deen';
@@ -505,168 +168,406 @@ describe('user', function () {
     }, {
       emailAddress: '1' + emailAddress,
       givenName: givenName2,
-      familyName: familyName1
+      familyName: familyName2
     }, {
       emailAddress: '2' + emailAddress,
       givenName: givenName2,
+      familyName: familyName1
+    }, {
+      emailAddress: '3' + emailAddress,
+      givenName: givenName1,
       familyName: familyName2
     }];
 
-    before('Create the searchable users.', function () {
-      return knex.into('users').insert(searchableUsers).returning('id').then(function (returnedIds) {
-        Array.prototype.push.apply(ids, returnedIds);
-        Array.prototype.push.apply(searchableIds, returnedIds);
-      });
-    });
-
-    after('Destroy the searchable users.', function () {
-      return knex.from('users').where('id', 'in', searchableIds).del();
-    });
-
-    it('should be able to list all users', function () {
-      return User.read({})
-        .then(function (users) {
-          assert.strictEqual(users.length, ids.length, 'The wrong number of users was returned.');
+    beforeEach('Create the searchable users.', function () {
+      return knex.into('users').insert(searchableUsers).returning('id')
+        .then(function (returnedIds) {
+          Array.prototype.push.apply(createdIds, returnedIds);
         });
     });
 
-    it('should be able to sort the list by family name, descending', function () {
+    it('should be able to look up by userId', function () {
       return User.read({
         params: {
-          sortBy: 'familyName',
-          sortOrder: 'descending'
-        }
-      }).then(function (users) {
-        assert.strictEqual(users.length, ids.length, 'The wrong number of users was returned.');
-        assert.strictEqual(users[0].familyName, familyName1, 'The wrong user was first.');
-      });
-    });
-
-    it('should be able to sort the list by family name, ascending', function () {
-      return User.read({
-        params: {
-          sortBy: 'familyName',
-          sortOrder: 'ascending'
-        }
-      }).then(function (users) {
-        assert.strictEqual(users.length, ids.length, 'The wrong number of users was returned.');
-        assert.strictEqual(users[0].familyName, familyName2, 'The wrong user was first.');
-      });
-    });
-
-    it('should be able to look up by id', function () {
-      return User.read({
-        params: {
-          userId: ids[0]
+          userId: createdIds[0]
         }
       }).then(function (user) {
         assert(!(user instanceof Array), 'An array was returned instead of a single user.');
-        assert.strictEqual(user.familyName, familyName, 'The wrong user was returned.');
+        assert.deepStrictEqual(user, {
+          id: createdIds[0],
+          emailAddress: searchableUsers[0].emailAddress,
+          givenName: searchableUsers[0].givenName,
+          familyName: searchableUsers[0].familyName,
+          active: true
+        }, 'The returned user was incorrect.');
       });
     });
 
-    it('should be able to search by family name', function () {
+    it('should fail to authenticate with an unassigned email address', function () {
       return User.read({
+        auth: {
+          emailAddress: 'notAssigned' + emailAddress,
+          password: password
+        },
         params: {
-          familyName: familyName1
+          userId: createdIds[0]
         }
-      }).then(function (users) {
-        assert.strictEqual(users.length, 2, 'The wrong number of users was returned.');
-        for (var i in users) {
-          assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.');
+      }).then(function (user) {
+        assert(false, 'Authentication did not fail.');
+      }).catch(AuthenticationError, function () {});
+    });
+
+    it('should fail to authenticate with a wrong password', function () {
+      return User.read({
+        auth: {
+          emailAddress: emailAddress,
+          password: password + 'wrong'
+        },
+        params: {
+          userId: createdIds[0]
         }
+      }).then(function (user) {
+        assert(false, 'Authentication did not fail.');
+      }).catch(AuthenticationError, function () {});
+    });
+
+    context('with searchable users', function () {
+
+      it('should be able to list all users', function () {
+        var count;
+        return knex.from('users').count('id')
+          .then(function (result) {
+            count = Number.parseInt(result[0].count);
+          })
+          .then(function () {
+            return User.read({});
+          })
+          .then(function (users) {
+            assert.strictEqual(users.length, count, 'The wrong number of users was returned.');
+          });
+      });
+
+      it('should be able to sort the list by family name, descending', function () {
+        var count;
+        return knex.from('users').count('id')
+          .then(function (result) {
+            count = Number.parseInt(result[0].count);
+          })
+          .then(function () {
+            return User.read({
+              params: {
+                sortBy: 'familyName',
+                sortOrder: 'descending'
+              }
+            });
+          }).then(function (users) {
+            assert.strictEqual(users.length, count, 'The wrong number of users was returned.');
+            for (var i = 0; i < users.length - 1; ++i) {
+              assert(users[i].familyName >= users[i + 1].familyName, 'The returned users were in the wrong order.');
+            }
+          });
+      });
+
+      it('should be able to sort the list by family name, ascending', function () {
+        var count;
+        return knex.from('users').count('id')
+          .then(function (result) {
+            count = Number.parseInt(result[0].count);
+          })
+          .then(function () {
+            return User.read({
+              params: {
+                sortBy: 'familyName',
+                sortOrder: 'ascending'
+              }
+            });
+          }).then(function (users) {
+            assert.strictEqual(users.length, count, 'The wrong number of users was returned.');
+            for (var i = 0; i < users.length - 1; ++i) {
+              assert(users[i].familyName <= users[i + 1].familyName, 'The returned users were in the wrong order.');
+            }
+          });
+      });
+
+      it('should be able to search by family name', function () {
+        return User.read({
+          params: {
+            familyName: familyName1
+          }
+        }).then(function (users) {
+          assert.strictEqual(users.length, 2, 'The wrong number of users was returned.');
+          for (var i in users) {
+            assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.');
+          }
+        });
+      });
+
+      it('should be able to search by family name and given name', function () {
+        return User.read({
+          params: {
+            familyName: familyName1,
+            givenName: givenName1
+          }
+        }).then(function (users) {
+          assert.strictEqual(users.length, 1, 'The wrong number of users was returned.');
+          assert.strictEqual(users[0].givenName, givenName1, 'The returned user has the wrong given name.');
+          assert.strictEqual(users[0].familyName, familyName1, 'The returned user has the wrong family name.');
+        });
+      });
+
+      it('should be able to search by family name and sort by given name, descending', function () {
+        return User.read({
+          params: {
+            familyName: familyName1,
+            sortBy: 'givenName',
+            sortOrder: 'descending'
+          }
+        }).then(function (users) {
+          assert.strictEqual(users.length, 2, 'The wrong number of users was returned.');
+          for (var i in users) {
+            assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.');
+          }
+          assert.strictEqual(users[0].givenName, givenName2, 'The wrong user was first.');
+        });
+      });
+
+      it('should be able to search by family name and sort by given name, ascending', function () {
+        return User.read({
+          params: {
+            familyName: familyName1,
+            sortBy: 'givenName',
+            sortOrder: 'ascending'
+          }
+        }).then(function (users) {
+          assert.strictEqual(users.length, 2, 'The wrong number of users was returned.');
+          for (var i in users) {
+            assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.');
+          }
+          assert.strictEqual(users[0].givenName, givenName1, 'The wrong user was first.');
+        });
+      });
+
+      it('should fail to search with a malformed query', function () {
+        return User.read({
+          params: {
+            familyName: familyName1,
+            notARealAttribute: 'hello'
+          }
+        }).then(function () {
+          assert(false, 'The read succeeded.');
+        }).catch(MalformedRequestError, function () {});
+      });
+
+      it('should fail to search with a userId', function () {
+        return User.read({
+          params: {
+            userId: createdIds[0],
+            familyName: familyName1
+          }
+        }).then(function () {
+          assert(false, 'The read succeeded.');
+        }).catch(MalformedRequestError, function () {});
       });
     });
 
-    it('should be able to search by family name and given name', function () {
-      return User.read({
-        params: {
-          familyName: familyName1,
-          givenName: givenName1
-        }
-      }).then(function (users) {
-        assert.strictEqual(users.length, 1, 'The wrong number of users was returned.');
-        assert.strictEqual(users[0].givenName, givenName1, 'The returned user has the wrong given name.');
-        assert.strictEqual(users[0].familyName, familyName1, 'The returned user has the wrong family name.');
+  });
+
+  describe('update', function () {
+    var passwordHash = bcrypt.hashSync(password, 8);
+
+    beforeEach('Create a user to be updated.', function () {
+      return knex.into('users').insert({
+        emailAddress: emailAddress,
+        passwordHash: passwordHash
+      }).returning('id').then(function (ids) {
+        createdIds.push(ids[0]);
       });
     });
 
-    it('should be able to search by family name and sort by given name, descending', function () {
-      return User.read({
+    it('should be able to set a password while authenticated', function () {
+      return User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
         params: {
-          familyName: familyName1,
-          sortBy: 'givenName',
-          sortOrder: 'descending'
+          userId: createdIds[0]
+        },
+        body: {
+          password: password + 'a'
         }
-      }).then(function (users) {
-        assert.strictEqual(users.length, 2, 'The wrong number of users was returned.');
-        for (var i in users) {
-          assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.');
-        }
-        assert.strictEqual(users[0].givenName, givenName2, 'The wrong user was first.');
+      }).then(function () {
+        return User.update({
+          auth: {
+            emailAddress: emailAddress,
+            password: password + 'a'
+          },
+          params: {
+            userId: createdIds[0]
+          },
+          body: {
+            password: password
+          }
+        });
       });
     });
 
-    it('should be able to search by family name and sort by given name, ascending', function () {
-      return User.read({
+    it('should fail to set a too short password', function () {
+      return User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
         params: {
-          familyName: familyName1,
-          sortBy: 'givenName',
-          sortOrder: 'ascending'
+          userId: createdIds[0]
+        },
+        body: {
+          password: '1234567'
         }
-      }).then(function (users) {
-        assert.strictEqual(users.length, 2, 'The wrong number of users was returned.');
-        for (var i in users) {
-          assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.');
-        }
-        assert.strictEqual(users[0].givenName, givenName1, 'The wrong user was first.');
-      });
+      }).then(function () {
+        assert(false, 'The update succeeded.');
+      }).catch(MalformedRequestError, function () {});
     });
 
-    it('should fail to search with a malformed query', function () {
-      return User.read({
+    it('should fail to set a too long password', function () {
+      return User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
         params: {
-          familyName: familyName1,
+          userId: createdIds[0]
+        },
+        body: {
+          password: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcde'
+        }
+      }).then(function () {
+        assert(false, 'The update succeeded.');
+      }).catch(MalformedRequestError, function () {});
+    });
+
+    it('should fail to set a property that users do not have', function () {
+      return User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          userId: createdIds[0]
+        },
+        body: {
           notARealAttribute: 'hello'
         }
       }).then(function () {
-        assert(false, 'The read succeeded.');
+        assert(false, 'The update succeeded.');
       }).catch(MalformedRequestError, function () {});
     });
 
-    it('should fail to search with a userId', function () {
-      return User.read({
+    it('should be able to set an email address', function () {
+      return User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
         params: {
-          userId: ids[0],
-          familyName: familyName1
-        }
-      }).then(function () {
-        assert(false, 'The read succeeded.');
-      }).catch(MalformedRequestError, function () {});
-    });
-  });
-
-  context('with a failing emailer', function () {
-    function EmailerError() {}
-    EmailerError.prototype = Object.create(Error.prototype);
-
-    beforeEach('Set the emailer to throw an error.', function () {
-      mockEmailer.throws(new EmailerError());
-    });
-
-    it('should fail to create', function () {
-      return User.create({
+          userId: createdIds[0]
+        },
         body: {
-          emailAddress: emailAddress + 'a'
+          emailAddress: 'different' + emailAddress
         }
       }).then(function (user) {
-        assert(!mockEmailer.called, 'The password setting email was sent.');
-        ids.push(user.id);
-        assert(false, 'The creation did not fail.');
-      }).catch(EmailerError, function () {});
+        assert(user.emailAddress === 'different' + emailAddress, 'The email address is wrong.');
+        return User.update({
+          auth: {
+            emailAddress: 'different' + emailAddress,
+            password: password
+          },
+          params: {
+            userId: createdIds[0]
+          },
+          body: {
+            emailAddress: emailAddress
+          }
+        });
+      });
     });
 
-    it('should fail to send a password reset email', function () {
+    it('should fail to set an email address without authenticating', function () {
+      return User.update({
+        params: {
+          userId: createdIds[0]
+        },
+        body: {
+          emailAddress: emailAddress
+        }
+      }).then(function () {
+        assert(false, 'The update succeeded.');
+      }).catch(AuthenticationError, function () {});
+    });
+
+    it('should be able to set inactive', function () {
+      return User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          userId: createdIds[0]
+        },
+        body: {
+          active: false
+        }
+      }).then(function (user) {
+        assert(!user.active, 'The user is not active.');
+      });
+    });
+
+    it('should be able to set active', function () {
+      return User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          userId: createdIds[0]
+        },
+        body: {
+          active: true
+        }
+      }).then(function (user) {
+        assert(user.active, 'The user is not active.');
+      });
+    });
+
+    it('should be able to set a given name and family name', function () {
+      return User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          userId: createdIds[0]
+        },
+        body: {
+          givenName: givenName,
+          familyName: familyName
+        }
+      });
+    });
+
+    it('should be able to send a password reset email', function () {
+      return User.update({
+        body: {
+          emailAddress: emailAddress,
+          passwordResetKey: true
+        }
+      }).then(function () {
+        assert(mockEmailer.calledOnce, 'The emailer was not called.');
+      });
+    });
+
+    it('should fail to send a password reset email with a failing emailer', function () {
+      mockEmailer.throws(new EmailerError());
       return User.update({
         body: {
           emailAddress: emailAddress,
@@ -677,5 +578,208 @@ describe('user', function () {
       }).catch(EmailerError, function () {});
     });
 
+    it('should fail to send a password reset email with extra attributes', function () {
+      return User.update({
+        body: {
+          emailAddress: emailAddress,
+          passwordResetKey: true,
+          familyName: familyName
+        }
+      }).then(function () {
+        assert(!mockEmailer.called, 'The emailer was called.');
+        assert(false, 'The update did not fail.');
+      }).catch(MalformedRequestError, function () {});
+    });
+
+    context('after password reset email', function () {
+      var passwordResetKey = {
+        key: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd'
+      };
+      passwordResetKey.hash = bcrypt.hashSync(passwordResetKey.key, 8);
+
+      beforeEach('Set the password reset key.', function () {
+        return knex.into('users').where('id', createdIds[0]).update({
+          passwordResetKeyHash: passwordResetKey.hash
+        });
+      });
+
+      it('should be able to set a password anonymously with a key', function () {
+        return User.update({
+          params: {
+            userId: createdIds[0]
+          },
+          body: {
+            passwordResetKey: passwordResetKey.key,
+            password: password
+          }
+        });
+      });
+
+      it('should not be able to resuse the password reset key', function () {
+        var completedFirstUpdate = false;
+        return User.update({
+          params: {
+            userId: createdIds[0]
+          },
+          body: {
+            passwordResetKey: passwordResetKey.key,
+            password: password
+          }
+        }).then(function () {
+          completedFirstUpdate = true;
+          return User.update({
+            params: {
+              userId: createdIds[0]
+            },
+            body: {
+              passwordResetKey: passwordResetKey.key,
+              password: password
+            }
+          });
+        }).then(function () {
+          assert(false, 'The update succeeded.');
+        }).catch(AuthenticationError, function () {
+          assert(completedFirstUpdate, 'The first update failed.');
+        });
+      });
+
+      it('should fail to set a password with an incorrect key', function () {
+        return User.update({
+          params: {
+            userId: createdIds[0]
+          },
+          body: {
+            password: password,
+            passwordResetKey: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabce'
+          }
+        }).then(function () {
+          assert(false, 'The update succeeded.');
+        }).catch(AuthenticationError, function () {});
+      });
+
+      it('should fail to set a password anonymously with extra attributes', function () {
+        return User.update({
+          params: {
+            userId: createdIds[0]
+          },
+          body: {
+            passwordResetKey: passwordResetKey,
+            password: password,
+            emailAddress: emailAddress // This attribute is not expected.
+          }
+        }).then(function () {
+          assert(false, 'The update succeeded.');
+        }).catch(MalformedRequestError, function () {});
+      });
+
+    });
+
+    context('while authenticated as someone else', function () {
+      var otherEmailAddress = 'somethingElse' + emailAddress;
+
+      beforeEach('Create the other user to edit.', function () {
+        return knex.into('users').insert({
+          emailAddress: otherEmailAddress
+        }).returning('id').then(function (ids) {
+          createdIds.push(ids[0]);
+        });
+      });
+
+      it('should fail to set inactive', function () {
+        return User.update({
+          auth: {
+            emailAddress: emailAddress,
+            password: password
+          },
+          params: {
+            userId: createdIds[1]
+          },
+          body: {
+            active: false
+          }
+        }).then(function () {
+          assert(false, 'The update succeeded.');
+        }).catch(AuthorisationError, function () {});
+      });
+
+      it('should fail to set a password', function () {
+        return User.update({
+          auth: {
+            emailAddress: emailAddress,
+            password: password
+          },
+          params: {
+            userId: createdIds[1]
+          },
+          body: {
+            password: password
+          }
+        }).then(function () {
+          assert(false, 'The update succeeded.');
+        }).catch(AuthorisationError, function () {});
+      });
+
+    });
+
+    context('when the user does not exist', function () {
+      var otherEmailAddress = 'somethingElse' + emailAddress;
+      var badId;
+
+      before('Get an unassigned ID.', function () {
+        //Create a user, store his ID, then delete the user.
+        return knex.into('users').insert({
+          emailAddress: otherEmailAddress
+        }).returning('id').then(function (ids) {
+          badId = ids[0];
+          return knex.from('users').where('id', badId).del();
+        });
+      });
+
+      it('should fail to set an email address', function () {
+        return User.update({
+          auth: {
+            emailAddress: emailAddress,
+            password: password
+          },
+          params: {
+            userId: badId
+          },
+          body: {
+            emailAddress: 'different' + emailAddress
+          }
+        }).then(function () {
+          assert(false, 'The update did not fail.');
+        }).catch(NoSuchResourceError, function () {});
+      });
+
+      it('should fail to do an anonymous password reset', function () {
+        return User.update({
+          params: {
+            userId: badId
+          },
+          body: {
+            passwordResetKey: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd',
+            password: password
+          }
+        }).then(function () {
+          assert(false, 'The update did not fail.');
+        }).catch(NoSuchResourceError, function () {});
+      });
+
+      it('should fail to send a password reset email', function () {
+        return User.update({
+          body: {
+            emailAddress: 'notAssigned' + emailAddress,
+            passwordResetKey: true
+          }
+        }).then(function () {
+          assert(!mockEmailer.called, 'The emailer was called.');
+          assert(false, 'The update did not fail.');
+        }).catch(NoSuchResourceError, function () {});
+      });
+
+    });
+
   });
+
 });
