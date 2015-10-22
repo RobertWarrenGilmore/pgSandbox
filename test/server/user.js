@@ -84,6 +84,8 @@ describe('user', function () {
       body: {
         emailAddress: emailAddress
       }
+    }).then(function (user) {
+      assert(false, 'The creation succeeded.');
     }).catch(ConflictingEditError, function () {});
   });
 
@@ -92,6 +94,8 @@ describe('user', function () {
       body: {
         emailAddress: badEmailAddress
       }
+    }).then(function (user) {
+      assert(false, 'The creation succeeded.');
     }).catch(MalformedRequestError, function () {});
   });
 
@@ -254,7 +258,8 @@ describe('user', function () {
       body: {
         emailAddress: 'different' + emailAddress
       }
-    }).then(function () {
+    }).then(function (user) {
+      assert(user.emailAddress === 'different' + emailAddress, 'The email address is wrong.');
       return User.update({
         auth: {
           emailAddress: 'different' + emailAddress,
@@ -282,6 +287,8 @@ describe('user', function () {
       body: {
         active: false
       }
+    }).then(function (user) {
+      assert(!user.active, 'The user is not active.');
     });
   });
 
