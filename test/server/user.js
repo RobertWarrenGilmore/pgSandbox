@@ -93,6 +93,26 @@ describe('user', function () {
     }).catch(MalformedRequestError, function () {});
   });
 
+  it('should fail to set a password with an incorrect key', function () {
+    return User.update({
+      params: {
+        userId: ids[0]
+      },
+      body: {
+        password: password,
+        passwordResetKey: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd'
+          /*
+          Cross your fingers and hope that the correct password reset key is one
+          of the other 3.8*10^91 possibilities. If it does happen to be this
+          one, we can just run the test again. Surely lightning won't
+          strike us twice.
+          */
+      }
+    }).then(function () {
+      assert(false, 'The update succeeded.');
+    }).catch(AuthenticationError, function () {});
+  });
+
   it('should be able to set a password anonymously with a key', function () {
     return User.update({
       params: {
@@ -145,7 +165,18 @@ describe('user', function () {
     }).catch(MalformedRequestError, function () {});
   });
 
-  it('should fail to send a password reset email with extra attributes');
+  it('should fail to send a password reset email with extra attributes', function () {
+    return User.update({
+      body: {
+        emailAddress: emailAddress,
+        passwordResetKey: true,
+        familyName: familyName
+      }
+    }).then(function () {
+      assert(!mockEmailer.called, 'The emailer was called.');
+      assert(false, 'The update did not fail.');
+    }).catch(MalformedRequestError, function () {});
+  });
 
   it('should fail to set a password while authenticated as someone else', function () {
     return User.create({
@@ -171,26 +202,6 @@ describe('user', function () {
     }).then(function () {
       assert(false, 'The update succeeded.');
     }).catch(AuthorisationError, function () {});
-  });
-
-  it('should fail to set a password with an incorrect key', function () {
-    return User.update({
-      params: {
-        userId: ids[0]
-      },
-      body: {
-        password: password,
-        passwordResetKey: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd'
-          /*
-          Cross your fingers and hope that the correct password reset key is one
-          of the other 3.8*10^91 possibilities. If it does happen to be this
-          one, we can just run the test again. Surely lightning won't
-          strike us twice.
-          */
-      }
-    }).then(function () {
-      assert(false, 'The update succeeded.');
-    }).catch(AuthenticationError, function () {});
   });
 
   it('should be able to set a password while authenticated', function () {
@@ -301,7 +312,18 @@ describe('user', function () {
     });
   });
 
-  it('should fail to set an email address without authenticating.');
+  it('should fail to set an email address without authenticating', function () {
+    return User.update({
+      params: {
+        userId: ids[0]
+      },
+      body: {
+        emailAddress: emailAddress
+      }
+    }).then(function () {
+      assert(false, 'The update succeeded.');
+    }).catch(AuthenticationError, function () {});
+  });
 
   it('should be able to set inactive', function () {
     return User.update({
