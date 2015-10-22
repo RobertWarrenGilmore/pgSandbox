@@ -276,7 +276,7 @@ describe('user', function () {
         userId: ids[0]
       },
       body: {
-        notARealProperty: 'hello'
+        notARealAttribute: 'hello'
       }
     }).then(function () {
       assert(false, 'The update succeeded.');
@@ -530,13 +530,120 @@ describe('user', function () {
         });
     });
 
-    it('should be able to sort the list by family name, descending');
-    it('should be able to sort the list by family name, ascending');
-    it('should be able to search by id');
-    it('should be able to search by family name');
-    it('should be able to search by family name and given name');
-    it('should be fail to search with a malformed query');
-    it('should be fail to search with a malformed query');
+    it('should be able to sort the list by family name, descending', function () {
+      return User.read({
+        params: {
+          sortBy: 'familyName',
+          sortOrder: 'descending'
+        }
+      }).then(function (users) {
+        assert.strictEqual(users.length, ids.length, 'The wrong number of users was returned.');
+        assert.strictEqual(users[0].familyName, familyName1, 'The wrong user was first.');
+      });
+    });
+
+    it('should be able to sort the list by family name, ascending', function () {
+      return User.read({
+        params: {
+          sortBy: 'familyName',
+          sortOrder: 'ascending'
+        }
+      }).then(function (users) {
+        assert.strictEqual(users.length, ids.length, 'The wrong number of users was returned.');
+        assert.strictEqual(users[0].familyName, familyName2, 'The wrong user was first.');
+      });
+    });
+
+    it('should be able to look up by id', function () {
+      return User.read({
+        params: {
+          userId: ids[0]
+        }
+      }).then(function (user) {
+        assert(!(user instanceof Array), 'An array was returned instead of a single user.');
+        assert.strictEqual(user.familyName, familyName, 'The wrong user was returned.');
+      });
+    });
+
+    it('should be able to search by family name', function () {
+      return User.read({
+        params: {
+          familyName: familyName1
+        }
+      }).then(function (users) {
+        assert.strictEqual(users.length, 2, 'The wrong number of users was returned.');
+        for (var i in users) {
+          assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.');
+        }
+      });
+    });
+
+    it('should be able to search by family name and given name', function () {
+      return User.read({
+        params: {
+          familyName: familyName1,
+          givenName: givenName1
+        }
+      }).then(function (users) {
+        assert.strictEqual(users.length, 1, 'The wrong number of users was returned.');
+        assert.strictEqual(users[0].givenName, givenName1, 'The returned user has the wrong given name.');
+        assert.strictEqual(users[0].familyName, familyName1, 'The returned user has the wrong family name.');
+      });
+    });
+
+    it('should be able to search by family name and sort by given name, descending', function () {
+      return User.read({
+        params: {
+          familyName: familyName1,
+          sortBy: 'givenName',
+          sortOrder: 'descending'
+        }
+      }).then(function (users) {
+        assert.strictEqual(users.length, 2, 'The wrong number of users was returned.');
+        for (var i in users) {
+          assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.');
+        }
+        assert.strictEqual(users[0].givenName, givenName2, 'The wrong user was first.');
+      });
+    });
+
+    it('should be able to search by family name and sort by given name, ascending', function () {
+      return User.read({
+        params: {
+          familyName: familyName1,
+          sortBy: 'givenName',
+          sortOrder: 'ascending'
+        }
+      }).then(function (users) {
+        assert.strictEqual(users.length, 2, 'The wrong number of users was returned.');
+        for (var i in users) {
+          assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.');
+        }
+        assert.strictEqual(users[0].givenName, givenName1, 'The wrong user was first.');
+      });
+    });
+
+    it('should fail to search with a malformed query', function () {
+      return User.read({
+        params: {
+          familyName: familyName1,
+          notARealAttribute: 'hello'
+        }
+      }).then(function () {
+        assert(false, 'The read succeeded.');
+      }).catch(MalformedRequestError, function () {});
+    });
+
+    it('should fail to search with a userId', function () {
+      return User.read({
+        params: {
+          userId: ids[0],
+          familyName: familyName1
+        }
+      }).then(function () {
+        assert(false, 'The read succeeded.');
+      }).catch(MalformedRequestError, function () {});
+    });
   });
 
   context('with a failing emailer', function () {
