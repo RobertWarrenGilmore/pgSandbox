@@ -219,7 +219,7 @@ module.exports = function (knex, emailer) {
     read: function (args) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
         // TODO Strip some information depending on who the authUser is.
-        if (args.params.userId) {
+        if (args.params && args.params.userId) {
           return trx
             .from('users')
             .where('id', args.params.userId)
