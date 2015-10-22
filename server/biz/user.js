@@ -56,24 +56,30 @@ function generatePasswordResetKey() {
 }
 
 function acceptOnlyAttributes(object, acceptible, error) {
-  for (var key in object) {
-    if (acceptible.indexOf(key) === -1) {
-      throw error(key);
+  return new Promise(function (resolve, reject) {
+    for (var attribute in object) {
+      if (acceptible.indexOf(attribute) === -1) {
+        reject(error(attribute));
+      }
     }
-  }
+    resolve();
+  });
 }
 
 function authenticatedUpdate(authUser, trx, id, newUser) {
   // Reject bad attributes.
-  acceptOnlyAttributes(newUser, updatableAttributes, function (key) {
-    return new MalformedRequestError('The attribute ' + key + ' cannot be written.');
-  });
+  return acceptOnlyAttributes(newUser, updatableAttributes,
+      function (attribute) {
+        return new MalformedRequestError('The attribute ' + attribute + ' cannot be written.');
+      }
+    ).then(function () {
 
-  // Get the existing user.
-  return trx
-    .from('users')
-    .where('id', id)
-    .select()
+      // Get the existing user.
+      return trx
+        .from('users')
+        .where('id', id)
+        .select();
+    })
     .then(function (users) {
       if (!users.length) {
         throw new NoSuchResourceError();
@@ -107,57 +113,63 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
 function anonymousPasswordUpdate(trx, id, newUser) {
 
   // Reject attributes other than passwordResetKey and password.
-  acceptOnlyAttributes(newUser, ['password', 'passwordResetKey'], function (key) {
-    throw new MalformedRequestError('The attribute ' + key + ' cannot be written during an anonymous password reset.');
+  return acceptOnlyAttributes(newUser, ['password', 'passwordResetKey'],
+    function (attribute) {
+      throw new MalformedRequestError('The attribute ' + attribute + ' cannot be written during an anonymous password reset.');
+    }
+  ).then(function () {
+
+    // Get the existing user.
+    return trx
+      .from('users')
+      .where('id', id)
+      .select();
+  }).then(function (users) {
+    if (!users.length) {
+      throw new NoSuchResourceError();
+    }
+    var oldUser = users[0];
+
+    // Verify the provided password reset key against the hash in the existing user.
+    if (!newUser.passwordResetKey || !oldUser.passwordResetKeyHash || !verifyPasswordResetKey(newUser.passwordResetKey, oldUser.passwordResetKeyHash)) {
+      throw new AuthenticationError();
+    }
+
+    // Do the update.
+    return trx
+      .from('users')
+      .where('id', id)
+      .update({
+        passwordHash: hashPassword(newUser.password),
+        passwordResetKeyHash: null
+      })
+      .returning(readableAttributes)
+      .then(function (rows) {
+        return rows[0];
+      });
   });
-
-  // Get the existing user.
-  return trx
-    .from('users')
-    .where('id', id)
-    .select()
-    .then(function (users) {
-      if (!users.length) {
-        throw new NoSuchResourceError();
-      }
-      var oldUser = users[0];
-
-      // Verify the provided password reset key against the hash in the existing user.
-      if (!newUser.passwordResetKey || !oldUser.passwordResetKeyHash || !verifyPasswordResetKey(newUser.passwordResetKey, oldUser.passwordResetKeyHash)) {
-        throw new AuthenticationError();
-      }
-
-      // Do the update.
-      return trx
-        .from('users')
-        .where('id', id)
-        .update({
-          passwordHash: hashPassword(newUser.password),
-          passwordResetKeyHash: null
-        })
-        .returning(readableAttributes)
-        .then(function (rows) {
-          return rows[0];
-        });
-    });
 }
 
 function anonymousPasswordResetKeyUpdate(trx, newUser, emailer) {
+  var key;
 
   // Reject attributes other than passwordResetKey and emailAddress.
-  acceptOnlyAttributes(newUser, ['passwordResetKey', 'emailAddress'], function (key) {
-    throw new MalformedRequestError('The attribute ' + key + ' cannot be written during an anonymous password reset key generation.');
-  });
+  return acceptOnlyAttributes(newUser, ['passwordResetKey', 'emailAddress'],
+      function (attribute) {
+        throw new MalformedRequestError('The attribute ' + attribute + ' cannot be written during an anonymous password reset key generation.');
+      }
+    ).then(function () {
 
-  // Generate a key.
-  var key = generatePasswordResetKey();
+      // Generate a key.
+      key = generatePasswordResetKey();
 
-  // Set the key hash.
-  return trx
-    .from('users')
-    .where('emailAddress', newUser.emailAddress)
-    .update({
-      passwordResetKeyHash: key.hash
+      // Set the key hash.
+      return trx
+        .from('users')
+        .where('emailAddress', newUser.emailAddress)
+        .update({
+          passwordResetKeyHash: key.hash
+        });
     })
     // Send the user an email with the key.
     .then(function () {
@@ -184,40 +196,42 @@ module.exports = function (knex, emailer) {
 
     create: function (args) {
       var newUser = Object.assign({}, args.body);
-      acceptOnlyAttributes(newUser, creatableAttributes, function (key) {
-        return new MalformedRequestError('The attribute ' + key + ' cannot be written during a user creation.');
-      });
-      var passwordResetKey = generatePasswordResetKey();
-      newUser.passwordResetKeyHash = passwordResetKey.hash;
-      // TODO Do validation before insert.
-      return validationRules.run(newUser)
-        .then(function () {
-          return knex.transaction(function (trx) {
-            return trx
-              .into('users')
-              .insert(newUser)
-              .returning('id')
-              .then(function (id) {
-                sendPasswordResetEmail(emailer, newUser.emailAddress, id, passwordResetKey.key);
-              }).catch(function (err) {
-                return err.code === '23502';
-              }, function (err) {
-                throw new MalformedRequestError('You must supply an email address to create a user.');
-              }).catch(function (err) {
-                return err.code === '23505';
-              }, function (err) {
-                throw new ConflictingEditError('That email address is already in use by another user.');
-              });
-          });
-        })
-        .catch(Checkit.Error, function (err) {
-          var message = '';
-          for (var key in err.errors) {
-            message += err.errors[key].message + '. ';
-          }
-          message = message.trim();
-          throw new MalformedRequestError(message);
+      var key;
+      return acceptOnlyAttributes(newUser, creatableAttributes,
+        function (attribute) {
+          return new MalformedRequestError('The attribute ' + attribute + ' cannot be written during a user creation.');
+        }
+      ).then(function () {
+        key = generatePasswordResetKey();
+        newUser.passwordResetKeyHash = key.hash;
+        // TODO Do validation before insert.
+        return validationRules.run(newUser);
+      }).then(function () {
+        return knex.transaction(function (trx) {
+          return trx
+            .into('users')
+            .insert(newUser)
+            .returning('id')
+            .then(function (id) {
+              sendPasswordResetEmail(emailer, newUser.emailAddress, id, key.key);
+            });
         });
+      }).catch(Checkit.Error, function (err) {
+        var message = '';
+        for (var key in err.errors) {
+          message += err.errors[key].message + '. ';
+        }
+        message = message.trim();
+        throw new MalformedRequestError(message);
+      }).catch(function (err) {
+        return err.code === '23502';
+      }, function (err) {
+        throw new MalformedRequestError('You must supply an email address to create a user.');
+      }).catch(function (err) {
+        return err.code === '23505';
+      }, function (err) {
+        throw new ConflictingEditError('That email address is already in use by another user.');
+      });
     },
 
     read: function (args) {

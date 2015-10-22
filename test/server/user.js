@@ -43,7 +43,16 @@ describe('user', function () {
     });
   });
 
-  it('should fail to create with attributes that are not accepted on creation');
+  it('should fail to create with attributes that are not accepted on creation', function () {
+    return User.create({
+      body: {
+        emailAddress: emailAddress,
+        active: false
+      }
+    }).then(function () {
+      assert(false, 'The creation succeeded.');
+    }).catch(MalformedRequestError, function () {});
+  });
 
   it('should be active by default', function () {
     return User.read({
