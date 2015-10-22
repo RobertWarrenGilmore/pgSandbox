@@ -96,7 +96,11 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
       return trx
         .from('users')
         .where('id', id)
-        .update(newUser);
+        .update(newUser)
+        .returning(readableAttributes)
+        .then(function (rows) {
+          return rows[0];
+        });
     });
 }
 
@@ -130,6 +134,10 @@ function anonymousPasswordUpdate(trx, id, newUser) {
         .update({
           passwordHash: hashPassword(newUser.password),
           passwordResetKeyHash: null
+        })
+        .returning(readableAttributes)
+        .then(function (rows) {
+          return rows[0];
         });
     });
 }
@@ -228,6 +236,11 @@ module.exports = function (knex, emailer) {
             .select(readableAttributes);
           // TODO Modify the query based on the search or individual user requested.
         }
+      })
+      .then(function (user) {
+        if (user instanceof Object || user instanceof Array) {
+          return JSON.parse(JSON.stringify(user));
+        }
       });
     },
 
@@ -261,6 +274,11 @@ module.exports = function (knex, emailer) {
           });
 
         })
+        .then(function (user) {
+          if (user instanceof Object) {
+            return JSON.parse(JSON.stringify(user));
+          }
+        })
         .catch(Checkit.Error, function (err) {
           var message = '';
           for (var key in err.errors) {
@@ -269,8 +287,6 @@ module.exports = function (knex, emailer) {
           message = message.trim();
           throw new MalformedRequestError(message);
         });
-
-      // TODO gather all of these trx promises and return an Promise.all() of them.
     }
   };
 };

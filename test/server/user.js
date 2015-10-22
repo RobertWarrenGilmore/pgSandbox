@@ -297,6 +297,8 @@ describe('user', function () {
       body: {
         active: true
       }
+    }).then(function (user) {
+      assert(user.active, 'The user is not active.');
     });
   });
 
@@ -317,8 +319,37 @@ describe('user', function () {
     }).catch(AuthorisationError, function () {});
   });
 
-  it('should be able to set a given name and family name');
-  it('should be able to read');
+  it('should be able to set a given name and family name', function () {
+    return User.update({
+      auth: {
+        emailAddress: emailAddress,
+        password: password
+      },
+      params: {
+        userId: ids[0]
+      },
+      body: {
+        givenName: givenName,
+        familyName: familyName
+      }
+    });
+  });
+
+  it('should be able to read', function () {
+    return User.read({
+      params: {
+        userId: ids[0]
+      }
+    }).then(function (user) {
+      assert.deepStrictEqual(user, {
+        id: ids[0],
+        emailAddress: emailAddress,
+        givenName: givenName,
+        familyName: familyName,
+        active: true
+      }, 'The returned user was incorrect.');
+    });
+  });
   it('should be able to list all users');
   it('should be able to sort the list by family name, descending');
   it('should be able to sort the list by family name, ascending');
