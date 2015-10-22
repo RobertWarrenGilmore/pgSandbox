@@ -392,11 +392,11 @@ describe('user', function () {
   });
 
   context('with a failing emailer', function () {
-    function MyCustomError() {}
-    MyCustomError.prototype = Object.create(Error.prototype);
+    function EmailerError() {}
+    EmailerError.prototype = Object.create(Error.prototype);
 
-    beforeEach(function () {
-      mockEmailer.throws(new MyCustomError());
+    beforeEach('Set the emailer to throw an error.', function () {
+      mockEmailer.throws(new EmailerError());
     });
 
     it('should fail to create', function () {
@@ -408,7 +408,7 @@ describe('user', function () {
         assert(!mockEmailer.called, 'The password setting email was sent.');
         ids.push(user.id);
         assert(false, 'The creation did not fail.');
-      }).catch(MyCustomError, function () {});
+      }).catch(EmailerError, function () {});
     });
 
     it('should fail to send a password reset email', function () {
@@ -419,7 +419,7 @@ describe('user', function () {
         }
       }).then(function (user) {
         assert(false, 'The email was sent.');
-      }).catch(MyCustomError, function () {});
+      }).catch(EmailerError, function () {});
     });
 
   });
