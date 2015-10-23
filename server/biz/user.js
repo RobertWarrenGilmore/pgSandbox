@@ -288,10 +288,8 @@ module.exports = function (knex, emailer) {
             return query;
           });
         }
-      }).then(function (user) {
-        if (user instanceof Object || user instanceof Array) {
-          return JSON.parse(JSON.stringify(user));
-        }
+      }).then(function (result) {
+        return JSON.parse(JSON.stringify(result));
       });
     },
 

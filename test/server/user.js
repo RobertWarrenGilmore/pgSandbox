@@ -201,6 +201,27 @@ describe('user', function () {
       });
     });
 
+    it('should fail to look up a non-existent user.', function () {
+      //Create a user, store his ID, then delete the user.
+      var badId;
+      return knex.into('users').insert({
+        emailAddress: 'different' + emailAddress
+      }).returning('id').then(function (ids) {
+        badId = ids[0];
+        return knex.from('users').where('id', badId).del();
+      }).then(function () {
+
+        // Try to read the user.
+        return User.read({
+          params: {
+            userId: badId
+          }
+        });
+      }).then(function (user) {
+        assert(false, 'The read succeeded.');
+      }).catch(NoSuchResourceError, function () {});
+    });
+
     it('should fail to authenticate with an unassigned email address', function () {
       return User.read({
         auth: {
@@ -287,6 +308,17 @@ describe('user', function () {
               assert(users[i].familyName <= users[i + 1].familyName, 'The returned users were in the wrong order.');
             }
           });
+      });
+
+      it('should fail to sort the list by a bad attribute', function () {
+        return User.read({
+          params: {
+            sortBy: 'active', // not sortrable
+            sortOrder: 'ascending'
+          }
+        }).then(function (users) {
+          assert(false, 'The read succeeded.');
+        }).catch(MalformedRequestError, function () {});
       });
 
       it('should be able to search by family name', function () {

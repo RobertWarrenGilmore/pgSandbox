@@ -1,6 +1,7 @@
 function AuthorisationError(message) {
   Error.call(this);
   this.name = this.constructor.name;
+  /* istanbul ignore next */
   this.message = message || 'You are not authorised to do that.';
   this.errorCode = 403;
   Error.captureStackTrace(this, this.constructor);
