@@ -20,6 +20,7 @@ var validationRules = new Checkit({
 var readableAttributes = ['id', 'emailAddress', 'givenName', 'familyName', 'active'];
 var creatableAttributes = ['emailAddress', 'givenName', 'familyName'];
 var updatableAttributes = ['emailAddress', 'givenName', 'familyName', 'password', 'active'];
+var searchableParams = ['emailAddress', 'givenName', 'familyName'];
 
 function uri(id) {
   return appUrl + '/users/' + 'id';
@@ -236,23 +237,56 @@ module.exports = function (knex, emailer) {
 
     read: function (args) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
-        // TODO Strip some information depending on who the authUser is.
-        if (args.params && args.params.userId) {
-          return trx
-            .from('users')
-            .where('id', args.params.userId)
-            .select(readableAttributes)
-            .then(function (users) {
-              if (!users.length) {
-                throw new NoSuchResourceError();
-              }
-              return users[0];
-            });
+
+        if (args.params.userId) {
+          // Read a specific user.
+          return acceptOnlyAttributes(args.params, ['userId'],
+            function (attribute) {
+              return new MalformedRequestError('A read against a specific user cannot filter by any other parameters.');
+            }
+          ).then(function () {
+            return trx
+              .from('users')
+              .where('id', args.params.userId)
+              .select(readableAttributes);
+          }).then(function (users) {
+            if (!users.length) {
+              throw new NoSuchResourceError();
+            }
+            return users[0];
+          });
         } else {
-          return trx
+
+          // Create a query for a search.
+          var query = trx
             .from('users')
             .select(readableAttributes);
-          // TODO Modify the query based on the search or individual user requested.
+
+          // Add sorting.
+          if (args.params.sortBy) {
+            var sortBy = args.params.sortBy;
+            if (searchableParams.indexOf(sortBy) === -1) {
+              return Promise.reject(new MalformedRequestError('Cannot sort by ' + sortBy + '.'));
+            }
+            var sortOrder = 'asc';
+            if (args.params.sortOrder === 'descending') {
+              sortOrder = 'desc';
+            }
+            query = query.orderBy(sortBy, sortOrder);
+          }
+
+          // Add search parameters.
+          var searchParams = Object.assign({}, args.params);
+          delete searchParams.sortBy;
+          delete searchParams.sortOrder;
+          return acceptOnlyAttributes(searchParams, searchableParams, function (attribute) {
+            return new MalformedRequestError('Cannot filter by parameter ' + attribute + '.');
+          }).then(function () {
+            query = query.where(searchParams);
+
+            // The query is finished. Return it.
+            return query;
+          });
         }
       }).then(function (user) {
         if (user instanceof Object || user instanceof Array) {

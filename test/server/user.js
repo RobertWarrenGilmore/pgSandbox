@@ -229,7 +229,7 @@ describe('user', function () {
       }).catch(AuthenticationError, function () {});
     });
 
-    context('with searchable users', function () {
+    describe('search', function () {
 
       it('should be able to list all users', function () {
         var count;
@@ -238,7 +238,9 @@ describe('user', function () {
             count = Number.parseInt(result[0].count);
           })
           .then(function () {
-            return User.read({});
+            return User.read({
+              params: {}
+            });
           })
           .then(function (users) {
             assert.strictEqual(users.length, count, 'The wrong number of users was returned.');
