@@ -11,13 +11,6 @@ var AuthenticationError = require('../../server/errors/authenticationError');
 var AuthorisationError = require('../../server/errors/authorisationError');
 var NoSuchResourceError = require('../../server/errors/noSuchResourceError');
 
-var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
-var badEmailAddress = 'NotAValidEmailAddress.com';
-var createdIds = [];
-var password = 'taco tuesday';
-var givenName = 'Victor';
-var familyName = 'Frankenstein';
-
 function EmailerError(message) {
   Error.call(this);
   this.name = this.constructor.name;
@@ -29,6 +22,7 @@ EmailerError.prototype = Object.create(Error.prototype);
 EmailerError.prototype.constructor = EmailerError;
 
 describe('user', function () {
+  var createdIds = [];
 
   beforeEach('Reset the mock emailer.', function () {
     mockEmailer.reset();
@@ -42,6 +36,8 @@ describe('user', function () {
   });
 
   describe('create', function () {
+    var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
+    var badEmailAddress = 'NotAValidEmailAddress.com';
 
     it('should work with a good email address', function () {
       return User.create({
@@ -157,6 +153,8 @@ describe('user', function () {
   });
 
   describe('read', function () {
+    var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
+    var password = 'taco tuesday';
     var givenName1 = 'James';
     var givenName2 = 'Paula';
     var familyName1 = 'Deen';
@@ -373,6 +371,10 @@ describe('user', function () {
   });
 
   describe('update', function () {
+    var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
+    var password = 'taco tuesday';
+    var givenName = 'Victor';
+    var familyName = 'Frankenstein';
     var passwordHash = bcrypt.hashSync(password, 8);
 
     beforeEach('Create a user to be updated.', function () {
