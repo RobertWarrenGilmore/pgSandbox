@@ -372,6 +372,7 @@ describe('user', function () {
 
   describe('update', function () {
     var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
+    var badEmailAddress = 'NotAValidEmailAddress.com';
     var password = 'taco tuesday';
     var givenName = 'Victor';
     var familyName = 'Frankenstein';
@@ -478,7 +479,7 @@ describe('user', function () {
           emailAddress: 'different' + emailAddress
         }
       }).then(function (user) {
-        assert(user.emailAddress === 'different' + emailAddress, 'The email address is wrong.');
+        assert.strictEqual(user.emailAddress, 'different' + emailAddress, 'The email address is wrong.');
         return User.update({
           auth: {
             emailAddress: 'different' + emailAddress,
@@ -492,6 +493,24 @@ describe('user', function () {
           }
         });
       });
+    });
+
+    it('should fail to set an improper email address', function () {
+      return User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          userId: createdIds[0]
+        },
+        body: {
+          emailAddress: badEmailAddress
+        }
+      }).then(function (user) {
+        assert.strictEqual(user.emailAddress, badEmailAddress, 'The email address was set.');
+        assert(false, 'The update succeeded.');
+      }).catch(MalformedRequestError, function () {});
     });
 
     it('should fail to set an email address without authenticating', function () {
