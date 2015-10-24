@@ -3,10 +3,10 @@
   "version": "0.0.0",
   "description": "a first attempt at a database wrapper app over postgres",
   "scripts": {
-    "start": "node ./main.js",
-    "dbSetup": "./database/dbSetup.sh",
-    "test": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha",
-    "lint": "./node_modules/.bin/eslint --ignore-path .gitignore ."
+    "start": "node index.js",
+    "dbSetup": "database/dbSetup.sh",
+    "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha",
+    "lint": "node_modules/.bin/eslint --ignore-path .gitignore ."
   },
   "repository": {
     "type": "git",
@@ -31,10 +31,13 @@
     "sinon": "^1.17.1"
   },
   "dependencies": {
+    "basic-auth": "^1.0.3",
     "bcrypt": "^0.8.5",
     "bluebird": "^2.10.1",
+    "body-parser": "^1.14.1",
     "bookshelf": "^0.8.1",
     "checkit": "^0.5.1",
+    "express": "^4.13.3",
     "knex": "^0.8.6",
     "pg": "^4.4.0"
   },

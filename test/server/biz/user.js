@@ -1,21 +1,21 @@
-var knex = require('../../server/database/knex');
+var knex = require('../../../server/database/knex');
 var assert = require('assert');
 var sinon = require('sinon');
 var Promise = require('bluebird');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
 var mockEmailer = sinon.stub();
-var User = require('../../server/biz/user')(knex, mockEmailer);
-var MalformedRequestError = require('../../server/errors/malformedRequestError');
-var ConflictingEditError = require('../../server/errors/conflictingEditError');
-var AuthenticationError = require('../../server/errors/authenticationError');
-var AuthorisationError = require('../../server/errors/authorisationError');
-var NoSuchResourceError = require('../../server/errors/noSuchResourceError');
+var User = require('../../../server/biz/user')(knex, mockEmailer);
+var MalformedRequestError = require('../../../server/errors/malformedRequestError');
+var ConflictingEditError = require('../../../server/errors/conflictingEditError');
+var AuthenticationError = require('../../../server/errors/authenticationError');
+var AuthorisationError = require('../../../server/errors/authorisationError');
+var NoSuchResourceError = require('../../../server/errors/noSuchResourceError');
 
 function EmailerError(message) {
   Error.call(this);
   this.name = this.constructor.name;
   this.message = message || 'The emailer failed.';
-  this.errorCode = 401;
+  this.errorCode = 501;
   Error.captureStackTrace(this, this.constructor);
 }
 EmailerError.prototype = Object.create(Error.prototype);
@@ -276,7 +276,7 @@ describe('user', function () {
           })
           .then(function () {
             return User.read({
-              params: {
+              query: {
                 sortBy: 'familyName',
                 sortOrder: 'descending'
               }
@@ -297,7 +297,7 @@ describe('user', function () {
           })
           .then(function () {
             return User.read({
-              params: {
+              query: {
                 sortBy: 'familyName',
                 sortOrder: 'ascending'
               }
@@ -312,7 +312,7 @@ describe('user', function () {
 
       it('should fail to sort the list by a bad attribute', function () {
         return User.read({
-          params: {
+          query: {
             sortBy: 'active', // not sortrable
             sortOrder: 'ascending'
           }
@@ -323,7 +323,7 @@ describe('user', function () {
 
       it('should be able to search by family name', function () {
         return User.read({
-          params: {
+          query: {
             familyName: familyName1
           }
         }).then(function (users) {
@@ -336,7 +336,7 @@ describe('user', function () {
 
       it('should be able to search by family name and given name', function () {
         return User.read({
-          params: {
+          query: {
             familyName: familyName1,
             givenName: givenName1
           }
@@ -349,7 +349,7 @@ describe('user', function () {
 
       it('should be able to search by family name and sort by given name, descending', function () {
         return User.read({
-          params: {
+          query: {
             familyName: familyName1,
             sortBy: 'givenName',
             sortOrder: 'descending'
@@ -365,7 +365,7 @@ describe('user', function () {
 
       it('should be able to search by family name and sort by given name, ascending', function () {
         return User.read({
-          params: {
+          query: {
             familyName: familyName1,
             sortBy: 'givenName',
             sortOrder: 'ascending'
@@ -381,7 +381,7 @@ describe('user', function () {
 
       it('should fail to search with a malformed query', function () {
         return User.read({
-          params: {
+          query: {
             familyName: familyName1,
             notARealAttribute: 'hello'
           }
@@ -393,7 +393,9 @@ describe('user', function () {
       it('should fail to search with a userId', function () {
         return User.read({
           params: {
-            userId: createdIds[0],
+            userId: createdIds[0]
+          },
+          query: {
             familyName: familyName1
           }
         }).then(function () {

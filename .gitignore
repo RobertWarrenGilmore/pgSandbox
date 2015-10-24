@@ -2,3 +2,8 @@ node_modules
 server/database/dbPassword
 coverage
 *.log
+ssl/cert
+ssl/key
+ssl/csr
+ssl/key.secure
+client/built
