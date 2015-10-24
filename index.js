@@ -3,9 +3,7 @@ var path = require('path');
 var express = require('express');
 var https = require('https');
 var http = require('http');
-
 var server = require('./server');
-
 var app = express();
 
 app.set('x-powered-by', false);
