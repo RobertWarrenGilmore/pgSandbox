@@ -197,7 +197,7 @@ module.exports = function (knex, emailer) {
 
     create: function (args) {
       var newUser = Object.assign({}, args.body);
-      if (newUser.emailAddress){
+      if (newUser.emailAddress) {
         newUser.emailAddress = newUser.emailAddress.toLowerCase();
       }
       var key;
@@ -300,7 +300,7 @@ module.exports = function (knex, emailer) {
         id = args.params.userId;
       }
       var newUser = Object.assign({}, args.body);
-      if (newUser.emailAddress){
+      if (newUser.emailAddress) {
         newUser.emailAddress = newUser.emailAddress.toLowerCase();
       }
 
