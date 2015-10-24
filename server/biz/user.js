@@ -238,7 +238,7 @@ module.exports = function (knex, emailer) {
     read: function (args) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
 
-        if (args.params && args.query) {
+        if (Object.keys(args.params).length && Object.keys(args.query).length) {
           return Promise.reject(new MalformedRequestError('A read against a specific user cannot filter by any other parameters.'))
         }
 
