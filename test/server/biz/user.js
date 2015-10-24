@@ -284,7 +284,9 @@ describe('user', function () {
           }).then(function (users) {
             assert.strictEqual(users.length, count, 'The wrong number of users was returned.');
             for (var i = 0; i < users.length - 1; ++i) {
-              assert(users[i].familyName >= users[i + 1].familyName, 'The returned users were in the wrong order.');
+              var inOrder = (users[i].familyName >= users[i + 1].familyName);
+              var notNull = (users[i].familyName && users[i + 1].familyName);
+              assert((!notNull) || inOrder, 'The returned users were in the wrong order.');
             }
           });
       });
@@ -305,7 +307,9 @@ describe('user', function () {
           }).then(function (users) {
             assert.strictEqual(users.length, count, 'The wrong number of users was returned.');
             for (var i = 0; i < users.length - 1; ++i) {
-              assert(users[i].familyName <= users[i + 1].familyName, 'The returned users were in the wrong order.');
+              var inOrder = (users[i].familyName <= users[i + 1].familyName);
+              var notNull = (users[i].familyName && users[i + 1].familyName);
+              assert((!notNull) || inOrder, 'The returned users were in the wrong order.');
             }
           });
       });
