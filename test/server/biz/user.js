@@ -3,7 +3,13 @@ var assert = require('assert');
 var sinon = require('sinon');
 var Promise = require('bluebird');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
-var mockEmailer = sinon.stub();
+var mockEmailer = sinon.spy(function () {
+  if (mockEmailer.err) {
+    return Promise.reject(mockEmailer.err);
+  } else {
+    return Promise.resolve();
+  }
+});
 var User = require('../../../server/biz/user')(knex, mockEmailer);
 var MalformedRequestError = require('../../../server/errors/malformedRequestError');
 var ConflictingEditError = require('../../../server/errors/conflictingEditError');
@@ -26,9 +32,8 @@ describe('user', function () {
 
   beforeEach('Reset the mock emailer.', function () {
     mockEmailer.reset();
-    mockEmailer.resetBehavior();
+    delete mockEmailer.err;
   });
-
   afterEach('Delete any created test users.', function () {
     return knex.from('users').where('id', 'in', createdIds).del().then(function () {
       createdIds.length = 0;
@@ -136,7 +141,7 @@ describe('user', function () {
     });
 
     it('should fail with a failing emailer', function () {
-      mockEmailer.throws(new EmailerError());
+      mockEmailer.err = new EmailerError();
       return User.create({
         body: {
           emailAddress: emailAddress
@@ -628,7 +633,7 @@ describe('user', function () {
     });
 
     it('should fail to send a password reset email with a failing emailer', function () {
-      mockEmailer.throws(new EmailerError());
+      mockEmailer.err = new EmailerError();
       return User.update({
         body: {
           emailAddress: emailAddress,

@@ -178,7 +178,7 @@ function anonymousPasswordResetKeyUpdate(trx, newUser, emailer) {
     .then(function (users) {
       if (users.length) {
         var oldUser = users[0];
-        sendPasswordResetEmail(emailer, newUser.emailAddress, oldUser.id, key.key);
+        return sendPasswordResetEmail(emailer, newUser.emailAddress, oldUser.id, key.key);
       } else {
         throw new NoSuchResourceError();
       }
@@ -188,7 +188,7 @@ function anonymousPasswordResetKeyUpdate(trx, newUser, emailer) {
 function sendPasswordResetEmail(emailer, address, id, key) {
   var subject = 'set your password';
   var message = 'Set your password at the following URL: ' + uri(id) + '/setPassword?key=' + key;
-  emailer(address, subject, message);
+  return emailer(address, subject, message);
 }
 
 module.exports = function (knex, emailer) {
@@ -217,7 +217,7 @@ module.exports = function (knex, emailer) {
             .insert(newUser)
             .returning('id')
             .then(function (id) {
-              sendPasswordResetEmail(emailer, newUser.emailAddress, id, key.key);
+              return sendPasswordResetEmail(emailer, newUser.emailAddress, id, key.key);
             });
         });
       }).catch(Checkit.Error, function (err) {
