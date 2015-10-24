@@ -17,6 +17,11 @@ module.exports = function (user) {
       user.read(req)
         .then(res.send.bind(res))
         .catch(handleError(res));
+    })
+    .put(function (req, res) {
+      user.update(req)
+        .then(res.send.bind(res))
+        .catch(handleError(res));
     });
 
   // a specific user

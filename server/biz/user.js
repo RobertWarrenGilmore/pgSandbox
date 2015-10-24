@@ -175,13 +175,16 @@ function anonymousPasswordResetKeyUpdate(trx, newUser, emailer) {
     .then(function () {
       return trx.from('users').where('emailAddress', newUser.emailAddress).select('id');
     })
-    .then(function (users) {
+    .tap(function (users) {
       if (users.length) {
         var oldUser = users[0];
         return sendPasswordResetEmail(emailer, newUser.emailAddress, oldUser.id, key.key);
       } else {
         throw new NoSuchResourceError();
       }
+    })
+    .then(function (users) {
+      return users[0];
     });
 }
 
@@ -216,8 +219,13 @@ module.exports = function (knex, emailer) {
             .into('users')
             .insert(newUser)
             .returning('id')
-            .then(function (id) {
-              return sendPasswordResetEmail(emailer, newUser.emailAddress, id, key.key);
+            .tap(function (ids) {
+              return sendPasswordResetEmail(emailer, newUser.emailAddress, ids[0], key.key);
+            })
+            .then(function (ids) {
+              return {
+                id: ids[0]
+              };
             });
         });
       }).catch(Checkit.Error, function (err) {
