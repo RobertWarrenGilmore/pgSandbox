@@ -65,7 +65,7 @@ describe('user', function () {
         assert(user, 'No user was created.');
         createdIds.push(user.id);
         assert(mockEmailer.withArgs(emailAddress).calledOnce, 'The emailer was not called.');
-        var passwordResetKey = mockEmailer.getCall(0).args[1].match(/(?:setPassword\?key=)([A-Za-z\d]{30})/)[1];
+        var passwordResetKey = mockEmailer.getCall(0).args[2].match(/(?:setPassword\?key=)([A-Za-z\d]{30})/)[1];
         assert(bcrypt.compareSync(passwordResetKey, user.passwordResetKeyHash), 'The email contained the wrong password reset key.');
       });
     });

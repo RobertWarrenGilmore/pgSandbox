@@ -2,11 +2,12 @@ var nodemailer = require('nodemailer');
 var transporter = nodemailer.createTransport();
 var Promise = require('bluebird');
 var appHost = require('../../package.json').appHost;
-var send = Promise.promisify(transporter.sendMail);
+var appName = require('../../package.json').name;
+var send = Promise.promisify(transporter.sendMail, transporter);
 
 function emailer(recipient, subject, message) {
   return send({
-    from: 'app@' + appHost,
+    from: appName + ' <app@' + appHost + '>',
     to: recipient,
     subject: subject,
     text: message

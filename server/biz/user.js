@@ -22,7 +22,7 @@ var updatableAttributes = ['emailAddress', 'givenName', 'familyName', 'password'
 var searchableParams = ['emailAddress', 'givenName', 'familyName'];
 
 function uri(id) {
-  return 'https://' + appHost + '/users/' + 'id';
+  return 'https://' + appHost + '/users/' + id;
 }
 
 function hashPassword(password) {
@@ -87,7 +87,7 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
       // var oldUser = users[0];
 
       // Reject unauthorised updates.
-      if (authUser.id !== id) {
+      if (authUser.id != id) {
         throw new AuthorisationError();
       }
 
@@ -238,23 +238,21 @@ module.exports = function (knex, emailer) {
     read: function (args) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
 
-        if (args.params.userId) {
+        if (args.params && args.query) {
+          return Promise.reject(new MalformedRequestError('A read against a specific user cannot filter by any other parameters.'))
+        }
+
+        if (args.params && args.params.userId) {
           // Read a specific user.
-          return acceptOnlyAttributes(args.params, ['userId'],
-            function (attribute) {
-              return new MalformedRequestError('A read against a specific user cannot filter by any other parameters.');
-            }
-          ).then(function () {
-            return trx
-              .from('users')
-              .where('id', args.params.userId)
-              .select(readableAttributes);
-          }).then(function (users) {
-            if (!users.length) {
-              throw new NoSuchResourceError();
-            }
-            return users[0];
-          });
+          return trx
+            .from('users')
+            .where('id', args.params.userId)
+            .select(readableAttributes).then(function (users) {
+              if (!users.length) {
+                throw new NoSuchResourceError();
+              }
+              return users[0];
+            });
         } else {
 
           // Create a query for a search.
@@ -263,20 +261,20 @@ module.exports = function (knex, emailer) {
             .select(readableAttributes);
 
           // Add sorting.
-          if (args.params.sortBy) {
-            var sortBy = args.params.sortBy;
+          if (args.query && args.query.sortBy) {
+            var sortBy = args.query.sortBy;
             if (searchableParams.indexOf(sortBy) === -1) {
               return Promise.reject(new MalformedRequestError('Cannot sort by ' + sortBy + '.'));
             }
             var sortOrder = 'asc';
-            if (args.params.sortOrder === 'descending') {
+            if (args.query.sortOrder === 'descending') {
               sortOrder = 'desc';
             }
             query = query.orderBy(sortBy, sortOrder);
           }
 
           // Add search parameters.
-          var searchParams = Object.assign({}, args.params);
+          var searchParams = Object.assign({}, args.query);
           delete searchParams.sortBy;
           delete searchParams.sortOrder;
           return acceptOnlyAttributes(searchParams, searchableParams, function (attribute) {

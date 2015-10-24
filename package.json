@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node index.js",
     "dbSetup": "database/dbSetup.sh",
-    "cert": "ssl/generateSelfSignedSslCert.sh",
+    "cert": "ssl/generateSelfSignedCertificate.sh",
     "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha",
     "lint": "node_modules/.bin/eslint --ignore-path .gitignore ."
   },
@@ -40,6 +40,7 @@
     "checkit": "^0.5.1",
     "express": "^4.13.3",
     "knex": "^0.8.6",
+    "nodemailer": "^1.8.0",
     "pg": "^4.4.0"
   },
   "engines": {

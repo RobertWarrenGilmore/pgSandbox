@@ -10,4 +10,4 @@ openssl req -new -key ssl/key -out ssl/csr
 # TODO Find a way to do this without keyboard interaction.
 
 # Create a certificate.
-openssl x509 -req -days 365 -in ssl/csr -signkey ssl/key -out ssl/crt
+openssl x509 -req -days 365 -in ssl/csr -signkey ssl/key -out ssl/cert
