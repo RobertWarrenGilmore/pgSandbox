@@ -45,5 +45,5 @@
   "engines": {
     "node": "4.1.1"
   },
-  "appUrl": "http://localhost:3000"
+  "appHost": "localhost"
 }

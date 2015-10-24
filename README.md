@@ -3,6 +3,8 @@ a first attempt at a database wrapper app over postgres
 
 # instructions
 
+Change the value of "appHost" in package.json to reflect the host where the app will be served.
+
 ## to install dependencies
 ```
 npm install
