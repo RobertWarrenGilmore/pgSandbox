@@ -1,5 +1,5 @@
 var authenticatedTransaction = require('./authenticatedTransaction');
-var appUrl = require('../../package.json').appUrl;
+var appHost = require('../../package.json').appHost;
 var AuthenticationError = require('../errors/authenticationError');
 var AuthorisationError = require('../errors/authorisationError');
 var NoSuchResourceError = require('../errors/noSuchResourceError');
@@ -7,7 +7,6 @@ var MalformedRequestError = require('../errors/malformedRequestError');
 var ConflictingEditError = require('../errors/conflictingEditError');
 var Promise = require('bluebird');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
-var appUrl = require('../../package.json').appUrl;
 var Checkit = require('checkit');
 
 var validationRules = new Checkit({
@@ -23,7 +22,7 @@ var updatableAttributes = ['emailAddress', 'givenName', 'familyName', 'password'
 var searchableParams = ['emailAddress', 'givenName', 'familyName'];
 
 function uri(id) {
-  return appUrl + '/users/' + 'id';
+  return 'https://' + appHost + '/users/' + 'id';
 }
 
 function hashPassword(password) {
@@ -187,8 +186,9 @@ function anonymousPasswordResetKeyUpdate(trx, newUser, emailer) {
 }
 
 function sendPasswordResetEmail(emailer, address, id, key) {
+  var subject = 'set your password';
   var message = 'Set your password at the following URL: ' + uri(id) + '/setPassword?key=' + key;
-  emailer(address, message);
+  emailer(address, subject, message);
 }
 
 module.exports = function (knex, emailer) {
