@@ -4,7 +4,7 @@
   "description": "a first attempt at a database wrapper app over postgres",
   "scripts": {
     "start": "node index.js",
-    "dbSetup": "database/dbSetup.sh",
+    "dbSetup": "server/database/dbSetup.sh",
     "cert": "ssl/generateSelfSignedCertificate.sh",
     "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha",
     "lint": "node_modules/.bin/eslint --ignore-path .gitignore ."
