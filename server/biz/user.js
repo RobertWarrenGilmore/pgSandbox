@@ -197,6 +197,9 @@ module.exports = function (knex, emailer) {
 
     create: function (args) {
       var newUser = Object.assign({}, args.body);
+      if (newUser.emailAddress){
+        newUser.emailAddress = newUser.emailAddress.toLowerCase();
+      }
       var key;
       return acceptOnlyAttributes(newUser, creatableAttributes,
         function (attribute) {
@@ -239,7 +242,7 @@ module.exports = function (knex, emailer) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
 
         if (Object.keys(args.params).length && Object.keys(args.query).length) {
-          return Promise.reject(new MalformedRequestError('A read against a specific user cannot filter by any other parameters.'))
+          return Promise.reject(new MalformedRequestError('A read against a specific user cannot filter by any other parameters.'));
         }
 
         if (args.params && args.params.userId) {
@@ -297,6 +300,9 @@ module.exports = function (knex, emailer) {
         id = args.params.userId;
       }
       var newUser = Object.assign({}, args.body);
+      if (newUser.emailAddress){
+        newUser.emailAddress = newUser.emailAddress.toLowerCase();
+      }
 
       return validationRules.run(newUser)
         .then(function () {

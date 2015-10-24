@@ -15,7 +15,7 @@ function authenticatedTransaction(knex, auth, callback) {
       authPromise = trx
         .from('users')
         .select()
-        .where('emailAddress', auth.emailAddress)
+        .where('emailAddress', auth.emailAddress.toLowerCase())
         .then(function (users) {
           var authUser = users[0];
           if (authUser && verifyPassword(auth.password, authUser.passwordHash)) {
