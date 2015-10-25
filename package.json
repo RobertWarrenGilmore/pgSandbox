@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "description": "a first attempt at a database wrapper app over postgres",
   "scripts": {
-    "start": "node index.js",
+    "start": "node node_modules/.bin/forever start index.js",
+    "stop": "node node_modules/.bin/forever stop index.js",
     "dbSetup": "server/database/dbSetup.sh",
     "cert": "ssl/generateSelfSignedCertificate.sh",
     "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha",
@@ -39,6 +40,7 @@
     "bookshelf": "^0.8.1",
     "checkit": "^0.5.1",
     "express": "^4.13.3",
+    "forever": "^0.15.1",
     "knex": "^0.8.6",
     "nodemailer": "^1.8.0",
     "pg": "^4.4.0"
