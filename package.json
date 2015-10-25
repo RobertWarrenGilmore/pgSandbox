@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "description": "a first attempt at a database wrapper app over postgres",
   "scripts": {
-    "start": "node node_modules/.bin/forever start index.js",
-    "stop": "node node_modules/.bin/forever stop index.js",
+    "start": "sudo node node_modules/.bin/forever start index.js",
+    "stop": "sudo node node_modules/.bin/forever stop index.js",
     "dbSetup": "server/database/dbSetup.sh",
     "cert": "ssl/generateSelfSignedCertificate.sh",
     "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha",
@@ -37,7 +37,6 @@
     "bcrypt": "^0.8.5",
     "bluebird": "^2.10.1",
     "body-parser": "^1.14.1",
-    "bookshelf": "^0.8.1",
     "checkit": "^0.5.1",
     "express": "^4.13.3",
     "forever": "^0.15.1",
