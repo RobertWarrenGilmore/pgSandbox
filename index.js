@@ -6,6 +6,7 @@ var http = require('http');
 var server = require('./server');
 var browserify = require('browserify');
 var reactify = require('reactify');
+var uglifyify = require('uglifyify');
 var sass = require('node-sass');
 var knex = require('./server/database/knex');
 var Promise = require('bluebird');
@@ -37,8 +38,11 @@ knex.migrate.latest()
     var b = browserify({
       debug: (process.env.NODE_ENV !== 'production')
     });
-    b.transform(reactify);
-    b.add('./client/main.jsx');
+    b.transform(reactify)
+      .transform({
+        global: true
+      }, uglifyify)
+      .add('./client/main.jsx');
     var bundlePromise = Promise.promisify(b.bundle, b)();
     return bundlePromise;
   })
