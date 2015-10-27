@@ -1,6 +1,9 @@
 var React = require('react');
 
 var Login = React.createClass({
+  componentWillMount: function() {
+    document.title = 'pgSandbox - log in';
+  },
   render: function() {
     return (
       <div id='login'>
