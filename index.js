@@ -6,6 +6,8 @@ var http = require('http');
 var server = require('./server');
 var browserify = require('browserify');
 var reactify = require('reactify');
+var sass = require('node-sass');
+var knex = require('./server/database/knex');
 var Promise = require('bluebird');
 var app = express();
 
@@ -23,21 +25,41 @@ app.use(function enforceSsl(req, res, next) {
 // Link the three server-side layers together and serve them as the API.
 app.use('/api', server);
 
-// Build the client resources.
-var b = browserify({
-  debug: (process.env.NODE_ENV !== 'production')
-});
-b.transform(reactify);
-b.add('./client/main.jsx');
-Promise.promisify(b.bundle, b)()
+// Migrate the database schema to the latest.
+knex.migrate.latest()
+  .then(function () {
+
+    // Build the client resources.
+    var b = browserify({
+      debug: (process.env.NODE_ENV !== 'production')
+    });
+    b.transform(reactify);
+    b.add('./client/main.jsx');
+    var bundlePromise = Promise.promisify(b.bundle, b)();
+    return bundlePromise;
+  })
   .then(function (clientScript) {
+    var clientStyle = sass.renderSync({
+      file: './client/main.sass',
+      outputStyle: (process.env.NODE_ENV === 'production') ? 'compressed' : 'expanded'
+    });
 
     // Serve the client resources.
     app.get('/main.js', function (req, res) {
       res.send(clientScript);
     });
-    app.get('/', function (req, res) {
+    app.get('/main.css', function (req, res) {
+      res.type('text/css');
+      res.send(clientStyle.css.toString());
+    });
+    app.get('/*', function (req, res) {
       res.sendFile((path.join(__dirname, 'client', 'index.html')));
+    });
+
+    // Handle uncaught errors.
+    app.use(function (err, req, res, next) {
+      console.error(err.stack);
+      res.status(500).send('Something broke!');
     });
 
     // Get the SSL key.
