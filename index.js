@@ -59,6 +59,7 @@ knex.migrate.latest()
 
     console.info('Routing the client.');
     app.get('/main.js', function (req, res) {
+      res.type('application/javascript');
       res.send(clientScript);
     });
     app.get('/main.css', function (req, res) {
