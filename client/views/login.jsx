@@ -31,6 +31,11 @@ var Login = React.createClass({
           <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address'/>
           <input type='password' ref='password' name='password' placeholder='password'/>
           <button>log in</button>
+          {this.state.error
+            ? <p className='error'>
+                {this.state.error}
+              </p>
+            : null}
         </form>
       </div>
     );
@@ -41,7 +46,9 @@ var Login = React.createClass({
       authInProgress: flux.store('auth')
         .isAuthInProgress(),
       auth: flux.store('auth')
-        .getAuth()
+        .getAuth(),
+      error: flux.store('auth')
+        .getError()
     };
   },
   _onSubmit: function(event) {

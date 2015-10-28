@@ -12,6 +12,7 @@ var AuthStore = Fluxxor.createStore({
     this.emit('change');
   },
   _setAuth: function (payload, type) {
+    this.error = payload.error;
     if (!payload.emailAddress) {
       this.auth = null;
       delete localStorage.auth;
@@ -30,6 +31,9 @@ var AuthStore = Fluxxor.createStore({
   },
   getAuth: function () {
     return this.auth;
+  },
+  getError: function () {
+    return this.error;
   }
 });
 
@@ -51,11 +55,15 @@ var actions = {
           password: password
         });
       } else {
-        self.dispatch('SET_AUTH', {});
+        self.dispatch('SET_AUTH', {
+          error: response.body
+        });
       }
       self.loggingIn = false;
     }).catch(function (error) {
-      self.dispatch('SET_AUTH', {});
+      self.dispatch('SET_AUTH', {
+        error: error.message
+      });
     });
   },
   resumeAuth: function () {
