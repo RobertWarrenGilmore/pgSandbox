@@ -39,10 +39,12 @@ knex.migrate.latest()
       debug: (process.env.NODE_ENV !== 'production')
     });
     b.transform(reactify)
-      .transform({
+    if (process.env.NODE_ENV === 'production') {
+      b.transform({
         global: true
-      }, uglifyify)
-      .add('./client/main.jsx');
+      }, uglifyify);
+    }
+    b.add('./client/main.jsx');
     var bundlePromise = Promise.promisify(b.bundle, {
       context: b
     })();

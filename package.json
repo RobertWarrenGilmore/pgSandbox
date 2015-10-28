@@ -40,6 +40,7 @@
     "browserify": "^12.0.0",
     "checkit": "^0.5.1",
     "express": "^4.13.3",
+    "fluxxor": "^1.7.3",
     "forever": "^0.15.1",
     "history": "^1.12.6",
     "knex": "^0.8.6",

@@ -1,6 +1,12 @@
 var React = require('react');
+var Fluxxor = require('fluxxor');
+var FluxMixin = Fluxxor.FluxMixin(React);
+var StoreWatchMixin = Fluxxor.StoreWatchMixin;
 
 var Login = React.createClass({
+  mixins: [
+    FluxMixin, StoreWatchMixin('auth')
+  ],
   componentWillMount: function() {
     document.title = 'pgSandbox - log in';
   },
@@ -8,15 +14,30 @@ var Login = React.createClass({
     return (
       <div id='login'>
         <form onSubmit={this._onSubmit}>
-          <input type='email' name='emailAddress' placeholder='email address'/>
-          <input type='password' name='password' placeholder='password'/>
+          <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address'/>
+          <input type='password' ref='password' name='password' placeholder='password'/>
           <button>log in</button>
         </form>
       </div>
     );
   },
+  getStateFromFlux: function() {
+    var flux = this.getFlux();
+    return {
+      authInProgress: flux.store('auth')
+        .isAuthInProgress(),
+      auth: flux.store('auth')
+        .getAuth()
+    };
+  },
   _onSubmit: function(event) {
     event.preventDefault();
+    var emailAddress = this.refs.emailAddress.value;
+    var password = this.refs.password.value;
+    this.getFlux()
+      .actions
+      .auth
+      .logIn(emailAddress, password);
   }
 });
 

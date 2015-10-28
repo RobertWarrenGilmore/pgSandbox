@@ -1,3 +1,4 @@
+var authRouter = require('./auth');
 var userRouter = require('./user');
 var express = require('express');
 var parseAuth = require('basic-auth');
@@ -27,7 +28,8 @@ module.exports = function (biz) {
 
   // Assign the routers to routes.
   // This list gets longer as API endpoints are added.
-  router.use('/users/', userRouter(biz.user));
+  router.use('/auth', authRouter(biz.auth));
+  router.use('/users', userRouter(biz.user));
 
   return router;
 };
