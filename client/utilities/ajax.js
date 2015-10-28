@@ -9,7 +9,6 @@ module.exports = function ajax(options) {
     }
     request(optionsClone, function (error, response, body) {
       if (error) {
-        //TODO Why doesn't this happen when the server is down?
         reject(error);
       } else {
         resolve(response);

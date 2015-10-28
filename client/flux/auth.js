@@ -56,7 +56,6 @@ var actions = {
       self.loggingIn = false;
     }).catch(function (error) {
       self.dispatch('SET_AUTH', {});
-      throw error;
     });
   },
   resumeAuth: function () {
