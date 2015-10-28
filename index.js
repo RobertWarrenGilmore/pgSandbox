@@ -43,7 +43,9 @@ knex.migrate.latest()
         global: true
       }, uglifyify)
       .add('./client/main.jsx');
-    var bundlePromise = Promise.promisify(b.bundle, b)();
+    var bundlePromise = Promise.promisify(b.bundle, {
+      context: b
+    })();
     return bundlePromise;
   })
   .then(function (clientScript) {

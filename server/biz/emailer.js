@@ -3,7 +3,9 @@ var transporter = nodemailer.createTransport();
 var Promise = require('bluebird');
 var appHost = require('../../package.json').appHost;
 var appName = require('../../package.json').name;
-var send = Promise.promisify(transporter.sendMail, transporter);
+var send = Promise.promisify(transporter.sendMail, {
+  context: transporter
+});
 
 function emailer(recipient, subject, message) {
   return send({
