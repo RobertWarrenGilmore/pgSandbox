@@ -9,6 +9,7 @@ var AuthStore = Fluxxor.createStore({
   _setAuthInProgress: function (payload, type) {
     this.auth = null;
     this.authInProgress = true;
+    this.emit('change');
   },
   _setAuth: function (payload, type) {
     if (!payload.emailAddress) {
@@ -22,6 +23,7 @@ var AuthStore = Fluxxor.createStore({
       localStorage.auth = JSON.stringify(this.auth);
     }
     this.authInProgress = false;
+    this.emit('change');
   },
   isAuthInProgress: function () {
     return this.authInProgress;

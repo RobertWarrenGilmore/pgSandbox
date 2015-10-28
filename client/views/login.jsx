@@ -1,14 +1,28 @@
 var React = require('react');
+var ReactRouter = require('react-router');
+var History = ReactRouter.History;
 var Fluxxor = require('fluxxor');
 var FluxMixin = Fluxxor.FluxMixin(React);
 var StoreWatchMixin = Fluxxor.StoreWatchMixin;
 
 var Login = React.createClass({
   mixins: [
-    FluxMixin, StoreWatchMixin('auth')
+    FluxMixin, StoreWatchMixin('auth'), History
   ],
   componentWillMount: function() {
     document.title = 'pgSandbox - log in';
+  },
+  componentWillUpdate: function(nextProps, nextState) {
+    if (nextState.auth) {
+      var location = this.props.location;
+      if (location.state && location.state.nextPathname) {
+        this.history
+          .replaceState(null, location.state.nextPathname);
+      } else {
+        this.history
+          .replaceState(null, '/');
+      }
+    }
   },
   render: function() {
     return (
