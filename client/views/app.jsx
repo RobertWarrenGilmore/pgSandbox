@@ -9,12 +9,6 @@ var App = React.createClass({
   mixins: [
     FluxMixin, StoreWatchMixin('auth')
   ],
-  componentWillMount: function() {
-    this.getFlux()
-      .actions
-      .auth
-      .resumeAuth();
-  },
   getStateFromFlux: function() {
     var state = {
       loggedIn: !!this.getFlux()

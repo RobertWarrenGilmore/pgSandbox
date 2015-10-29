@@ -1,14 +1,15 @@
 var Fluxxor = require('fluxxor');
+var Promise = require('bluebird');
 var ajax = require('../utilities/ajax');
 
 var AuthStore = Fluxxor.createStore({
   actions: {
-    'SET_AUTH_IN_PROGRESS': '_setAuthInProgress',
+    'SET_AUTH_IN_PROGRESS': '_setInProgress',
     'SET_AUTH': '_setAuth'
   },
-  _setAuthInProgress: function (payload, type) {
+  _setInProgress: function (payload, type) {
     this.auth = null;
-    this.authInProgress = true;
+    this.inProgress = true;
     this.emit('change');
   },
   _setAuth: function (payload, type) {
@@ -23,11 +24,11 @@ var AuthStore = Fluxxor.createStore({
       };
       localStorage.auth = JSON.stringify(this.auth);
     }
-    this.authInProgress = false;
+    this.inProgress = false;
     this.emit('change');
   },
-  isAuthInProgress: function () {
-    return this.authInProgress;
+  isInProgress: function () {
+    return this.inProgress;
   },
   getAuth: function () {
     return this.auth;
@@ -41,7 +42,7 @@ var actions = {
   logIn: function (emailAddress, password) {
     this.dispatch('SET_AUTH_IN_PROGRESS');
     var self = this;
-    ajax({
+    return ajax({
       method: 'GET',
       uri: '/api/auth',
       auth: {
@@ -59,7 +60,6 @@ var actions = {
           error: response.body
         });
       }
-      self.loggingIn = false;
     }).catch(function (error) {
       self.dispatch('SET_AUTH', {
         error: error.message
@@ -69,7 +69,9 @@ var actions = {
   resumeAuth: function () {
     if (localStorage.auth) {
       var auth = JSON.parse(localStorage.auth);
-      this.flux.actions.auth.logIn(auth.emailAddress, auth.password);
+      return this.flux.actions.auth.logIn(auth.emailAddress, auth.password);
+    } else {
+      return Promise.resolve();
     }
   },
   logOut: function () {

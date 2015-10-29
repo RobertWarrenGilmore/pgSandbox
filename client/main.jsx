@@ -7,6 +7,7 @@ var createBrowserHistory = require('history/lib/createBrowserHistory');
 var flux = require('./flux');
 var App = require('./views/app.jsx');
 var Login = require('./views/login.jsx');
+var Register = require('./views/register.jsx');
 var Users = require('./views/users.jsx');
 var User = require('./views/user.jsx');
 var NotFound = require('./views/notFound.jsx');
@@ -37,26 +38,30 @@ document
     function addFlux(Component, props) {
       return <Component {...props} flux={flux}/>;
     }
-    var router = (
-      <Router createElement={addFlux} history={createBrowserHistory()}>
-        <Route component={App} path='/'>
+    flux.actions
+      .auth
+      .resumeAuth()
+      .then(function() {
+        var router = (
+          <Router createElement={addFlux} history={createBrowserHistory()}>
+            <Route component={App} path='/'>
 
-          <Route onEnter={denyAuth}>
-            <Route component={Login} path='login'/>
-            <Route path='register'/>
-            {/* TODO Add the registration component. */}
-          </Route>
-          <Route onEnter={logOut} path='logout'/>
+              <Route onEnter={denyAuth}>
+                <Route component={Login} path='login'/>
+                <Route component={Register} path='register'/>
+              </Route>
+              <Route onEnter={logOut} path='logout'/>
 
-          <Route onEnter={requireAuth}>
-            <Route component={Users} path='users'/>
-            <Route component={User} path='users/:userId'/>
-          </Route>
+              <Route onEnter={requireAuth}>
+                <Route component={Users} path='users'/>
+                <Route component={User} path='users/:userId'/>
+              </Route>
 
-          <Route component={NotFound} path='*'/>
-        </Route>
-      </Router>
-    );
-    var element = document.getElementById('appContainer');
-    ReactDom.render(router, element);
+              <Route component={NotFound} path='*'/>
+            </Route>
+          </Router>
+        );
+        var element = document.getElementById('appContainer');
+        ReactDom.render(router, element);
+      });
   });

@@ -28,9 +28,9 @@ var Login = React.createClass({
     return (
       <div id='login'>
         <form onSubmit={this._onSubmit}>
-          <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address'/>
-          <input type='password' ref='password' name='password' placeholder='password'/>
-          <button>log in</button>
+          <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={this.state.blocked} required/>
+          <input type='password' ref='password' name='password' placeholder='password' disabled={this.state.blocked} required/>
+          <button disabled={this.state.blocked}>log in</button>
           {this.state.error
             ? <p className='error'>
                 {this.state.error}
@@ -41,14 +41,12 @@ var Login = React.createClass({
     );
   },
   getStateFromFlux: function() {
-    var flux = this.getFlux();
+    var store = this.getFlux()
+      .store('auth');
     return {
-      authInProgress: flux.store('auth')
-        .isAuthInProgress(),
-      auth: flux.store('auth')
-        .getAuth(),
-      error: flux.store('auth')
-        .getError()
+      blocked: store.isInProgress(),
+      auth: store.getAuth(),
+      error: store.getError()
     };
   },
   _onSubmit: function(event) {
