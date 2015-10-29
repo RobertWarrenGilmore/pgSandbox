@@ -38,7 +38,7 @@ knex.migrate.latest()
     var b = browserify({
       debug: (process.env.NODE_ENV !== 'production')
     });
-    b.transform(reactify)
+    b.transform(reactify);
     if (process.env.NODE_ENV === 'production') {
       b.transform({
         global: true
