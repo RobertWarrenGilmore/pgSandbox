@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "description": "a first attempt at a database wrapper app over postgres",
   "scripts": {
-    "start": "sudo node node_modules/.bin/forever start index.js",
-    "stop": "sudo node node_modules/.bin/forever stop index.js",
+    "start": "sudo $(which node) node_modules/.bin/forever start index.js",
+    "stop": "sudo $(which node) node_modules/.bin/forever stop index.js",
     "dbSetup": "server/database/dbSetup.sh",
     "cert": "ssl/generateSelfSignedCertificate.sh",
     "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha",
@@ -55,7 +55,7 @@
     "uglifyify": "^3.0.1"
   },
   "engines": {
-    "node": "4.1.1"
+    "node": "5.0.0"
   },
   "appHost": "localhost"
 }
