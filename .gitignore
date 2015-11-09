@@ -1,6 +1,5 @@
+.env
 node_modules
-server/database/dbPassword
-server/biz/sparkPostApiKey
 coverage
 *.log
 ssl/cert

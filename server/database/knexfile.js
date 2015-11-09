@@ -2,11 +2,7 @@
  * This file provides database configuration parameters for Knex.
  */
 
-// Read the database password that was set in npm postinstall.
-var fs = require('fs');
-var path = require('path');
-var dbPassword = fs.readFileSync(path.join(__dirname, '/dbPassword'))
-  .toString().trim();
+var dbPassword = process.env.dbPassword;
 
 module.exports = {
 

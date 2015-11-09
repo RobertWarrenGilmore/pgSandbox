@@ -3,7 +3,7 @@ a first attempt at a database wrapper app over postgres
 
 # instructions
 
-Change the values in appInfo.json. `host` should reflect the host where the app will be served and `name` should reflect the display name of the application.
+Change the values in appInfo.json. `host` should reflect the host where the app will be served and `name` should reflect the display name of the application. Also add a line `sparkPostApiKey=thisIsYourKey`, substituting your SparkPost API key, to the file .env, creating such a file if it doesn't exist.
 
 ## to install Node and NPM
 I recommend that you manage Node/NPM versions using NVM. Install it like so:
