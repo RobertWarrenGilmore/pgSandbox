@@ -9,6 +9,8 @@ module.exports = function ajax(options) {
     }
     request(optionsClone, function (error, response, body) {
       if (error) {
+        console.error(error);
+        error.message = 'The server could not be reached.';
         reject(error);
       } else {
         resolve(response);
