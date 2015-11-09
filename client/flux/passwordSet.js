@@ -1,7 +1,7 @@
 var Fluxxor = require('fluxxor');
 var ajax = require('../utilities/ajax');
 
-var PasswordResetStore = Fluxxor.createStore({
+var PasswordSetStore = Fluxxor.createStore({
   actions: {
     'SET_PASSWORD_RESET_IN_PROGRESS': '_setInProgress',
     'SET_PASSWORD_RESET_RESULT': '_setResult'
@@ -65,6 +65,6 @@ var actions = {
 };
 
 module.exports = {
-  Store: PasswordResetStore,
+  Store: PasswordSetStore,
   actions: actions
 };

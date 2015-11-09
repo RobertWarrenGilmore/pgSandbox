@@ -8,7 +8,7 @@ var StoreWatchMixin = Fluxxor.StoreWatchMixin;
 
 var SetPassword = React.createClass({
   mixins: [
-    FluxMixin, StoreWatchMixin('passwordReset'), History
+    FluxMixin, StoreWatchMixin('passwordSet'), History
   ],
   componentWillMount: function() {
     document.title = appInfo.name + ' - set password';
@@ -20,8 +20,11 @@ var SetPassword = React.createClass({
   },
   getStateFromFlux: function() {
     var store = this.getFlux()
-      .store('passwordReset');
-    return {blocked: store.isInProgress(), result: store.getResult()};
+      .store('passwordSet');
+    return {
+      blocked: store.isInProgress(),
+      result: store.getResult()
+    };
   },
   _onSubmit: function(event) {
     event.preventDefault();
@@ -31,7 +34,7 @@ var SetPassword = React.createClass({
     var verifyPassword = this.refs.verifyPassword.value;
     this.getFlux()
       .actions
-      .passwordReset
+      .passwordSet
       .set({
         userId: userId,
         password: password,
