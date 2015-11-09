@@ -1,5 +1,5 @@
 var authenticatedTransaction = require('./authenticatedTransaction');
-var appHost = require('../../package.json').appHost;
+var appHost = require('../../appInfo.json').host;
 var AuthenticationError = require('../errors/authenticationError');
 var AuthorisationError = require('../errors/authorisationError');
 var NoSuchResourceError = require('../errors/noSuchResourceError');
@@ -211,7 +211,6 @@ module.exports = function (knex, emailer) {
       ).then(function () {
         key = generatePasswordResetKey();
         newUser.passwordResetKeyHash = key.hash;
-        // TODO Do validation before insert.
         return validationRules.run(newUser);
       }).then(function () {
         return knex.transaction(function (trx) {

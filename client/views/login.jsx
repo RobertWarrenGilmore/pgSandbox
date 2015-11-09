@@ -1,3 +1,4 @@
+var appInfo = require('../../appInfo.json');
 var React = require('react');
 var ReactRouter = require('react-router');
 var History = ReactRouter.History;
@@ -10,7 +11,7 @@ var Login = React.createClass({
     FluxMixin, StoreWatchMixin('auth'), History
   ],
   componentWillMount: function() {
-    document.title = 'pgSandbox - log in';
+    document.title = appInfo.name + ' - log in';
   },
   componentWillUpdate: function(nextProps, nextState) {
     if (nextState.auth) {
@@ -43,11 +44,7 @@ var Login = React.createClass({
   getStateFromFlux: function() {
     var store = this.getFlux()
       .store('auth');
-    return {
-      blocked: store.isInProgress(),
-      auth: store.getAuth(),
-      error: store.getError()
-    };
+    return {blocked: store.isInProgress(), auth: store.getAuth(), error: store.getError()};
   },
   _onSubmit: function(event) {
     event.preventDefault();

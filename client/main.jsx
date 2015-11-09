@@ -8,6 +8,7 @@ var flux = require('./flux');
 var App = require('./views/app.jsx');
 var Login = require('./views/login.jsx');
 var Register = require('./views/register.jsx');
+var SetPassword = require('./views/setPassword.jsx');
 var Users = require('./views/users.jsx');
 var User = require('./views/user.jsx');
 var NotFound = require('./views/notFound.jsx');
@@ -50,6 +51,7 @@ document
                 <Route component={Login} path='login'/>
                 <Route component={Register} path='register'/>
               </Route>
+              <Route component={SetPassword} path='users/:userId/setPassword'/>
               <Route onEnter={logOut} path='logout'/>
 
               <Route onEnter={requireAuth}>

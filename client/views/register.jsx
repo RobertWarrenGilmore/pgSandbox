@@ -1,3 +1,4 @@
+var appInfo = require('../../appInfo.json');
 var React = require('react');
 var Fluxxor = require('fluxxor');
 var FluxMixin = Fluxxor.FluxMixin(React);
@@ -8,7 +9,7 @@ var Register = React.createClass({
     FluxMixin, StoreWatchMixin('registration')
   ],
   componentWillMount: function() {
-    document.title = 'pgSandbox - register';
+    document.title = appInfo.name + ' - register';
   },
   render: function() {
     if (this.state.result.success) {

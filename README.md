@@ -3,7 +3,7 @@ a first attempt at a database wrapper app over postgres
 
 # instructions
 
-Change the value of "appHost" in package.json to reflect the host where the app will be served.
+Change the values in appInfo.json. `host` should reflect the host where the app will be served and `name` should reflect the display name of the application.
 
 ## to install Node and NPM
 I recommend that you manage Node/NPM versions using NVM. Install it like so:

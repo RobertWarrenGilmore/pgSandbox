@@ -1,18 +1,34 @@
 var nodemailer = require('nodemailer');
-var transporter = nodemailer.createTransport();
+var sparkPostTransport = require('nodemailer-sparkpost-transport');
+
 var Promise = require('bluebird');
-var appHost = require('../../package.json').appHost;
-var appName = require('../../package.json').name;
+var appInfo = require('../../appInfo.json');
+var fs = require('fs');
+var path = require('path');
+var sparkPostApiKey = fs.readFileSync(path.join(__dirname, 'sparkPostApiKey'))
+  .toString().trim();
+var transporter = nodemailer.createTransport(sparkPostTransport({
+  sparkPostApiKey: sparkPostApiKey
+}));
 var send = Promise.promisify(transporter.sendMail, {
   context: transporter
 });
 
 function emailer(recipient, subject, message) {
   return send({
-    from: appName + ' <app@' + appHost + '>',
-    to: recipient,
-    subject: subject,
-    text: message
+    recipients: [{
+      address: {
+        email: recipient
+      }
+    }],
+    content: {
+      from: {
+        name: appInfo.name,
+        email: 'app@' + appInfo.host
+      },
+      subject: subject,
+      text: message
+    }
   });
 }
 
