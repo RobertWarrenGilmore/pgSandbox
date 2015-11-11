@@ -1,4 +1,3 @@
-var appInfo = require('../../appInfo.json');
 var React = require('react');
 var ReactRouter = require('react-router');
 var History = ReactRouter.History;
@@ -10,9 +9,6 @@ var SetPassword = React.createClass({
   mixins: [
     FluxMixin, StoreWatchMixin('passwordSet'), History
   ],
-  componentWillMount: function() {
-    document.title = appInfo.name + ' - set password';
-  },
   componentWillUpdate: function(nextProps, nextState) {
     if (nextState.result.success) {
       this.history.pushState(null, '/login');

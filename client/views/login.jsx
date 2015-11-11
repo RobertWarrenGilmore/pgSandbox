@@ -1,6 +1,6 @@
-var appInfo = require('../../appInfo.json');
 var React = require('react');
 var ReactRouter = require('react-router');
+var Link = ReactRouter.Link;
 var History = ReactRouter.History;
 var Fluxxor = require('fluxxor');
 var FluxMixin = Fluxxor.FluxMixin(React);
@@ -10,9 +10,6 @@ var Login = React.createClass({
   mixins: [
     FluxMixin, StoreWatchMixin('auth'), History
   ],
-  componentWillMount: function() {
-    document.title = appInfo.name + ' - log in';
-  },
   componentWillUpdate: function(nextProps, nextState) {
     if (nextState.auth) {
       var location = this.props.location;
@@ -37,6 +34,9 @@ var Login = React.createClass({
                 {this.state.error}
               </p>
             : null}
+          <Link to='/forgotPassword'>
+            Are you locked out?
+          </Link>
         </form>
       </div>
     );

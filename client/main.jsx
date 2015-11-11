@@ -1,13 +1,16 @@
+var appInfo = require('../appInfo.json');
 var React = require('react');
 var ReactDom = require('react-dom');
 var ReactRouter = require('react-router');
 var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
+var Redirect = ReactRouter.Redirect;
 var createBrowserHistory = require('history/lib/createBrowserHistory');
 var flux = require('./flux');
 var App = require('./views/app.jsx');
 var Login = require('./views/login.jsx');
 var Register = require('./views/register.jsx');
+var ForgotPassword = require('./views/forgotPassword.jsx');
 var SetPassword = require('./views/setPassword.jsx');
 var Users = require('./views/users.jsx');
 var User = require('./views/user.jsx');
@@ -31,8 +34,9 @@ function logOut(nextState, replaceState) {
   flux.actions
     .auth
     .logOut();
-  replaceState(null, '/');
 }
+
+document.title = appInfo.name;
 
 document
   .addEventListener('DOMContentLoaded', function() {
@@ -50,16 +54,21 @@ document
               <Route onEnter={denyAuth}>
                 <Route component={Login} path='login'/>
                 <Route component={Register} path='register'/>
+                <Route component={ForgotPassword} path='forgotPassword'/>
               </Route>
-              <Route component={SetPassword} path='users/:userId/setPassword'/>
-              <Route onEnter={logOut} path='logout'/>
 
               <Route onEnter={requireAuth}>
                 <Route component={Users} path='users'/>
                 <Route component={User} path='users/:userId'/>
               </Route>
 
+              <Route onEnter={logOut}>
+                <Route component={SetPassword} path='users/:userId/setPassword'/>
+                <Redirect from='/logout' to='/'/>
+              </Route>
+
               <Route component={NotFound} path='*'/>
+
             </Route>
           </Router>
         );
