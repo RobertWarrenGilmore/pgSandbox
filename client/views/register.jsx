@@ -2,10 +2,11 @@ var React = require('react');
 var Fluxxor = require('fluxxor');
 var FluxMixin = Fluxxor.FluxMixin(React);
 var StoreWatchMixin = Fluxxor.StoreWatchMixin;
+var TitleMixin = require('./titleMixin');
 
 var Register = React.createClass({
   mixins: [
-    FluxMixin, StoreWatchMixin('registration')
+    FluxMixin, StoreWatchMixin('registration'), TitleMixin('register')
   ],
   render: function() {
     if (this.state.result.success) {

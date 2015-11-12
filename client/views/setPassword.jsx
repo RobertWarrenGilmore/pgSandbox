@@ -4,10 +4,11 @@ var History = ReactRouter.History;
 var Fluxxor = require('fluxxor');
 var FluxMixin = Fluxxor.FluxMixin(React);
 var StoreWatchMixin = Fluxxor.StoreWatchMixin;
+var TitleMixin = require('./titleMixin');
 
 var SetPassword = React.createClass({
   mixins: [
-    FluxMixin, StoreWatchMixin('passwordSet'), History
+    FluxMixin, StoreWatchMixin('passwordSet'), History, TitleMixin('set password')
   ],
   componentWillUpdate: function(nextProps, nextState) {
     if (nextState.result.success) {

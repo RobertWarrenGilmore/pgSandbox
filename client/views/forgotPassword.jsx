@@ -2,10 +2,11 @@ var React = require('react');
 var Fluxxor = require('fluxxor');
 var FluxMixin = Fluxxor.FluxMixin(React);
 var StoreWatchMixin = Fluxxor.StoreWatchMixin;
+var TitleMixin = require('./titleMixin');
 
 var ForgotPassword = React.createClass({
   mixins: [
-    FluxMixin, StoreWatchMixin('forgotPassword')
+    FluxMixin, StoreWatchMixin('forgotPassword'), TitleMixin('forgot password')
   ],
   render: function() {
     if (this.state.result.success) {
@@ -35,17 +36,12 @@ var ForgotPassword = React.createClass({
   },
   getStateFromFlux: function() {
     var store = this.getFlux().store('forgotPassword');
-    return {
-      blocked: store.isInProgress(),
-      result: store.getResult()
-    };
+    return {blocked: store.isInProgress(), result: store.getResult()};
   },
   _onSubmit: function(event) {
     event.preventDefault();
     var emailAddress = this.refs.emailAddress.value;
-    this.getFlux().actions.forgotPassword.sendEmail({
-      emailAddress: emailAddress
-    });
+    this.getFlux().actions.forgotPassword.sendEmail({emailAddress: emailAddress});
   }
 });
 

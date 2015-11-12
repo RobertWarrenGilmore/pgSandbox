@@ -5,10 +5,11 @@ var History = ReactRouter.History;
 var Fluxxor = require('fluxxor');
 var FluxMixin = Fluxxor.FluxMixin(React);
 var StoreWatchMixin = Fluxxor.StoreWatchMixin;
+var TitleMixin = require('./titleMixin');
 
 var Login = React.createClass({
   mixins: [
-    FluxMixin, StoreWatchMixin('auth'), History
+    FluxMixin, StoreWatchMixin('auth'), History, TitleMixin('log in')
   ],
   componentWillUpdate: function(nextProps, nextState) {
     if (nextState.auth) {

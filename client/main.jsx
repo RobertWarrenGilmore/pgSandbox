@@ -1,4 +1,3 @@
-var appInfo = require('../appInfo.json');
 var React = require('react');
 var ReactDom = require('react-dom');
 var ReactRouter = require('react-router');
@@ -35,8 +34,6 @@ function logOut(nextState, replaceState) {
     .auth
     .logOut();
 }
-
-document.title = appInfo.name;
 
 document
   .addEventListener('DOMContentLoaded', function() {
