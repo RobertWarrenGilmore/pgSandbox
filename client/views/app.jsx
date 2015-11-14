@@ -15,7 +15,6 @@ var App = React.createClass({
       loggedIn: !!this.getFlux().store('auth').getAuth(),
       title: this.getFlux().store('title').get()
     };
-    console.log('title: ' + state.title);
     return state;
   },
   _updateTitle: function() {
