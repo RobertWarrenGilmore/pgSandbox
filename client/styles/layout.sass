@@ -1,0 +1,27 @@
+$header-height: 120px
+$footer-height: 40px
+$content-width: 800px
+$tiny-media-width: 550px
+$large-padding: 20px
+$medium-padding: 10px
+$small-padding: 5px
+
+body
+  position: absolute
+  padding-top: $header-height
+  padding-bottom: $footer-height
+  height: 100%
+  width: 100%
+  > header
+    position: absolute
+    top: 0
+    height: $header-height
+  > main
+    min-height: 100%
+  > footer
+    height: $footer-height
+  > #appContainer
+    > #login
+      *
+        display: block
+        margin: $small-padding

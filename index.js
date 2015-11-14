@@ -31,32 +31,36 @@ app.use(function enforceSsl(req, res, next) {
   }
 });
 
-console.info('Migrating the database schema.');
-knex.migrate.latest()
-  .then(function () {
+// Create Browserify promise.
+var b = browserify({
+  debug: (process.env.NODE_ENV !== 'production')
+});
+b.transform(reactify);
+if (process.env.NODE_ENV === 'production') {
+  b.transform({
+    global: true
+  }, uglifyify);
+}
+b.add('./client/main.jsx');
+var clientScriptPromise = Promise.promisify(b.bundle, {
+  context: b
+})();
 
-    console.info('Compiling client-side JS.');
-    var b = browserify({
-      debug: (process.env.NODE_ENV !== 'production')
-    });
-    b.transform(reactify);
-    if (process.env.NODE_ENV === 'production') {
-      b.transform({
-        global: true
-      }, uglifyify);
-    }
-    b.add('./client/main.jsx');
-    var bundlePromise = Promise.promisify(b.bundle, {
-      context: b
-    })();
-    return bundlePromise;
-  })
-  .then(function (clientScript) {
-    console.info('Compiling Sass.');
-    var clientStyle = sass.renderSync({
-      file: './client/main.sass',
-      outputStyle: (process.env.NODE_ENV === 'production') ? 'compressed' : 'expanded'
-    });
+// Create Sass promise.
+var sassRender = Promise.promisify(sass.render, {
+  context: sass
+});
+var clientStylePromise = sassRender({
+  file: './client/main.sass',
+  outputStyle: (process.env.NODE_ENV === 'production') ? 'compressed' : 'expanded'
+});
+
+// Create database schema migration promise.
+var knexMigratePromise = knex.migrate.latest();
+
+console.info('Bundling scripts, bundling styles, and migrating database schema.');
+Promise.join(clientScriptPromise, clientStylePromise, knexMigratePromise,
+  function (clientScript, clientStyle, migrate) {
 
     // Link the three server-side layers together and serve them as the API.
     console.info('Routing the API.');
@@ -87,5 +91,6 @@ knex.migrate.latest()
     console.info('Serving.');
   })
   .catch(function (err) {
-    throw err;
+    console.error(err.stack);
+    process.exit(err.status);
   });
