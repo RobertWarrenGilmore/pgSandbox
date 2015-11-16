@@ -11,8 +11,10 @@ var ForgotPassword = React.createClass({
   render: function() {
     if (this.state.result.success) {
       return (
-        <div>
-          Success! You'll recieve a password reset email soon.
+        <div id='message'>
+          <p>
+            Success! You'll recieve a password reset email soon.
+          </p>
         </div>
       );
     } else {
@@ -23,12 +25,14 @@ var ForgotPassword = React.createClass({
               If you're locked out of your account (not that we'd ever suggest that you forgot your password), enter your email address to reset your password.
             </p>
             <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={this.state.blocked} required/>
-            <button disabled={this.state.blocked} className='highlighted'>send the email</button>
             {this.state.result.error
               ? <p className='error'>
                   {this.state.result.error}
                 </p>
               : null}
+            <div>
+              <button disabled={this.state.blocked} className='highlighted'>send the email</button>
+            </div>
           </form>
         </div>
       );
