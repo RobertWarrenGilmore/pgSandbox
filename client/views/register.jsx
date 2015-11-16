@@ -22,7 +22,7 @@ var Register = React.createClass({
         <div id='register'>
           <form onSubmit={this._onSubmit}>
             <p>
-              Create an account to access our exciting app that does jack squat.
+              Create an account.
             </p>
             <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={this.state.blocked} required/>
             <input type='text' ref='givenName' name='givenName' placeholder='first name (optional)' disabled={this.state.blocked}/>
