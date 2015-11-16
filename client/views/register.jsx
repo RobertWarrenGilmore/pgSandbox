@@ -11,8 +11,10 @@ var Register = React.createClass({
   render: function() {
     if (this.state.result.success) {
       return (
-        <div>
-          Congratulations! You registered. You'll recieve a confirmation email soon.
+        <div id='register'>
+          <p>
+            Congratulations! You registered. You'll recieve a confirmation email soon.
+          </p>
         </div>
       );
     } else {
@@ -22,12 +24,14 @@ var Register = React.createClass({
             <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={this.state.blocked} required/>
             <input type='text' ref='givenName' name='givenName' placeholder='first name (optional)' disabled={this.state.blocked}/>
             <input type='text' ref='familyName' name='familyName' placeholder='last name (optional)' disabled={this.state.blocked}/>
-            <button disabled={this.state.blocked} className='highlighted'>register</button>
             {this.state.result.error
               ? <p className='error'>
                   {this.state.result.error}
                 </p>
               : null}
+            <div>
+              <button disabled={this.state.blocked} className='highlighted'>register</button>
+            </div>
           </form>
         </div>
       );
