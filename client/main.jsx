@@ -49,7 +49,7 @@ document
             <Route component={App} path='/'>
 
               <Route onEnter={denyAuth}>
-                <Route component={Login} path='logIn'/>
+                <Route component={LogIn} path='logIn'/>
                 <Route component={Register} path='register'/>
                 <Route component={ForgotPassword} path='forgotPassword'/>
               </Route>

@@ -16,6 +16,15 @@ $body-colour: rgb(29, 29, 29)
 
 @import url(https://fonts.googleapis.com/css?family=Bitter:400,700,400italic)
 
+=message($colour)
+  border: thin solid darken($colour, 20%)
+  border-radius: $small-padding
+  background-color: lighten($colour, 20%)
+  padding: $small-padding
+  display: block
+  color: darken($colour, 30%)
+
+
 body
   > #appContainer > div
     box-shadow: 0 0 100px -50px black
@@ -45,7 +54,16 @@ body
       a
         color: lighten($body-colour, 20%)
         &:hover
+          color: inherit
           text-decoration: underline
+      input
+        border: thin solid $body-colour
+        border-radius: $small-padding
+        padding: $small-padding
+      .info
+        +message(rgb(141, 183, 207))
+      .error
+        +message(rgb(212, 111, 111))
       button
         border-radius: $small-padding
         background-color: lighten($body-colour, 60%)

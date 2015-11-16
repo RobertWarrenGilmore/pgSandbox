@@ -23,7 +23,7 @@ var ForgotPassword = React.createClass({
               If you're locked out of your account (not that we'd ever suggest that you forgot your password), enter your email address to reset your password.
             </p>
             <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={this.state.blocked} required/>
-            <button disabled={this.state.blocked}>send the email</button>
+            <button disabled={this.state.blocked} className='highlighted'>send the email</button>
             {this.state.result.error
               ? <p className='error'>
                   {this.state.result.error}

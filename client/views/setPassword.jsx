@@ -57,7 +57,7 @@ var SetPassword = React.createClass({
             </p>
             <input type='password' ref='password' name='password' placeholder='new password' disabled={this.state.blocked} required/>
             <input type='password' ref='verifyPassword' name='verifyPassword' placeholder='verify new password' disabled={this.state.blocked} required/>
-            <button disabled={this.state.blocked}>
+            <button disabled={this.state.blocked} className='highlighted'>
               set password
             </button>
             {this.state.result.error
