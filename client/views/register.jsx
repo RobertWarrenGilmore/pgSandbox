@@ -11,7 +11,7 @@ var Register = React.createClass({
   render: function() {
     if (this.state.result.success) {
       return (
-        <div id='register'>
+        <div id='message'>
           <p>
             Congratulations! You registered. You'll recieve a confirmation email soon.
           </p>

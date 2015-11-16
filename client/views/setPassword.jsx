@@ -44,8 +44,10 @@ var SetPassword = React.createClass({
     var userId = this.props.params.userId;
     if (!userId || !passwordResetKey) {
       return (
-        <div>
-          The URL was malformed.
+        <div id='message'>
+          <p>
+            The URL was malformed.
+          </p>
         </div>
       );
     } else {
@@ -57,14 +59,16 @@ var SetPassword = React.createClass({
             </p>
             <input type='password' ref='password' name='password' placeholder='new password' disabled={this.state.blocked} required/>
             <input type='password' ref='verifyPassword' name='verifyPassword' placeholder='verify new password' disabled={this.state.blocked} required/>
-            <button disabled={this.state.blocked} className='highlighted'>
-              set password
-            </button>
             {this.state.result.error
               ? <p className='error'>
                   {this.state.result.error}
                 </p>
               : null}
+            <div>
+              <button disabled={this.state.blocked} className='highlighted'>
+                set password
+              </button>
+            </div>
           </form>
         </div>
       );
