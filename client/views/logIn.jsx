@@ -7,7 +7,7 @@ var FluxMixin = Fluxxor.FluxMixin(React);
 var StoreWatchMixin = Fluxxor.StoreWatchMixin;
 var TitleMixin = require('./titleMixin');
 
-var Login = React.createClass({
+var LogIn = React.createClass({
   mixins: [
     FluxMixin, StoreWatchMixin('auth'), History, TitleMixin('log in')
   ],
@@ -29,7 +29,7 @@ var Login = React.createClass({
         <form onSubmit={this._onSubmit}>
           <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={this.state.blocked} required/>
           <input type='password' ref='password' name='password' placeholder='password' disabled={this.state.blocked} required/>
-          <button disabled={this.state.blocked}>log in</button>
+          <button disabled={this.state.blocked} className='highlighted'>log in</button>
           {this.state.error
             ? <p className='error'>
                 {this.state.error}
@@ -58,4 +58,4 @@ var Login = React.createClass({
   }
 });
 
-module.exports = Login;
+module.exports = LogIn;

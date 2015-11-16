@@ -7,7 +7,7 @@ var Redirect = ReactRouter.Redirect;
 var createBrowserHistory = require('history/lib/createBrowserHistory');
 var flux = require('./flux');
 var App = require('./views/app.jsx');
-var Login = require('./views/login.jsx');
+var LogIn = require('./views/logIn.jsx');
 var Register = require('./views/register.jsx');
 var ForgotPassword = require('./views/forgotPassword.jsx');
 var SetPassword = require('./views/setPassword.jsx');
@@ -49,7 +49,7 @@ document
             <Route component={App} path='/'>
 
               <Route onEnter={denyAuth}>
-                <Route component={Login} path='login'/>
+                <Route component={Login} path='logIn'/>
                 <Route component={Register} path='register'/>
                 <Route component={ForgotPassword} path='forgotPassword'/>
               </Route>
@@ -61,7 +61,7 @@ document
 
               <Route onEnter={logOut}>
                 <Route component={SetPassword} path='users/:userId/setPassword'/>
-                <Redirect from='/logout' to='/'/>
+                <Redirect from='/logOut' to='/'/>
               </Route>
 
               <Route component={NotFound} path='*'/>

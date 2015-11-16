@@ -2,6 +2,7 @@ var appInfo = require('../../appInfo.json');
 var React = require('react');
 var ReactRouter = require('react-router');
 var Link = ReactRouter.Link;
+var IndexLink = ReactRouter.IndexLink;
 var Fluxxor = require('fluxxor');
 var FluxMixin = Fluxxor.FluxMixin(React);
 var StoreWatchMixin = Fluxxor.StoreWatchMixin;
@@ -33,23 +34,42 @@ var App = React.createClass({
     var result = (
       <div>
         <header>
+          <Link to='/'>
+            <h1>
+              {appInfo.name}
+            </h1>
+          </Link>
           <nav>
+            <div className='hamburgerButton'>
+              ≡
+            </div>
+            <IndexLink activeClassName='active' to='/'>
+              home
+            </IndexLink>
+            <div className='spacer'></div>
             {this.state.loggedIn
               ? (
-                <Link to='/logout'>
+                <Link activeClassName='active' to='/logOut'>
                   log out
                 </Link>
               )
               : (
-                <Link to='/login'>
-                  log in
-                </Link>
+                [
+                  <Link activeClassName='active' to='/logIn'>
+                    log in
+                  </Link>,
+                  <Link activeClassName='active' to='/register'>
+                    register
+                  </Link>
+                ]
               )}
           </nav>
         </header>
         <main>
           {this.props.children}
         </main>
+        <footer>
+        </footer>
       </div>
     );
     return result;

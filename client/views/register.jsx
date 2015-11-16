@@ -22,7 +22,7 @@ var Register = React.createClass({
             <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={this.state.blocked} required/>
             <input type='text' ref='givenName' name='givenName' placeholder='first name (optional)' disabled={this.state.blocked}/>
             <input type='text' ref='familyName' name='familyName' placeholder='last name (optional)' disabled={this.state.blocked}/>
-            <button disabled={this.state.blocked}>register</button>
+            <button disabled={this.state.blocked} className='highlighted'>register</button>
             {this.state.result.error
               ? <p className='error'>
                   {this.state.result.error}

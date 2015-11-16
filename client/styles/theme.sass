@@ -1,0 +1,62 @@
+$theme-colour: rgb(65, 53, 99)
+$theme-colour-contrast: rgb(212, 208, 244)
+$body-colour: rgb(29, 29, 29)
+
+=themed
+  background-color: $theme-colour
+  color: $theme-colour-contrast
+
+@import url(https://fonts.googleapis.com/css?family=Righteous)
+=brand-text
+  font-family: Righteous, Helvetica, 'Century Gothic', sans-serif
+
+@import url(https://fonts.googleapis.com/css?family=Arvo:400,400italic,700,700italic)
+=header-text
+  font-family: Arvo, Rockwell, 'Cooper Black', serif
+
+@import url(https://fonts.googleapis.com/css?family=Bitter:400,700,400italic)
+
+body
+  > #appContainer > div
+    box-shadow: 0 0 100px -50px black
+    > header
+      +themed
+      -webkit-user-select: none
+      -moz-user-select: none
+      -ms-user-select: none
+      user-select: none
+      h1
+        +brand-text
+        font-size: 50px
+      > nav
+        > .hamburgerButton
+          font-size: 25px
+          border: thin solid
+          border-radius: $small-padding
+        > a
+          +themed
+          +header-text
+          &.active
+            background-color: desaturate(lighten($theme-colour, 20%), 10%)
+            font-weight: bold
+    > main
+      color: $body-colour
+      font-family: Bitter, 'Bookman Antiqua', serif
+      a
+        color: lighten($body-colour, 20%)
+        &:hover
+          text-decoration: underline
+      button
+        border-radius: $small-padding
+        background-color: lighten($body-colour, 60%)
+        &:disabled
+          background-color: lighten($body-colour, 30%)
+          color: lighten($body-colour, 20%)
+        &.highlighted
+          +themed
+          &:disabled
+            background-color: desaturate(lighten($theme-colour, 20%), 20%)
+            color: desaturate(darken($theme-colour-contrast, 10%), 20%)
+        padding: $small-padding
+    > footer
+      +themed
