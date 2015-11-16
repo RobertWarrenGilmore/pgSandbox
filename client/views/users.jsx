@@ -1,10 +1,20 @@
 var React = require('react');
+var Fluxxor = require('fluxxor');
+var FluxMixin = Fluxxor.FluxMixin(React);
 var TitleMixin = require('./titleMixin');
 
 var Users = React.createClass({
-  mixins: [TitleMixin('user search')],
+  mixins: [
+    FluxMixin, TitleMixin('user search')
+  ],
   render: function() {
-    return <div>Let's search for some users.</div>;
+    return (
+      <div id='message'>
+        <p>
+          Let's search for some users.
+        </p>
+      </div>
+    );
   }
 });
 

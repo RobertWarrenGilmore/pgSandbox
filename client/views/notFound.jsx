@@ -1,10 +1,20 @@
 var React = require('react');
+var Fluxxor = require('fluxxor');
+var FluxMixin = Fluxxor.FluxMixin(React);
 var TitleMixin = require('./titleMixin');
 
 var NotFound = React.createClass({
-  mixins: [TitleMixin('page not found')],
+  mixins: [
+    FluxMixin, TitleMixin('page not found')
+  ],
   render: function() {
-    return <div>That page wasn't found.</div>;
+    return (
+      <div id='message'>
+        <p>
+          That page wasn't found.
+        </p>
+      </div>
+    );
   }
 });
 
