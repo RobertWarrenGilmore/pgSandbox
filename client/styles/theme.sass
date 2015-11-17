@@ -2,6 +2,12 @@ $theme-colour: rgb(65, 53, 99)
 $theme-colour-contrast: rgb(212, 208, 244)
 $body-colour: rgb(29, 29, 29)
 
+=noSelect
+  -webkit-user-select: none
+  -moz-user-select: none
+  -ms-user-select: none
+  user-select: none
+
 =themed
   background-color: $theme-colour
   color: $theme-colour-contrast
@@ -18,7 +24,6 @@ $body-colour: rgb(29, 29, 29)
 
 =message($colour)
   border: thin solid darken($colour, 20%)
-  border-radius: $small-padding
   background-color: lighten($colour, 20%)
   padding: $small-padding
   display: block
@@ -29,10 +34,7 @@ body
     box-shadow: 0 0 100px -50px black
     > header
       +themed
-      -webkit-user-select: none
-      -moz-user-select: none
-      -ms-user-select: none
-      user-select: none
+      +noSelect
       h1
         +brand-text
         font-size: 50px
@@ -40,7 +42,6 @@ body
         > .hamburgerButton
           font-size: 25px
           border: thin solid
-          border-radius: $small-padding
         > a
           +themed
           +header-text
@@ -53,12 +54,11 @@ body
         line-height: 1.5
       a
         color: lighten($body-colour, 20%)
+        text-decoration: underline
         &:hover
           color: inherit
-          text-decoration: underline
       input
         border: thin solid $body-colour
-        border-radius: $small-padding
         padding: $small-padding
       .info
         +message(rgb(141, 183, 207))
@@ -66,7 +66,7 @@ body
         +message(rgb(212, 111, 111))
       button
         +header-text
-        border-radius: $small-padding
+        +noSelect
         background-color: lighten($body-colour, 60%)
         &:disabled
           background-color: lighten($body-colour, 30%)
