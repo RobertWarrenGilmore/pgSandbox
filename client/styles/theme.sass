@@ -19,6 +19,7 @@ $body-colour: rgb(29, 29, 29)
 @import url(https://fonts.googleapis.com/css?family=Arvo:400,400italic,700,700italic)
 =header-text
   font-family: Arvo, Rockwell, 'Cooper Black', serif
+  font-weight: bold
 
 @import url(https://fonts.googleapis.com/css?family=Bitter:400,700,400italic)
 =body-text
@@ -52,6 +53,10 @@ body
     > main
       color: $body-colour
       +body-text
+      h1
+        +header-text
+        font-size: 130%
+        margin-bottom: $medium-padding
       p
         line-height: 1.5
       a

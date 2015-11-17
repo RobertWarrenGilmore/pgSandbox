@@ -19,6 +19,10 @@ body > #appContainer > div
   > footer
     height: $footer-height
 
+=floater-content($width)
+  @supports (display: flex)
+    flex: 0 1 $width
+
 // If we have flex capability,
 @supports (display: flex)
   // Undo the legacy layout.

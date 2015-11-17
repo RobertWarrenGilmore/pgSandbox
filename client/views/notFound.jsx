@@ -10,6 +10,9 @@ var NotFound = React.createClass({
   render: function() {
     return (
       <div id='message'>
+        <h1>
+          no such page
+        </h1>
         <p>
           That page wasn't found.
         </p>

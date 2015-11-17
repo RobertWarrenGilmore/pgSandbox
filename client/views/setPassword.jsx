@@ -53,10 +53,13 @@ var SetPassword = React.createClass({
     } else {
       return (
         <div id='setPassword'>
+          <h1>
+            set password
+          </h1>
+          <p>
+            Set a new password.
+          </p>
           <form onSubmit={this._onSubmit}>
-            <p>
-              Set a new password.
-            </p>
             <input type='password' ref='password' name='password' placeholder='new password' disabled={this.state.blocked} required/>
             <input type='password' ref='verifyPassword' name='verifyPassword' placeholder='verify new password' disabled={this.state.blocked} required/>
             {this.state.result.error

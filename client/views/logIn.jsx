@@ -26,6 +26,9 @@ var LogIn = React.createClass({
   render: function() {
     return (
       <div id='logIn'>
+        <h1>
+          log in
+        </h1>
         <form onSubmit={this._onSubmit}>
           <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={this.state.blocked} required/>
           <input type='password' ref='password' name='password' placeholder='password' disabled={this.state.blocked} required/>
