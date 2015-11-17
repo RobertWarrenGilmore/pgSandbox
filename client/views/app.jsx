@@ -6,6 +6,7 @@ var IndexLink = ReactRouter.IndexLink;
 var Fluxxor = require('fluxxor');
 var FluxMixin = Fluxxor.FluxMixin(React);
 var StoreWatchMixin = Fluxxor.StoreWatchMixin;
+var classnames = require('classnames');
 
 var App = React.createClass({
   mixins: [
@@ -18,11 +19,26 @@ var App = React.createClass({
     };
     return state;
   },
+  getInitialState: function() {
+    return {
+      hamburgerExpanded: false
+    };
+  },
   _updateTitle: function() {
     document.title = appInfo.name;
     if (this.state.title && this.state.title.length) {
       document.title += ' - ' + this.state.title;
     }
+  },
+  _onHamburgerClick: function() {
+    this.setState({
+      hamburgerExpanded: !this.state.hamburgerExpanded
+    });
+  },
+  _onNavClick: function() {
+    this.setState({
+      hamburgerExpanded: false
+    });
   },
   componentDidMount: function() {
     this._updateTitle();
@@ -31,6 +47,9 @@ var App = React.createClass({
     this._updateTitle();
   },
   render: function() {
+    var headerNavClasses = classnames({
+      hamburgerExpanded: this.state.hamburgerExpanded
+    });
     var result = (
       <div>
         <header>
@@ -39,30 +58,28 @@ var App = React.createClass({
               {appInfo.name}
             </h1>
           </Link>
-          <nav>
-            <div className='hamburgerButton'>
+          <nav className={headerNavClasses}>
+            <div className='hamburgerButton' onClick={this._onHamburgerClick}>
               ≡
             </div>
-            <IndexLink activeClassName='active' to='/'>
+            <IndexLink activeClassName='active' to='/' onClick={this._onNavClick}>
               home
             </IndexLink>
             <div className='spacer'></div>
             {this.state.loggedIn
               ? (
-                <Link activeClassName='active' to='/logOut'>
+                <Link activeClassName='active' to='/logOut' onClick={this._onNavClick}>
                   log out
                 </Link>
               )
-              : (
-                [
-                  <Link activeClassName='active' to='/logIn'>
-                    log in
-                  </Link>,
-                  <Link activeClassName='active' to='/register'>
-                    register
-                  </Link>
-                ]
-              )}
+              : ([
+                <Link activeClassName='active' key='navLogIn' to='/logIn' onClick={this._onNavClick}>
+                  log in
+                </Link>,
+                <Link activeClassName='active' key='navRegister' to='/register' onClick={this._onNavClick}>
+                  register
+                </Link>
+              ])}
           </nav>
         </header>
         <main>

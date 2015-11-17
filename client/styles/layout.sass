@@ -68,10 +68,12 @@ body > #appContainer > div
             display: none
           > a
             flex: 0 0 auto
-            display: flex
+            display: none
             align-items: center
             justify-content: center
             padding: $small-padding
+          &.hamburgerExpanded > a
+            display: flex
         @media (min-width: $tiny-media-width)
           flex-basis: $header-height
           > nav
@@ -81,6 +83,8 @@ body > #appContainer > div
               display: none
             > .spacer
               flex: 1 0 0
+            > a
+              display: flex
       > main
         flex: 1 0 auto
         display: flex
