@@ -2,7 +2,7 @@ $theme-colour: rgb(65, 53, 99)
 $theme-colour-contrast: rgb(212, 208, 244)
 $body-colour: rgb(29, 29, 29)
 
-=noSelect
+=no-select
   -webkit-user-select: none
   -moz-user-select: none
   -ms-user-select: none
@@ -21,6 +21,8 @@ $body-colour: rgb(29, 29, 29)
   font-family: Arvo, Rockwell, 'Cooper Black', serif
 
 @import url(https://fonts.googleapis.com/css?family=Bitter:400,700,400italic)
+=body-text
+  font-family: Bitter, 'Bookman Antiqua', serif
 
 =message($colour)
   border: thin solid darken($colour, 20%)
@@ -34,7 +36,7 @@ body
     box-shadow: 0 0 100px -50px black
     > header
       +themed
-      +noSelect
+      +no-select
       h1
         +brand-text
         font-size: 50px
@@ -49,7 +51,7 @@ body
             background-color: desaturate(lighten($theme-colour, 20%), 10%)
     > main
       color: $body-colour
-      font-family: Bitter, 'Bookman Antiqua', serif
+      +body-text
       p
         line-height: 1.5
       a
@@ -66,7 +68,7 @@ body
         +message(rgb(212, 111, 111))
       button
         +header-text
-        +noSelect
+        +no-select
         background-color: lighten($body-colour, 60%)
         &:disabled
           background-color: lighten($body-colour, 30%)
@@ -79,3 +81,4 @@ body
         padding: $small-padding
     > footer
       +themed
+      +body-text
