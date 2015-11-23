@@ -1,15 +1,14 @@
 var React = require('react');
-var Fluxxor = require('fluxxor');
-var FluxMixin = Fluxxor.FluxMixin(React);
-var StoreWatchMixin = Fluxxor.StoreWatchMixin;
 var TitleMixin = require('./titleMixin');
+var ajax = require('../utilities/ajax');
 
 var ForgotPassword = React.createClass({
-  mixins: [
-    FluxMixin, StoreWatchMixin('forgotPassword'), TitleMixin('forgot password')
-  ],
+  mixins: [TitleMixin('forgot password')],
+  getInitialState: function() {
+    return {busy: false, success: false, error: null};
+  },
   render: function() {
-    if (this.state.result.success) {
+    if (this.state.success) {
       return (
         <div id='message'>
           <p>
@@ -27,28 +26,42 @@ var ForgotPassword = React.createClass({
             If you're locked out of your account, enter your email address to reset your password.
           </p>
           <form onSubmit={this._onSubmit}>
-            <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={this.state.blocked} required/>
-            {this.state.result.error
+            <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={this.state.busy} required/>
+            {this.state.error
               ? <p className='error'>
-                  {this.state.result.error}
+                  {this.state.error}
                 </p>
               : null}
             <div>
-              <button disabled={this.state.blocked} className='highlighted'>send the email</button>
+              <button disabled={this.state.busy} className='highlighted'>send the email</button>
             </div>
           </form>
         </div>
       );
     }
   },
-  getStateFromFlux: function() {
-    var store = this.getFlux().store('forgotPassword');
-    return {blocked: store.isInProgress(), result: store.getResult()};
-  },
   _onSubmit: function(event) {
     event.preventDefault();
     var emailAddress = this.refs.emailAddress.value;
-    this.getFlux().actions.forgotPassword.sendEmail({emailAddress: emailAddress});
+    this.setState({busy: true, success: false, error: null});
+    var self = this;
+    return ajax({
+      method: 'PUT',
+      uri: '/api/users',
+      json: true,
+      body: {
+        emailAddress: emailAddress,
+        passwordResetKey: true
+      }
+    }).then(function(response) {
+      if (response.statusCode === 200) {
+        self.setState({busy: false, success: true, error: null});
+      } else {
+        self.setState({busy: false, success: false, error: response.body});
+      }
+    }).catch(function(error) {
+      self.setState({busy: false, success: false, error: error.message});
+    });
   }
 });
 

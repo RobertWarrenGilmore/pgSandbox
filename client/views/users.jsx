@@ -1,13 +1,10 @@
 var _ = require('lodash');
 var React = require('react');
-var Fluxxor = require('fluxxor');
-var FluxMixin = Fluxxor.FluxMixin(React);
-var StoreWatchMixin = Fluxxor.StoreWatchMixin;
 var TitleMixin = require('./titleMixin');
 
 var Users = React.createClass({
   mixins: [
-    FluxMixin, StoreWatchMixin('users'), TitleMixin('user search')
+    TitleMixin('user search')
   ],
   getStateFromFlux: function() {
     var store = this.getFlux().store('users');

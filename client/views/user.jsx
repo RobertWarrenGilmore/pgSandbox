@@ -1,11 +1,9 @@
 var React = require('react');
-var Fluxxor = require('fluxxor');
-var FluxMixin = Fluxxor.FluxMixin(React);
 var TitleMixin = require('./titleMixin');
 
 var User = React.createClass({
   mixins: [
-    FluxMixin, TitleMixin('user')
+    TitleMixin('user')
   ],
   render: function() {
     return (
