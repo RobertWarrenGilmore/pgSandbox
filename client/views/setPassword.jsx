@@ -4,7 +4,6 @@ var History = ReactRouter.History;
 var TitleMixin = require('./titleMixin');
 var ajax = require('../utilities/ajax');
 
-
 var SetPassword = React.createClass({
   mixins: [
     History, TitleMixin('set password')
@@ -13,7 +12,7 @@ var SetPassword = React.createClass({
     return {busy: false, success: false, error: null};
   },
   componentWillUpdate: function(nextProps, nextState) {
-    if (nextState.result.success) {
+    if (nextState.success) {
       this.history.pushState(null, '/login');
     }
   },
@@ -64,9 +63,7 @@ var SetPassword = React.createClass({
     this.setState({busy: true, success: false, error: null});
     var self = this;
     if (password !== verifyPassword) {
-      self.dispatch('SET_PASSWORD_RESET_RESULT', {
-        error: 'The passwords must match.'
-      });
+      self.setState({busy: false, success: false, error: 'The passwords must match.'});
     } else {
       return ajax({
         method: 'PUT',

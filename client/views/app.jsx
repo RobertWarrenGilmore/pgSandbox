@@ -4,40 +4,25 @@ var ReactRouter = require('react-router');
 var Link = ReactRouter.Link;
 var IndexLink = ReactRouter.IndexLink;
 var TitleMixin = require('./titleMixin');
-var Fluxxor = require('fluxxor');
-var FluxMixin = Fluxxor.FluxMixin(React);
-var StoreWatchMixin = Fluxxor.StoreWatchMixin;
 var classnames = require('classnames');
+var auth = require('../flux/auth');
 
 var App = React.createClass({
-  mixins: [
-    FluxMixin, StoreWatchMixin('auth'), TitleMixin()
-  ],
-  getStateFromFlux: function() {
-    var state = {
-      loggedIn: !!this.getFlux().store('auth').getAuth()
-    };
-    return state;
-  },
+  mixins: [TitleMixin()],
   getInitialState: function() {
-    return {
-      hamburgerExpanded: false
-    };
+    return {authCredentials: auth.getCredentials(), authBusy: auth.isBusy(), hamburgerExpanded: false};
   },
-  _onHamburgerClick: function() {
-    this.setState({
-      hamburgerExpanded: !this.state.hamburgerExpanded
-    });
+  _authListener: function() {
+    this.setState({authCredentials: auth.getCredentials(), authBusy: auth.isBusy()});
   },
-  _onNavClick: function() {
-    this.setState({
-      hamburgerExpanded: false
-    });
+  componentDidMount: function() {
+    auth.listen(this._authListener);
+  },
+  componentWillUnmount: function() {
+    auth.unlisten(this._authListener);
   },
   render: function() {
-    var headerNavClasses = classnames({
-      hamburgerExpanded: this.state.hamburgerExpanded
-    });
+    var headerNavClasses = classnames({hamburgerExpanded: this.state.hamburgerExpanded});
     var result = (
       <div>
         <header>
@@ -54,7 +39,7 @@ var App = React.createClass({
               home
             </IndexLink>
             <div className='spacer'></div>
-            {this.state.loggedIn
+            {this.state.authCredentials
               ? (
                 <Link activeClassName='active' to='/logOut' onClick={this._onNavClick}>
                   log out
@@ -78,6 +63,14 @@ var App = React.createClass({
       </div>
     );
     return result;
+  },
+  _onHamburgerClick: function() {
+    this.setState({
+      hamburgerExpanded: !this.state.hamburgerExpanded
+    });
+  },
+  _onNavClick: function() {
+    this.setState({hamburgerExpanded: false});
   }
 });
 

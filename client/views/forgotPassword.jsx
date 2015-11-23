@@ -27,9 +27,9 @@ var ForgotPassword = React.createClass({
           </p>
           <form onSubmit={this._onSubmit}>
             <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={this.state.busy} required/>
-            {this.state.result.error
+            {this.state.error
               ? <p className='error'>
-                  {this.state.result.error}
+                  {this.state.error}
                 </p>
               : null}
             <div>
@@ -59,7 +59,6 @@ var ForgotPassword = React.createClass({
       } else {
         self.setState({busy: false, success: false, error: response.body});
       }
-      self.loggingIn = false;
     }).catch(function(error) {
       self.setState({busy: false, success: false, error: error.message});
     });

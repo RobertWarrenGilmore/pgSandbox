@@ -1,85 +1,74 @@
-var Fluxxor = require('fluxxor');
-var Promise = require('bluebird');
+var Emitter = require('./emitter');
 var ajax = require('../utilities/ajax');
+var Promise = require('bluebird');
 
-var AuthStore = Fluxxor.createStore({
-  actions: {
-    'SET_AUTH_IN_PROGRESS': '_setInProgress',
-    'SET_AUTH': '_setAuth'
+var emitter = new Emitter();
+var busy = false;
+var credentials = null;
+var error = null;
+
+var methods = {
+  listen: function (listener) {
+    emitter.listen(listener);
   },
-  _setInProgress: function (payload, type) {
-    this.auth = null;
-    this.inProgress = true;
-    this.emit('change');
+  unlisten: function (listener) {
+    emitter.unlisten(listener);
   },
-  _setAuth: function (payload, type) {
-    this.error = payload.error;
-    if (!payload.emailAddress) {
-      this.auth = null;
-      delete localStorage.auth;
-    } else {
-      this.auth = {
-        emailAddress: payload.emailAddress,
-        password: payload.password
-      };
-      localStorage.auth = JSON.stringify(this.auth);
-    }
-    this.inProgress = false;
-    this.emit('change');
+  getCredentials: function () {
+    return credentials;
   },
-  isInProgress: function () {
-    return this.inProgress;
-  },
-  getAuth: function () {
-    return this.auth;
+  isBusy: function () {
+    return busy;
   },
   getError: function () {
-    return this.error;
-  }
-});
-
-var actions = {
-  logIn: function (emailAddress, password) {
-    this.dispatch('SET_AUTH_IN_PROGRESS');
-    var self = this;
+    return error;
+  },
+  clearError: function () {
+    error = null;
+    emitter.emit();
+  },
+  logIn: function (auth) {
+    busy = true;
+    error = null;
+    emitter.emit();
     return ajax({
       method: 'GET',
       uri: '/api/auth',
       auth: {
-        user: emailAddress,
-        pass: password
+        user: auth.emailAddress,
+        pass: auth.password
       }
-    }).then(function (response) {
+    }).tap(function (response) {
       if (response.statusCode === 200) {
-        self.dispatch('SET_AUTH', {
-          emailAddress: emailAddress,
-          password: password
-        });
+        credentials = auth;
+        localStorage.auth = JSON.stringify(credentials);
       } else {
-        self.dispatch('SET_AUTH', {
-          error: response.body
-        });
+        error = response.body;
+        credentials = null;
+        delete localStorage.auth;
       }
-    }).catch(function (error) {
-      self.dispatch('SET_AUTH', {
-        error: error.message
-      });
+      busy = false;
+      emitter.emit();
+    }).catch(function (err) {
+      error = err.message;
+      emitter.emit();
     });
   },
-  resumeAuth: function () {
+  resume: function () {
+    error = null;
     if (localStorage.auth) {
       var auth = JSON.parse(localStorage.auth);
-      return this.flux.actions.auth.logIn(auth.emailAddress, auth.password);
+      return methods.logIn(auth);
     } else {
       return Promise.resolve();
     }
   },
   logOut: function () {
-    this.dispatch('SET_AUTH', {});
+    error = null;
+    credentials = null;
+    delete localStorage.auth;
+    emitter.emit();
   }
 };
 
-module.exports = {
-  Store: AuthStore,
-  actions: actions
-};
+module.exports = methods;

@@ -8,7 +8,7 @@ var Register = React.createClass({
     return {busy: false, success: false, error: null};
   },
   render: function() {
-    if (this.state.result.success) {
+    if (this.state.success) {
       return (
         <div id='message'>
           <p>
@@ -64,7 +64,6 @@ var Register = React.createClass({
       } else {
         self.setState({busy: false, success: false, error: response.body});
       }
-      self.loggingIn = false;
     }).catch(function(error) {
       self.setState({busy: false, success: false, error: error.message});
     });
