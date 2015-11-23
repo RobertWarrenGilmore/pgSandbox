@@ -3,6 +3,7 @@ var React = require('react');
 var ReactRouter = require('react-router');
 var Link = ReactRouter.Link;
 var IndexLink = ReactRouter.IndexLink;
+var TitleMixin = require('./titleMixin');
 var Fluxxor = require('fluxxor');
 var FluxMixin = Fluxxor.FluxMixin(React);
 var StoreWatchMixin = Fluxxor.StoreWatchMixin;
@@ -10,12 +11,11 @@ var classnames = require('classnames');
 
 var App = React.createClass({
   mixins: [
-    FluxMixin, StoreWatchMixin('title', 'auth')
+    FluxMixin, StoreWatchMixin('auth'), TitleMixin()
   ],
   getStateFromFlux: function() {
     var state = {
-      loggedIn: !!this.getFlux().store('auth').getAuth(),
-      title: this.getFlux().store('title').get()
+      loggedIn: !!this.getFlux().store('auth').getAuth()
     };
     return state;
   },
@@ -23,12 +23,6 @@ var App = React.createClass({
     return {
       hamburgerExpanded: false
     };
-  },
-  _updateTitle: function() {
-    document.title = appInfo.name;
-    if (this.state.title && this.state.title.length) {
-      document.title += ' - ' + this.state.title;
-    }
   },
   _onHamburgerClick: function() {
     this.setState({
@@ -39,12 +33,6 @@ var App = React.createClass({
     this.setState({
       hamburgerExpanded: false
     });
-  },
-  componentDidMount: function() {
-    this._updateTitle();
-  },
-  componentDidUpdate: function(prevProps, prevState) {
-    this._updateTitle();
   },
   render: function() {
     var headerNavClasses = classnames({

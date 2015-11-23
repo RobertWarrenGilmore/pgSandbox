@@ -1,3 +1,5 @@
+var appInfo = require('../../appInfo.json');
+
 var TitleMixin = function (initialTitle) {
   return {
     componentDidMount: function () {
@@ -7,7 +9,10 @@ var TitleMixin = function (initialTitle) {
       this.setTitle();
     },
     setTitle: function (title) {
-      this.getFlux().actions.title.set(title);
+      document.title = appInfo.name;
+      if (title && title.length) {
+        document.title += ' - ' + title;
+      }
     }
   };
 };

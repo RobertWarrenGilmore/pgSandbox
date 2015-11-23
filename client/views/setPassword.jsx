@@ -1,43 +1,21 @@
 var React = require('react');
 var ReactRouter = require('react-router');
 var History = ReactRouter.History;
-var Fluxxor = require('fluxxor');
-var FluxMixin = Fluxxor.FluxMixin(React);
-var StoreWatchMixin = Fluxxor.StoreWatchMixin;
 var TitleMixin = require('./titleMixin');
+var ajax = require('../utilities/ajax');
+
 
 var SetPassword = React.createClass({
   mixins: [
-    FluxMixin, StoreWatchMixin('passwordSet'), History, TitleMixin('set password')
+    History, TitleMixin('set password')
   ],
+  getInitialState: function() {
+    return {busy: false, success: false, error: null};
+  },
   componentWillUpdate: function(nextProps, nextState) {
     if (nextState.result.success) {
       this.history.pushState(null, '/login');
     }
-  },
-  getStateFromFlux: function() {
-    var store = this.getFlux()
-      .store('passwordSet');
-    return {
-      blocked: store.isInProgress(),
-      result: store.getResult()
-    };
-  },
-  _onSubmit: function(event) {
-    event.preventDefault();
-    var userId = this.props.params.userId;
-    var passwordResetKey = this.props.location.query.key;
-    var password = this.refs.password.value;
-    var verifyPassword = this.refs.verifyPassword.value;
-    this.getFlux()
-      .actions
-      .passwordSet
-      .set({
-        userId: userId,
-        password: password,
-        verifyPassword: verifyPassword,
-        passwordResetKey: passwordResetKey
-      });
   },
   render: function() {
     var passwordResetKey = this.props.location.query.key;
@@ -60,21 +38,53 @@ var SetPassword = React.createClass({
             Set a new password.
           </p>
           <form onSubmit={this._onSubmit}>
-            <input type='password' ref='password' name='password' placeholder='new password' disabled={this.state.blocked} required/>
-            <input type='password' ref='verifyPassword' name='verifyPassword' placeholder='verify new password' disabled={this.state.blocked} required/>
-            {this.state.result.error
+            <input type='password' ref='password' name='password' placeholder='new password' disabled={this.state.busy} required/>
+            <input type='password' ref='verifyPassword' name='verifyPassword' placeholder='verify new password' disabled={this.state.busy} required/>
+            {this.state.error
               ? <p className='error'>
-                  {this.state.result.error}
+                  {this.state.error}
                 </p>
               : null}
             <div>
-              <button disabled={this.state.blocked} className='highlighted'>
+              <button disabled={this.state.busy} className='highlighted'>
                 set password
               </button>
             </div>
           </form>
         </div>
       );
+    }
+  },
+  _onSubmit: function(event) {
+    event.preventDefault();
+    var userId = this.props.params.userId;
+    var passwordResetKey = this.props.location.query.key;
+    var password = this.refs.password.value;
+    var verifyPassword = this.refs.verifyPassword.value;
+    this.setState({busy: true, success: false, error: null});
+    var self = this;
+    if (password !== verifyPassword) {
+      self.dispatch('SET_PASSWORD_RESET_RESULT', {
+        error: 'The passwords must match.'
+      });
+    } else {
+      return ajax({
+        method: 'PUT',
+        uri: '/api/users/' + userId,
+        json: true,
+        body: {
+          password: password,
+          passwordResetKey: passwordResetKey
+        }
+      }).then(function(response) {
+        if (response.statusCode === 200) {
+          self.setState({busy: false, success: true, error: null});
+        } else {
+          self.setState({busy: false, success: false, error: response.body});
+        }
+      }).catch(function(error) {
+        self.setState({busy: false, success: false, error: error.message});
+      });
     }
   }
 });

@@ -1,11 +1,9 @@
 var React = require('react');
-var Fluxxor = require('fluxxor');
-var FluxMixin = Fluxxor.FluxMixin(React);
 var TitleMixin = require('./titleMixin');
 
 var NotFound = React.createClass({
   mixins: [
-    FluxMixin, TitleMixin('page not found')
+    TitleMixin('page not found')
   ],
   render: function() {
     return (
