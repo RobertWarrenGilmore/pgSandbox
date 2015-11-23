@@ -7,6 +7,8 @@ var UsersStore = Fluxxor.createStore({
     'SET_USER_ACTION_STATUS': '_setStatus',
     'SET_USER_QUERY': '_setQuery',
     'CLEAR_READ_USERS': '_clearList',
+    'SET_READ_USERS_ERROR': '_setReadError',
+    'SET_UPDATE_USERS_ERROR': '_setUpdateError',
     'APPEND_READ_USERS': '_appendList',
     'UPDATE_USER': '_updateUser'
   },
@@ -20,16 +22,23 @@ var UsersStore = Fluxxor.createStore({
     this.loading = !!payload.loading;
     this.emit('change');
   },
+  _setQuery: function (payload, type) {
+    this.query = payload.query;
+    this.emit('change');
+  },
   _clearList: function (payload, type) {
+    this.readError = null;
     this.query = null;
     this.list = [];
     this.map = {};
     this.totalCount = 0;
     this.emit('change');
   },
-  _setQuery: function (payload, type) {
-    this.query = payload.query;
-    this.emit('change');
+  _setReadError: function (payload, type) {
+    this.readError = payload;
+  },
+  _setUpdateError: function (payload, type) {
+    this.updateError = payload;
   },
   _appendList: function (payload, type) {
     this.totalCount = payload.totalCount;
@@ -55,6 +64,9 @@ var UsersStore = Fluxxor.createStore({
   isLoading: function () {
     return this.loading;
   },
+  isBusy: function () {
+    return this.saving || this.loading;
+  },
   getQuery: function () {
     return this.query;
   },
@@ -73,8 +85,35 @@ var UsersStore = Fluxxor.createStore({
 
 var actions = {
   search: function (query) {
+    if (this.isBusy()) {
+      throw new Error('User flux is busy.');
+    }
+
     this.dispatch('SET_USER_ACTION_STATUS', {
-      
+      loading: true
+    });
+
+    this.dispatch('CLEAR_READ_USERS');
+    this.dispatch('SET_USER_QUERY', query);
+    var dispatch = this.dispatch;
+    //var limitedQuery = Object.
+    return Promise.props({
+      a: ajax({
+        method: 'GET',
+        uri: '/api/users',
+        json: true,
+        body: query
+      })
+    }).then(function (response) {
+      if (response.statusCode === 200) {
+        self.dispatch('APPEND_READ_USERS', {
+          list: true
+        });
+      } else {
+        self.dispatch('SET_PASSWORD_RESET_RESULT', response.body);
+      }
+    }).finally(function () {
+      dispatch('SET_USER_ACTION_STATUS', {});
     });
   },
   set: function (params) {
