@@ -3,86 +3,159 @@ var React = require('react');
 var TitleMixin = require('./titleMixin');
 
 var Users = React.createClass({
-  mixins: [
-    TitleMixin('user search')
-  ],
-  getStateFromFlux: function() {
-    var store = this.getFlux().store('users');
+  mixins: [TitleMixin('user search')],
+  getInitialState: function() {
     return {
-      loading: store.isLoading(),
-      saving: store.isSaving(),
-      error: store.getError(),
-      results: store.getResults()
+      busy: false,
+      error: null,
+      queryUpdateTimeout: null,
+      workingQuery: this.props.location.query,
+      results: [],
+      endReached: false
     };
   },
-  // Redirect to a valid URL query from the potentially invalid user-supplied query.
-  _forceValidQuery: function() {
-    var oldQuery = this.props.location.query;
-    var newQuery = {};
+  // Are we redirecting after input or waiting until the user manually clicks "apply"?
+  _useManualApply: function () {
+    // Borrowed from rackt/history/modules/DOMUtils.supportsHistory
+    var ua = navigator.userAgent;
+    if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) &&
+        ua.indexOf('Mobile Safari') !== -1 &&
+        ua.indexOf('Chrome') === -1 &&
+        ua.indexOf('Windows Phone') === -1) {
+      return true;
+    }
+    if (ua.indexOf('CriOS') !== -1) {
+      return true;
+    }
+    return !window.history || !window.history.pushState;
+
+  },
+  // Read the search parameters from the controls and use them to construct the working query.
+  _updateWorkingQuery: function() {
+    // Collect the search parameters from the controls.
+    var parameters = {
+      givenName: this.refs.givenName.value,
+      familyName: this.refs.familyName.value,
+      emailAddress: this.refs.emailAddress.value,
+      sortBy: null, // TODO
+      sortOrder: null // TODO
+    };
+    this.setState({workingQuery: parameters});
+  },
+  // Redirect the URL to the working query.
+  _setUrlQuery: function(query, options) {
+    var delayed = options && !!options.delayed;
+    var replace = options && !!options.replace;
+    var validQuery = {};
     // Only these parameters can be filtered on.
     var validFilter = ['emailAddress', 'givenName', 'familyName'];
     for (var i in validFilter) {
       var parameter = validFilter[i];
-      newQuery[parameter] = oldQuery[parameter];
+      validQuery[parameter] = query[parameter];
     }
     // sortBy has valid values and a default.
     var validSortBy = ['emailAddress', 'givenName', 'familyName'];
-    if (!oldQuery.sortOrder || (validSortBy.indexOf(oldQuery.sortOrder) == -1)) {
-      newQuery.sortBy = validSortBy[0];
+    if (!query.sortOrder || (validSortBy.indexOf(query.sortOrder) == -1)) {
+      validQuery.sortBy = validSortBy[0];
     } else {
-      newQuery.sortBy = oldQuery.sortBy;
+      validQuery.sortBy = query.sortBy;
     }
     // sortOrder has valid values and a default.
     var validSortOrder = ['ascending', 'descending'];
-    if (!oldQuery.sortOrder || (validSortOrder.indexOf(oldQuery.sortOrder) == -1)) {
-      newQuery.sortOrder = validSortOrder[0];
+    if (!query.sortOrder || (validSortOrder.indexOf(query.sortOrder) == -1)) {
+      validQuery.sortOrder = validSortOrder[0];
     } else {
-      newQuery.sortOrder = oldQuery.sortOrder;
+      validQuery.sortOrder = query.sortOrder;
     }
     // If the valid query differs from the supplied query, redirect to it.
-    var pathname = this.props.location.pathname;
-    if (!_.isEqual(newQuery, oldQuery)) {
-      this.props.history.replaceState(null, pathname, newQuery);
+    if (!_.isEqual(query, validQuery)) {
+      var navigate = this.props.history[replace
+          ? 'replaceState'
+          : 'pushState'];
+      var self = this;
+      var doRedirect = function() {
+        navigate(null, self.props.location.pathname, validQuery);
+        if (self.state.queryUpdateTimeout) {
+          self.setState({queryUpdateTimeout: null});
+        }
+      };
+      if (this.state.queryUpdateTimeout) {
+        clearTimeout(this.state.queryUpdateTimeout);
+      }
+      if (delayed) {
+        // Delay the query update to one second after the most recent edit.
+        var queryUpdateTimeout = setTimeout(doRedirect, 1000);
+        this.setState({queryUpdateTimeout: queryUpdateTimeout});
+      } else {
+        doRedirect();
+      }
     }
-  },
-  // Read the search parameters from the controls and use them to construct a URL query.
-  _updateSearchParameters: function () {
-    // TODO Collect the search parameters from the controls.
-    var parameters = {
-      givenName: null,
-      familyName: null,
-      emailAddress: null,
-      sortBy: null,
-      sortOrder: null
-    };
-    // Navigate to this page, but with the new parameters as the query.
-    this.props.history.pushState(null, this.props.location.pathname, parameters);
   },
   // Initiate a search from the URL query.
   _doSearch: function() {
-    this.getFlux().actions.users.doSearch(this.props.location.query);
+    // TODO Some ajax involving this.props.location.query.
   },
-  _loadMoreResults: function() {
-    this.getFlux().actions.users.loadMoreResults();
+  _loadMoreResults: function() {},
+  componentWillMount: function() {
+    // Correct the URL query if it's invalid.
+    this._setUrlQuery(this.props.location.query, {
+      replace: true,
+      delayed: false
+    });
   },
-  componentWillMount: function(nextProps) {
-    this._forceValidQuery();
-    // TODO determine if the redirect in forceValidQuery fires a componentWillUpdate. If so, then we don't need to do any more here.
+  componentWillReceiveProps: function(nextProps) {
+    this.setState({
+      workingQuery: nextProps.location.query
+    });
   },
   componentWillUpdate: function(nextProps, nextState) {
-    console.log(nextProps.location.query);
+    if (!this._useManualApply()) {
+      var workingQueryChanged = !_.isEqual(nextState.workingQuery, this.state.workingQuery);
+      var urlQueryIsBehindWorkingQuery = !_.isEqual(nextState.workingQuery, nextProps.location.query);
+      if (workingQueryChanged && urlQueryIsBehindWorkingQuery) {
+        this._setUrlQuery(nextState.workingQuery, {
+          replace: false,
+          delayed: true
+        });
+      }
+    }
   },
   render: function() {
-    // TODO Set the values on the controls from the query.
-    // TODO Bind onChange for every control to this._updateSearchParameters.
     return (
       <div id='userSearch'>
-        <form id='filter'>
+        <form id='filter' onChange={this._updateWorkingQuery}>
           <label>
             email address
-            <input type='email' ref='emailAddress'/>
+            <input type='email' ref='emailAddress' value={this.state.workingQuery.emailAddress}/>
           </label>
+          <label>
+            first name
+            <input type='text' ref='givenName' value={this.state.workingQuery.givenName}/>
+          </label>
+          <label>
+            last name
+            <input type='text' ref='familyName' value={this.state.workingQuery.familyName}/>
+          </label>
+          {this._useManualApply()
+            ? (
+              <div>
+                <button disabled={this.state.busy} className='highlighted'>apply</button>
+                <button disabled={this.state.busy}>revert</button>
+              </div>
+            ) :(
+              null
+            )
+          }
+
         </form>
+        <ol>
+          {_.map(this.state.results, function(user) {
+            return <li>user.id</li>;
+          })}
+          {this.state.endReached
+            ? <li>no more</li>
+            : <li>loading more</li>}
+        </ol>
       </div>
     );
   }

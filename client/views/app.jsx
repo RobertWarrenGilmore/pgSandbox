@@ -38,6 +38,9 @@ var App = React.createClass({
             <IndexLink activeClassName='active' to='/' onClick={this._onNavClick}>
               home
             </IndexLink>
+            <Link activeClassName='active' to='/users' onClick={this._onNavClick}>
+              users
+            </Link>
             <div className='spacer'></div>
             {this.state.authCredentials
               ? (

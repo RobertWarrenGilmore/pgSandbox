@@ -18,12 +18,12 @@ var NotFound = require('./views/notFound.jsx');
 function requireAuth(nextState, replaceState) {
   if (!auth.getCredentials()) {
     replaceState({
-      nextPathname: nextState.location.pathname
+      nextLocation: nextState.location
     }, '/login');
   }
 }
 
-function denyAuth(nextState, replaceState) {
+function requireNoAuth(nextState, replaceState) {
   if (auth.getCredentials()) {
     replaceState(null, '/');
   }
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <Router history={createBrowserHistory()}>
       <Route component={App} path='/'>
 
-        <Route onEnter={denyAuth}>
+        <Route onEnter={requireNoAuth}>
           <Route component={LogIn} path='logIn'/>
           <Route component={Register} path='register'/>
           <Route component={ForgotPassword} path='forgotPassword'/>
