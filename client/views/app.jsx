@@ -15,7 +15,7 @@ var App = React.createClass({
   _authListener: function() {
     this.setState({authCredentials: auth.getCredentials(), authBusy: auth.isBusy()});
   },
-  componentDidMount: function() {
+  componentWillMount: function() {
     auth.listen(this._authListener);
   },
   componentWillUnmount: function() {

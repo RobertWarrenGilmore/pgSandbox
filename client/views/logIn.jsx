@@ -27,9 +27,7 @@ var LogIn = React.createClass({
     if (nextState.credentials) {
       var location = this.props.location;
       if (location.state && location.state.nextLocation) {
-        console.log('logging in');
         this.props.history.replaceState(null, location.state.nextLocation.pathname, location.state.nextLocation.query);
-        console.log('logged in');
       } else {
         this.props.history.replaceState(null, '/');
       }
