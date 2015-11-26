@@ -74,11 +74,9 @@ var Users = React.createClass({
         navigate(null, self.props.location.pathname, validQuery);
       }
       self._doSearch();
-      console.log('setting the state');
       if (self.state.queryUpdateTimeout) {
         self.setState({queryUpdateTimeout: null});
       }
-      console.log('set the state');
     };
     if (this.state.queryUpdateTimeout) {
       clearTimeout(this.state.queryUpdateTimeout);
