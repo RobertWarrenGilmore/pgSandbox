@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react');
 var TitleMixin = require('./titleMixin');
+var auth = require('../flux/auth');
 
 var Users = React.createClass({
   mixins: [TitleMixin('user search')],
@@ -15,13 +16,10 @@ var Users = React.createClass({
     };
   },
   // Are we redirecting after input or waiting until the user manually clicks "apply"?
-  _useManualApply: function () {
+  _useManualApply: function() {
     // Borrowed from rackt/history/modules/DOMUtils.supportsHistory
     var ua = navigator.userAgent;
-    if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) &&
-        ua.indexOf('Mobile Safari') !== -1 &&
-        ua.indexOf('Chrome') === -1 &&
-        ua.indexOf('Windows Phone') === -1) {
+    if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) {
       return true;
     }
     if (ua.indexOf('CriOS') !== -1) {
@@ -42,7 +40,7 @@ var Users = React.createClass({
     };
     this.setState({workingQuery: parameters});
   },
-  // Redirect the URL to the working query.
+  // Redirect the URL to the provided query.
   _setUrlQuery: function(query, options) {
     var delayed = options && !!options.delayed;
     var replace = options && !!options.replace;
@@ -67,28 +65,31 @@ var Users = React.createClass({
     } else {
       validQuery.sortOrder = query.sortOrder;
     }
-    // If the valid query differs from the supplied query, redirect to it.
-    if (!_.isEqual(query, validQuery)) {
-      var navigate = this.props.history[replace
-          ? 'replaceState'
-          : 'pushState'];
-      var self = this;
-      var doRedirect = function() {
+    var navigate = this.props.history[replace
+        ? 'replaceState'
+        : 'pushState'];
+    var self = this;
+    var doRedirect = function() {
+      if (!_.isEqual(query, validQuery)) {
         navigate(null, self.props.location.pathname, validQuery);
-        if (self.state.queryUpdateTimeout) {
-          self.setState({queryUpdateTimeout: null});
-        }
-      };
-      if (this.state.queryUpdateTimeout) {
-        clearTimeout(this.state.queryUpdateTimeout);
       }
-      if (delayed) {
-        // Delay the query update to one second after the most recent edit.
-        var queryUpdateTimeout = setTimeout(doRedirect, 1000);
-        this.setState({queryUpdateTimeout: queryUpdateTimeout});
-      } else {
-        doRedirect();
+      self._doSearch();
+      console.log('setting the state');
+      if (self.state.queryUpdateTimeout) {
+        self.setState({queryUpdateTimeout: null});
       }
+      console.log('set the state');
+    };
+    if (this.state.queryUpdateTimeout) {
+      clearTimeout(this.state.queryUpdateTimeout);
+    }
+    // If the valid query differs from the supplied query, redirect to it.
+    if (delayed) {
+      // Delay the query update to one second after the most recent edit.
+      var queryUpdateTimeout = setTimeout(doRedirect, 500);
+      this.setState({queryUpdateTimeout: queryUpdateTimeout});
+    } else {
+      doRedirect();
     }
   },
   // Initiate a search from the URL query.
@@ -104,9 +105,7 @@ var Users = React.createClass({
     });
   },
   componentWillReceiveProps: function(nextProps) {
-    this.setState({
-      workingQuery: nextProps.location.query
-    });
+    this.setState({workingQuery: nextProps.location.query});
   },
   componentWillUpdate: function(nextProps, nextState) {
     if (!this._useManualApply()) {
@@ -119,6 +118,17 @@ var Users = React.createClass({
         });
       }
     }
+  },
+  _onApply: function(event) {
+    event.preventDefault();
+    this._setUrlQuery(this.state.workingQuery, {
+      replace: false,
+      delayed: false
+    });
+  },
+  _onRevert: function(event) {
+    event.preventDefault();
+    this.setState({workingQuery: this.props.location.query});
   },
   render: function() {
     return (
@@ -139,14 +149,15 @@ var Users = React.createClass({
           {this._useManualApply()
             ? (
               <div>
-                <button disabled={this.state.busy} className='highlighted'>apply</button>
-                <button disabled={this.state.busy}>revert</button>
+                <button onClick={this._onApply} disabled={this.state.busy} className='highlighted'>
+                  apply
+                </button>
+                <button onClick={this._onRevert} disabled={this.state.busy}>
+                  revert
+                </button>
               </div>
-            ) :(
-              null
             )
-          }
-
+            : (null)}
         </form>
         <ol>
           {_.map(this.state.results, function(user) {

@@ -1,13 +1,12 @@
 var React = require('react');
 var ReactRouter = require('react-router');
 var Link = ReactRouter.Link;
-var History = ReactRouter.History;
 var TitleMixin = require('./titleMixin');
 var auth = require('../flux/auth');
 
 var LogIn = React.createClass({
   mixins: [
-    History, TitleMixin('log in')
+    TitleMixin('log in')
   ],
   getInitialState: function() {
     return {credentials: auth.getCredentials(), busy: auth.isBusy(), error: null};
@@ -28,9 +27,11 @@ var LogIn = React.createClass({
     if (nextState.credentials) {
       var location = this.props.location;
       if (location.state && location.state.nextLocation) {
-        this.history.replaceState(location.state.nextLocation.state, location.state.nextLocation.pathname, location.state.nextLocation.query);
+        console.log('logging in');
+        this.props.history.replaceState(null, location.state.nextLocation.pathname, location.state.nextLocation.query);
+        console.log('logged in');
       } else {
-        this.history.replaceState(null, '/');
+        this.props.history.replaceState(null, '/');
       }
     }
   },

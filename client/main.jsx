@@ -34,6 +34,7 @@ function logOut(nextState, replaceState) {
 }
 
 auth.resume();
+debugger;
 document.addEventListener('DOMContentLoaded', function() {
   var router = (
     <Router history={createBrowserHistory()}>
