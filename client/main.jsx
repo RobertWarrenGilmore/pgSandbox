@@ -6,6 +6,7 @@ var Route = ReactRouter.Route;
 var Redirect = ReactRouter.Redirect;
 var createBrowserHistory = require('history/lib/createBrowserHistory');
 var auth = require('./flux/auth');
+var Promise = require('bluebird');
 var App = require('./views/app.jsx');
 var LogIn = require('./views/logIn.jsx');
 var Register = require('./views/register.jsx');
@@ -14,6 +15,10 @@ var SetPassword = require('./views/setPassword.jsx');
 var Users = require('./views/users.jsx');
 var User = require('./views/user.jsx');
 var NotFound = require('./views/notFound.jsx');
+
+Promise.config({
+  cancellation: true
+});
 
 function requireAuth(nextState, replaceState) {
   if (!auth.getCredentials()) {

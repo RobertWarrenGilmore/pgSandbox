@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react');
 var TitleMixin = require('./titleMixin');
+var ajax = require('../utilities/ajax');
 var auth = require('../flux/auth');
 
 var Users = React.createClass({
@@ -94,7 +95,41 @@ var Users = React.createClass({
   },
   // Initiate a search from the URL query.
   _doSearch: function() {
-    // TODO Some ajax involving this.props.location.query.
+    if (this.state.runningRequest) {
+      this.state.runningRequest.cancel();
+    }
+    var authCredentials = auth.getCredentials();
+    // TODO Add limit and offset.
+    var r = ajax({
+      method: 'GET',
+      uri: '/api/users',
+      auth: {
+        user: authCredentials.emailAddress,
+        pass: authCredentials.password
+      },
+      json: true,
+      qs: this.props.location.query
+    });
+    this.setState({
+      runningRequest: r,
+      busy: true,
+      error: null
+    });
+    var self = this;
+    r.then(function(response) {
+      if (response.statusCode === 200) {
+        self.setState({
+          busy: false,
+          error: null,
+          results: response.body,
+          runningRequest: null
+        });
+      } else {
+        self.setState({busy: false, error: response.body, runningRequest: null});
+      }
+    }).catch(function(error) {
+      self.setState({busy: false, error: error.message, runningRequest: null});
+    });
   },
   _loadMoreResults: function() {},
   componentWillMount: function() {
@@ -136,7 +171,7 @@ var Users = React.createClass({
         <form id='filter' onChange={this._updateWorkingQuery}>
           <label>
             email address
-            <input type='email' ref='emailAddress' value={this.state.workingQuery.emailAddress}/>
+            <input type='text' ref='emailAddress' value={this.state.workingQuery.emailAddress}/>
           </label>
           <label>
             first name
@@ -161,7 +196,7 @@ var Users = React.createClass({
         </form>
         <ol>
           {_.map(this.state.results, function(user) {
-            return <li>user.id</li>;
+            return <li>{user.id} - {user.emailAddress}</li>;
           })}
           {this.state.endReached
             ? <li>no more</li>

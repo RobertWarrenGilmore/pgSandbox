@@ -290,6 +290,18 @@ module.exports = function (knex, emailer) {
           return acceptOnlyAttributes(searchParams, searchableParams, function (attribute) {
             return new MalformedRequestError('Cannot filter by parameter ' + attribute + '.');
           }).then(function () {
+            if (searchParams.givenName) {
+              query = query.where('givenName', 'like', searchParams.givenName + '%');
+              delete searchParams.givenName;
+            }
+            if (searchParams.familyName) {
+              query = query.where('familyName', 'like', searchParams.familyName + '%');
+              delete searchParams.familyName;
+            }
+            if (searchParams.emailAddress) {
+              query = query.where('emailAddress', 'like', searchParams.emailAddress + '%');
+              delete searchParams.emailAddress;
+            }
             query = query.where(searchParams);
 
             // The query is finished. Return it.
