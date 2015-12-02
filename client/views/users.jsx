@@ -47,7 +47,7 @@ var Users = React.createClass({
     var replace = options && !!options.replace;
     var validQuery = {};
     // Only these parameters can be filtered on.
-    var validFilter = ['emailAddress', 'givenName', 'familyName'];
+    var validFilter = ['familyName', 'givenName', 'emailAddress'];
     for (var i in validFilter) {
       var parameter = validFilter[i];
       if (query[parameter]) {
@@ -55,7 +55,7 @@ var Users = React.createClass({
       }
     }
     // sortBy has valid values and a default.
-    var validSortBy = ['emailAddress', 'givenName', 'familyName'];
+    var validSortBy = ['familyName', 'givenName', 'emailAddress'];
     if (!query.sortOrder || (validSortBy.indexOf(query.sortOrder) == -1)) {
       validQuery.sortBy = validSortBy[0];
     } else {
