@@ -209,14 +209,14 @@ module.exports = function (knex, emailer) {
           return new MalformedRequestError('The attribute ' + attribute + ' cannot be written during a user creation.');
         }
       ).then(function () {
+        if (!newUser.emailAddress) {
+          throw absentEmailAddressError;
+        }
         key = generatePasswordResetKey();
         newUser.passwordResetKeyHash = key.hash;
         return validationRules.run(newUser);
       }).then(function () {
         return knex.transaction(function (trx) {
-          if (!newUser.emailAddress) {
-            throw absentEmailAddressError;
-          }
           return trx
             .from('users')
             .select(['id', 'emailAddress'])
