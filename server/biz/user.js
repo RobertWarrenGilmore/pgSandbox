@@ -202,6 +202,8 @@ module.exports = function (knex, emailer) {
     create: function (args) {
       var newUser = Object.assign({}, args.body);
       var key;
+      var absentEmailAddressError = new MalformedRequestError('You must supply an email address to create a user.');
+      var notUniqueEmailAddressError = new ConflictingEditError('That email address is already in use by another user.');
       return acceptOnlyAttributes(newUser, creatableAttributes,
         function (attribute) {
           return new MalformedRequestError('The attribute ' + attribute + ' cannot be written during a user creation.');
@@ -212,10 +214,22 @@ module.exports = function (knex, emailer) {
         return validationRules.run(newUser);
       }).then(function () {
         return knex.transaction(function (trx) {
+          if (!newUser.emailAddress) {
+            throw absentEmailAddressError;
+          }
           return trx
-            .into('users')
-            .insert(newUser)
-            .returning('id')
+            .from('users')
+            .select(['id', 'emailAddress'])
+            .where('emailAddress', 'ilike', escapeForLike(newUser.emailAddress))
+            .then(function (existingUsers) {
+              if (existingUsers && existingUsers.length) {
+                throw notUniqueEmailAddressError;
+              }
+              return trx
+                .into('users')
+                .insert(newUser)
+                .returning('id');
+            })
             .tap(function (ids) {
               return sendPasswordResetEmail(emailer, newUser.emailAddress, ids[0], key.key);
             })
@@ -235,11 +249,11 @@ module.exports = function (knex, emailer) {
       }).catch(function (err) {
         return err.code === '23502';
       }, function (err) {
-        throw new MalformedRequestError('You must supply an email address to create a user.');
+        throw absentEmailAddressError;
       }).catch(function (err) {
         return err.code === '23505';
       }, function (err) {
-        throw new ConflictingEditError('That email address is already in use by another user.');
+        throw notUniqueEmailAddressError;
       });
     },
 

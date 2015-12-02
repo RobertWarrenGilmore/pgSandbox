@@ -124,7 +124,7 @@ describe('user', function () {
         createdIds.push(ids[0]);
         return User.create({
           body: {
-            emailAddress: emailAddress
+            emailAddress: emailAddress.toUpperCase()
           }
         });
       }).then(function (user) {
