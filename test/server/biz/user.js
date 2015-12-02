@@ -347,6 +347,32 @@ describe('user', function () {
         });
       });
 
+      it('should be able to search by partial, lower-case family name', function () {
+        return User.read({
+          query: {
+            familyName: familyName1.substr(0, 3).toLowerCase()
+          }
+        }).then(function (users) {
+          assert.strictEqual(users.length, 2, 'The wrong number of users was returned.');
+          for (var i in users) {
+            assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.');
+          }
+        });
+      });
+
+      it('should fail to search by family name using like expressions', function () {
+        return User.read({
+          query: {
+            familyName: familyName1.replace('e', '_')
+          }
+        }).then(function (users) {
+          assert.strictEqual(users.length, 0, 'The wrong number of users was returned.');
+          for (var i in users) {
+            assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.');
+          }
+        });
+      });
+
       it('should be able to search by family name and given name', function () {
         return User.read({
           query: {

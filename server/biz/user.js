@@ -8,6 +8,7 @@ var ConflictingEditError = require('../errors/conflictingEditError');
 var Promise = require('bluebird');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
 var Checkit = require('checkit');
+var escapeForLike = require('./escapeForLike');
 
 var validationRules = new Checkit({
   emailAddress: ['email'],
@@ -166,14 +167,14 @@ function anonymousPasswordResetKeyUpdate(trx, newUser, emailer) {
       // Set the key hash.
       return trx
         .from('users')
-        .where('emailAddress', newUser.emailAddress)
+        .where('emailAddress', 'ilike', escapeForLike(newUser.emailAddress))
         .update({
           passwordResetKeyHash: key.hash
         });
     })
     // Send the user an email with the key.
     .then(function () {
-      return trx.from('users').where('emailAddress', newUser.emailAddress).select('id');
+      return trx.from('users').where('emailAddress', 'ilike', escapeForLike(newUser.emailAddress)).select('id');
     })
     .tap(function (users) {
       if (users.length) {
@@ -200,9 +201,6 @@ module.exports = function (knex, emailer) {
 
     create: function (args) {
       var newUser = Object.assign({}, args.body);
-      if (newUser.emailAddress) {
-        newUser.emailAddress = newUser.emailAddress.toLowerCase();
-      }
       var key;
       return acceptOnlyAttributes(newUser, creatableAttributes,
         function (attribute) {
@@ -291,15 +289,15 @@ module.exports = function (knex, emailer) {
             return new MalformedRequestError('Cannot filter by parameter ' + attribute + '.');
           }).then(function () {
             if (searchParams.givenName) {
-              query = query.where('givenName', 'like', searchParams.givenName + '%');
+              query = query.where('givenName', 'ilike', escapeForLike(searchParams.givenName) + '%');
               delete searchParams.givenName;
             }
             if (searchParams.familyName) {
-              query = query.where('familyName', 'like', searchParams.familyName + '%');
+              query = query.where('familyName', 'ilike', escapeForLike(searchParams.familyName) + '%');
               delete searchParams.familyName;
             }
             if (searchParams.emailAddress) {
-              query = query.where('emailAddress', 'like', searchParams.emailAddress + '%');
+              query = query.where('emailAddress', 'ilike', escapeForLike(searchParams.emailAddress) + '%');
               delete searchParams.emailAddress;
             }
             query = query.where(searchParams);
@@ -319,9 +317,6 @@ module.exports = function (knex, emailer) {
         id = args.params.userId;
       }
       var newUser = Object.assign({}, args.body);
-      if (newUser.emailAddress) {
-        newUser.emailAddress = newUser.emailAddress.toLowerCase();
-      }
 
       return validationRules.run(newUser)
         .then(function () {

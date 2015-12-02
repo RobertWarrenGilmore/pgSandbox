@@ -1,10 +1,18 @@
 require('dotenv').load();
 var knex = require('../server/database/knex');
+var Promise = require('bluebird');
 
-// Before we do any tests, migrate the database to the latest schema.
+// Migrate the database to the latest schema.
 before(function (done) {
   knex.migrate.latest().then(function () {
     done();
+  });
+});
+
+// Canfigure promises.
+before(function () {
+  Promise.config({
+    cancellation: true
   });
 });
 
