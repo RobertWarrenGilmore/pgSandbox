@@ -23,6 +23,11 @@ body > #appContainer > div
   @supports (display: flex)
     flex: 0 1 $width
 
+=full-content
+  @supports (display: flex)
+    flex: 1 0
+    align-self: stretch
+
 // If we have flex capability,
 @supports (display: flex)
   // Undo the legacy layout.
