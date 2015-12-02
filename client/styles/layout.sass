@@ -6,19 +6,6 @@ $medium-padding: 10px
 $small-padding: 5px
 $app-max-width: 1000px
 
-// legacy (flexless) layout
-body > #appContainer > div
-  padding-top: $header-height
-  padding-bottom: $footer-height
-  > header
-    position: absolute
-    top: 0
-    height: $header-height
-  > main
-    min-height: 100%
-  > footer
-    height: $footer-height
-
 =floater-content($width)
   @supports (display: flex)
     flex: 0 1 $width
@@ -27,6 +14,62 @@ body > #appContainer > div
   @supports (display: flex)
     flex: 1 0
     align-self: stretch
+
+// things in common between the two layouts
+body
+  position: absolute
+  min-height: 100%
+  width: 100%
+  > #appContainer
+    // height: 100%
+    > div
+      // height: 100%
+      > header
+        > nav
+          position: absolute
+          top: $small-padding
+          padding-top: $small-padding * 2 + 25px
+          right: $small-padding
+          > .spacer
+            display: none
+          > .hamburgerButton
+            width: 30px
+            height: 25px
+            position: absolute
+            top: $small-padding
+            right: $small-padding
+            cursor: pointer
+          > a
+            display: none
+        @media (min-width: $tiny-media-width)
+          > nav
+            padding-top: 0
+            position: unset
+            > .hamburgerButton
+              display: none
+            > .spacer
+              display: block
+      > main
+        padding: $large-padding
+
+// legacy (flexless) layout
+body > #appContainer > div
+  padding-top: $header-height
+  padding-bottom: $footer-height
+  > header
+    position: absolute
+    top: 0
+    height: $header-height
+    > nav.hamburgerExpanded > a
+      display: block
+    @media (min-width: $tiny-media-width)
+      > nav:not(.hamburgerExpanded) > a
+        display: block
+  > main
+    min-height: 100%
+  > footer
+    height: $footer-height
+
 
 // If we have flex capability,
 @supports (display: flex)
@@ -38,95 +81,77 @@ body > #appContainer > div
       position: relative
       top: auto
       height: auto
+      > nav.hamburgerExpanded > a
+        display: initial
+      @media (min-width: $tiny-media-width)
+        > nav > a
+          display: initial
     > main
       min-height: auto
     > footer
       height: auto
   // Define a flexbox layout.
-  body > #appContainer
-    @media (min-width: $app-max-width)
-      display: flex
-      flex-direction: row
-      justify-content: center
+  body
+    display: flex
+    flex-direction: column
+    justify-content: flex-start
+    > #appContainer
+      flex: 1 0
+      @media (min-width: $app-max-width)
+        display: flex
+        flex-direction: row
+        justify-content: center
+        > div
+          flex: 0 1 $app-max-width
       > div
-        flex: 0 1 $app-max-width
-    > div
-      display: flex
-      flex-direction: column
-      > header
-        flex-grow: 0
-        flex-shrink: 0
-        flex-basis: $header-height * 0.75
         display: flex
         flex-direction: column
-        > a
+        > header
+          flex-grow: 0
+          flex-shrink: 0
+          flex-basis: $header-height * 0.75
+          display: flex
+          flex-direction: column
+          > a
+            flex: 1 0 auto
+            display: flex
+            align-items: center
+            justify-content: center
+          > nav
+            display: flex
+            flex-wrap: nowrap
+            flex-direction: column
+            align-items: stretch
+            > .hamburgerButton
+              display: flex
+              align-items: center
+              justify-content: center
+            > .spacer
+              display: none
+            > a
+              flex: 0 0 auto
+              display: none
+              align-items: center
+              justify-content: center
+              padding: $small-padding
+            &.hamburgerExpanded > a
+              display: flex
+          @media (min-width: $tiny-media-width)
+            flex-basis: $header-height
+            > nav
+              flex-wrap: wrap
+              flex-direction: row
+              > .hamburgerButton
+                display: none
+              > .spacer
+                display: block
+                flex: 1 0 0
+              > a
+                display: flex
+        > main
           flex: 1 0 auto
           display: flex
           align-items: center
           justify-content: center
-        > nav
-          display: flex
-          flex-wrap: nowrap
-          flex-direction: column
-          align-items: stretch
-          > .hamburgerButton
-            display: flex
-            align-items: center
-            justify-content: center
-          > spacer
-            display: none
-          > a
-            flex: 0 0 auto
-            display: none
-            align-items: center
-            justify-content: center
-            padding: $small-padding
-          &.hamburgerExpanded > a
-            display: flex
-        @media (min-width: $tiny-media-width)
-          flex-basis: $header-height
-          > nav
-            flex-wrap: wrap
-            flex-direction: row
-            > .hamburgerButton
-              display: none
-            > .spacer
-              flex: 1 0 0
-            > a
-              display: flex
-      > main
-        flex: 1 0 auto
-        display: flex
-        align-items: center
-        justify-content: center
-      > footer
-        flex: 0 0 $footer-height
-
-// things in common between the two layouts
-body
-  position: absolute
-  height: 100%
-  width: 100%
-  > #appContainer
-    height: 100%
-    > div
-      height: 100%
-      > header
-        > nav
-          position: absolute
-          top: $small-padding
-          padding-top: $small-padding * 2 + 25px
-          right: $small-padding
-          > .hamburgerButton
-            width: 30px
-            height: 25px
-            position: absolute
-            top: $small-padding
-            right: $small-padding
-            cursor: pointer
-        @media (min-width: $tiny-media-width)
-          > nav
-            padding-top: 0
-            position: unset
-      > main
-        padding: $large-padding
+        > footer
+          flex: 0 0 $footer-height
