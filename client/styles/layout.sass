@@ -41,6 +41,7 @@ body
             cursor: pointer
           > a
             display: none
+            padding: $small-padding
         @media (min-width: $tiny-media-width)
           > nav
             padding-top: 0
@@ -124,14 +125,10 @@ body > #appContainer > div
               display: flex
               align-items: center
               justify-content: center
-            > .spacer
-              display: none
             > a
               flex: 0 0 auto
-              display: none
               align-items: center
               justify-content: center
-              padding: $small-padding
             &.hamburgerExpanded > a
               display: flex
           @media (min-width: $tiny-media-width)
@@ -142,7 +139,6 @@ body > #appContainer > div
               > .hamburgerButton
                 display: none
               > .spacer
-                display: block
                 flex: 1 0 0
               > a
                 display: flex
