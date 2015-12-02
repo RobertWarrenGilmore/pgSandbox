@@ -97,15 +97,13 @@ body > #appContainer > div
     justify-content: flex-start
     > #appContainer
       flex: 1 0
-      @media (min-width: $app-max-width)
-        display: flex
-        flex-direction: row
-        justify-content: center
-        > div
-          flex: 0 1 $app-max-width
+      display: flex
+      flex-direction: row
+      justify-content: center
       > div
         display: flex
         flex-direction: column
+        flex: 0 1 $app-max-width
         > header
           flex-grow: 0
           flex-shrink: 0
