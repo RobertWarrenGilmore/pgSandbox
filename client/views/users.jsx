@@ -196,15 +196,33 @@ var Users = React.createClass({
         </form>
         <ol>
           {_.map(this.state.results, function(user) {
-            return <li>{user.id} - {user.emailAddress}</li>;
+            return <Entry user={user}/>;
           })}
           {this.state.endReached
-            ? <li>no more</li>
+            ? null
             : <li>loading more</li>}
         </ol>
       </div>
     );
   }
+});
+
+var Entry = React.createClass({
+
+  render: function() {
+    var user = this.props.user;
+    return (
+      <li className='user' key={user.id}>
+        <div className='name'>
+          {user.givenName} {user.familyName}
+        </div>
+        <div className='emailAddress'>
+          {user.emailAddress}
+        </div>
+      </li>
+    );
+  }
+
 });
 
 module.exports = Users;
