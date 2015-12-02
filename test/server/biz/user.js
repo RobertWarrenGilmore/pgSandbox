@@ -367,9 +367,6 @@ describe('user', function () {
           }
         }).then(function (users) {
           assert.strictEqual(users.length, 0, 'The wrong number of users was returned.');
-          for (var i in users) {
-            assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.');
-          }
         });
       });
 
