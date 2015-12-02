@@ -76,7 +76,6 @@ var Users = React.createClass({
       if (!_.isEqual(query, validQuery)) {
         navigate(null, self.props.location.pathname, validQuery);
       }
-      self._doSearch();
       if (self.state.queryUpdateTimeout) {
         self.setState({queryUpdateTimeout: null});
       }
@@ -110,20 +109,11 @@ var Users = React.createClass({
       json: true,
       qs: this.props.location.query
     });
-    this.setState({
-      runningRequest: r,
-      busy: true,
-      error: null
-    });
+    this.setState({runningRequest: r, busy: true, error: null});
     var self = this;
     r.then(function(response) {
       if (response.statusCode === 200) {
-        self.setState({
-          busy: false,
-          error: null,
-          results: response.body,
-          runningRequest: null
-        });
+        self.setState({busy: false, error: null, results: response.body, runningRequest: null});
       } else {
         self.setState({busy: false, error: response.body, runningRequest: null});
       }
@@ -138,9 +128,13 @@ var Users = React.createClass({
       replace: true,
       delayed: false
     });
+    this._doSearch();
   },
   componentWillReceiveProps: function(nextProps) {
-    this.setState({workingQuery: nextProps.location.query});
+    var urlQueryChanged = !_.isEqual(nextProps.location.query, this.props.location.query);
+    if (urlQueryChanged) {
+      this.setState({workingQuery: nextProps.location.query});
+    }
   },
   componentWillUpdate: function(nextProps, nextState) {
     if (!this._useManualApply()) {
@@ -152,6 +146,12 @@ var Users = React.createClass({
           delayed: true
         });
       }
+    }
+  },
+  componentDidUpdate: function(prevProps, prevState) {
+    var urlQueryChanged = !_.isEqual(this.props.location.query, prevProps.location.query);
+    if (urlQueryChanged) {
+      this._doSearch();
     }
   },
   _onApply: function(event) {
