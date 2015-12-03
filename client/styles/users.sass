@@ -1,5 +1,7 @@
 #appContainer > div > main > #userSearch
+  $filter-width: 250px
   +full-content
+  // The tiny-media layout doesn't require any special flexbox stuff.
   > #filter
     > label
       display: inline-block
@@ -10,7 +12,49 @@
     > li.user
       padding: $medium-padding
       border-bottom: thin solid grey
+      &:first-of-type
+        border-top: thin solid grey
       > *
         margin: $small-padding
       > div.name
         font-size: 120%
+  @media (min-width: $app-max-width)
+    // common
+    > #filter
+      border-right: thin solid grey
+      > label
+        display: block
+        > input
+          width: 100%
+    // legacy layout
+    margin-left: $filter-width
+    > #filter
+      margin-left: -1 * $filter-width
+      width: $filter-width
+    > ol
+      width: 100%
+    > *
+      display: inline-block
+      height: 100%
+      vertical-align: top
+    @supports (display: flex)
+      // undo legacy layout
+      margin-left: initial
+      > #filter
+        margin-left: initial
+        width: initial
+      > ol
+        width: initial
+      > *
+        display: initial
+        height: initial
+        vertical-align: initial
+      // flex layout
+      display: flex
+      flex-direction: row
+      align-items: stretch
+      flex-wrap: nowrap
+      > #filter
+        flex: 0 1 $filter-width
+      > ol
+        flex: 1 1
