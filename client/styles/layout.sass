@@ -47,7 +47,7 @@ body
           > .hamburgerButton
             display: none
           > .spacer
-            display: block
+            display: inline-block
     > main
       z-index: 0
       padding: $large-padding
@@ -76,11 +76,17 @@ body > #appContainer
     > header
       height: $header-height
       margin-top: -1 * $header-height
-      > nav.hamburgerExpanded > a
-        display: block
-      @media (min-width: $tiny-media-width)
-        > nav:not(.hamburgerExpanded) > a
-          display: block
+      > nav
+        &.hamburgerExpanded
+          > a
+            display: block
+            text-align: center
+        @media (min-width: $tiny-media-width)
+          > a
+            display: inline-block
+            float: left
+          > .spacer ~ a
+            float: right
     > main
       min-height: 100%
     > footer
@@ -111,11 +117,16 @@ body > #appContainer
       > header
         height: initial
         margin-top: initial
-        > nav.hamburgerExpanded > a
-          display: initial
-        @media (min-width: $tiny-media-width)
-          > nav:not(.hamburgerExpanded) > a
-            display: initial
+        > nav
+          &.hamburgerExpanded
+            > a
+              display: initial
+              text-align: initial
+          @media (min-width: $tiny-media-width)
+            > a,
+            > .spacer ~ a
+              display: initial
+              float: none
       > main
         min-height: initial
       > footer
