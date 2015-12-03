@@ -76,7 +76,13 @@ body > #appContainer
     > header
       height: $header-height
       margin-top: -1 * $header-height
+      > a > h1
+        text-align: center
+        padding-top: $large-padding
+        padding-bottom: $large-padding
       > nav
+        > .hamburgerButton
+          text-align: center
         &.hamburgerExpanded
           > a
             display: block
@@ -117,7 +123,13 @@ body > #appContainer
       > header
         height: initial
         margin-top: initial
+        > a > h1
+          text-align: initial
+          padding-top: initial
+          padding-bottom: initial
         > nav
+          > .hamburgerButton
+            text-align: initial
           &.hamburgerExpanded
             > a
               display: initial
