@@ -295,10 +295,17 @@ module.exports = function (knex, emailer) {
             query = query.orderBy(sortBy, sortOrder);
           }
 
+          // Add offset.
+          query = query.limit(20);
+          if (args.query && args.query.offset) {
+            query = query.offset(args.query.offset);
+          }
+
           // Add search parameters.
           var searchParams = Object.assign({}, args.query);
           delete searchParams.sortBy;
           delete searchParams.sortOrder;
+          delete searchParams.offset;
           return acceptOnlyAttributes(searchParams, searchableParams, function (attribute) {
             return new MalformedRequestError('Cannot filter by parameter ' + attribute + '.');
           }).then(function () {

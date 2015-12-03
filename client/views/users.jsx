@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var React = require('react');
 var TitleMixin = require('./titleMixin');
+var appScroll = require('../utilities/appScroll');
 var ajax = require('../utilities/ajax');
 var auth = require('../flux/auth');
 
@@ -93,12 +94,16 @@ var Users = React.createClass({
     }
   },
   // Initiate a search from the URL query.
-  _doSearch: function() {
+  _doSearch: function(offset) {
     if (this.state.runningRequest) {
       this.state.runningRequest.cancel();
     }
     var authCredentials = auth.getCredentials();
     // TODO Add limit and offset.
+    var query = _.cloneDeep(this.props.location.query);
+    if (offset) {
+      query.offset = offset;
+    }
     var r = ajax({
       method: 'GET',
       uri: '/api/users',
@@ -107,13 +112,24 @@ var Users = React.createClass({
         pass: authCredentials.password
       },
       json: true,
-      qs: this.props.location.query
+      qs: query
     });
     this.setState({runningRequest: r, busy: true, error: null});
     var self = this;
     r.then(function(response) {
       if (response.statusCode === 200) {
-        self.setState({busy: false, error: null, results: response.body, runningRequest: null});
+        var results = [];
+        if (offset) {
+          Array.prototype.push.apply(results, self.state.results);
+        }
+        Array.prototype.push.apply(results, response.body);
+        self.setState({
+          busy: false,
+          error: null,
+          results: results,
+          runningRequest: null,
+          endReached: !response.body.length
+        }, self._loadMoreResults);
       } else {
         self.setState({busy: false, error: response.body, runningRequest: null});
       }
@@ -121,7 +137,11 @@ var Users = React.createClass({
       self.setState({busy: false, error: error.message, runningRequest: null});
     });
   },
-  _loadMoreResults: function() {},
+  _loadMoreResults: function() {
+    if (this._isInNextPageZone() && !this.state.busy && !this.state.endReached) {
+      this._doSearch(this.state.results.length);
+    }
+  },
   componentWillMount: function() {
     // Correct the URL query if it's invalid.
     this._setUrlQuery(this.props.location.query, {
@@ -153,6 +173,23 @@ var Users = React.createClass({
     if (urlQueryChanged) {
       this._doSearch();
     }
+  },
+  componentDidMount: function() {
+    appScroll.addListener(this._onScroll);
+  },
+  componentWillUnmount: function() {
+    appScroll.removeListener(this._onScroll);
+  },
+  _isInNextPageZone: function () {
+    var element = this.refs.caboose;
+    if (element) {
+      return element.getBoundingClientRect().top <= window.innerHeight;
+    } else {
+      return false;
+    }
+  },
+  _onScroll: function (event) {
+    return this._loadMoreResults();
   },
   _onApply: function(event) {
     event.preventDefault();
@@ -200,7 +237,7 @@ var Users = React.createClass({
           })}
           {this.state.endReached
             ? null
-            : <li>loading more</li>}
+            : <li ref='caboose'>loading more</li>}
         </ol>
       </div>
     );
