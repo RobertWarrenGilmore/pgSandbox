@@ -7,7 +7,11 @@ $small-padding: 5px
 $app-max-width: 1000px
 
 =floater-content($width)
+  max-width: $width
+  margin: auto
   @supports (display: flex)
+    max-width: initial
+    margin: initial
     flex: 0 1 $width
 
 =full-content
@@ -23,6 +27,7 @@ body
   > #appContainer > div
     > header
       z-index: 1
+      position: relative
       > nav
         position: absolute
         top: $small-padding
@@ -50,9 +55,11 @@ body
             display: inline-block
     > main
       z-index: 0
+      position: relative
       padding: $large-padding
     > footer
       z-index: 1
+      position: relative
 
 // legacy (flexless) layout
 body > #appContainer
