@@ -2,6 +2,7 @@ require('dotenv').load();
 var fs = require('fs');
 var path = require('path');
 var express = require('express');
+var compression = require('compression');
 var https = require('https');
 var http = require('http');
 var server = require('./server');
@@ -14,6 +15,10 @@ var Promise = require('bluebird');
 var app = express();
 
 app.set('x-powered-by', false);
+
+app.use(compression({
+  level: 9
+}));
 
 console.info('Getting the SSL key.');
 var sslOptions = {
