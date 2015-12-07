@@ -37,8 +37,8 @@ var Users = React.createClass({
       givenName: this.refs.givenName.value,
       familyName: this.refs.familyName.value,
       emailAddress: this.refs.emailAddress.value,
-      sortBy: null, // TODO
-      sortOrder: null // TODO
+      sortBy: this.props.location.query.sortBy, // TODO
+      sortOrder: this.props.location.query.sortOrder // TODO
     };
     this.setState({workingQuery: parameters});
   },
@@ -57,7 +57,7 @@ var Users = React.createClass({
     }
     // sortBy has valid values and a default.
     var validSortBy = ['familyName', 'givenName', 'emailAddress'];
-    if (!query.sortOrder || (validSortBy.indexOf(query.sortOrder) == -1)) {
+    if (!query.sortBy || (validSortBy.indexOf(query.sortBy) == -1)) {
       validQuery.sortBy = validSortBy[0];
     } else {
       validQuery.sortBy = query.sortBy;
