@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var authenticatedTransaction = require('./authenticatedTransaction');
 var appHost = require('../../appInfo.json').host;
 var AuthenticationError = require('../errors/authenticationError');
@@ -200,7 +201,7 @@ module.exports = function (knex, emailer) {
   return {
 
     create: function (args) {
-      var newUser = Object.assign({}, args.body);
+      var newUser = _.cloneDeep(args.body);
       var key;
       var absentEmailAddressError = new MalformedRequestError('You must supply an email address to create a user.');
       var notUniqueEmailAddressError = new ConflictingEditError('That email address is already in use by another user.');
@@ -302,7 +303,7 @@ module.exports = function (knex, emailer) {
           }
 
           // Add search parameters.
-          var searchParams = Object.assign({}, args.query);
+          var searchParams = _.clone(args.query);
           delete searchParams.sortBy;
           delete searchParams.sortOrder;
           delete searchParams.offset;
@@ -337,7 +338,7 @@ module.exports = function (knex, emailer) {
       if (args.params) {
         id = args.params.userId;
       }
-      var newUser = Object.assign({}, args.body);
+      var newUser = _.cloneDeep(args.body);
 
       return validationRules.run(newUser)
         .then(function () {
