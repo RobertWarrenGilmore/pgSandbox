@@ -3,7 +3,6 @@
   "version": "0.1.0",
   "description": "a first attempt at a database wrapper app over postgres",
   "scripts": {
-    "serve": "sudo $(which node) index.js",
     "start": "sudo $(which node) node_modules/.bin/forever start index.js",
     "stop": "sudo $(which node) node_modules/.bin/forever stop index.js",
     "dbSetup": "server/database/dbSetup.sh",
