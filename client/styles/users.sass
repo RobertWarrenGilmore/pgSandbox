@@ -6,8 +6,10 @@
     > label
       display: inline-block
       margin: $small-padding
-      > input
+      > input:not([type=checkbox]), > select
         display: block
+      > input[type=checkbox]
+        margin: $small-padding
   > ol
     > li.user
       padding: $medium-padding
@@ -24,7 +26,7 @@
       border-right: thin solid grey
       > label
         display: block
-        > input
+        > input:not([type=checkbox]), > select
           width: 100%
     // legacy layout
     margin-left: $filter-width

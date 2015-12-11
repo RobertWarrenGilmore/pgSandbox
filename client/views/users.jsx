@@ -37,8 +37,8 @@ var Users = React.createClass({
       givenName: this.refs.givenName.value,
       familyName: this.refs.familyName.value,
       emailAddress: this.refs.emailAddress.value,
-      sortBy: this.props.location.query.sortBy, // TODO
-      sortOrder: this.props.location.query.sortOrder // TODO
+      sortBy: this.refs.sortBy.value,
+      sortOrder: this.refs.sortOrderDescending.checked ? 'descending' : 'ascending'
     };
     this.setState({workingQuery: parameters});
   },
@@ -217,6 +217,24 @@ var Users = React.createClass({
           <label>
             last name
             <input type='text' ref='familyName' value={this.state.workingQuery.familyName}/>
+          </label>
+          <label>
+            sort by
+            <select ref='sortBy' value={this.state.workingQuery.sortBy}>
+              <option value='emailAddress'>
+                email address
+              </option>
+              <option value='givenName'>
+                first name
+              </option>
+              <option value='familyName'>
+                last name
+              </option>
+            </select>
+          </label>
+          <label>
+            <input type='checkbox' ref='sortOrderDescending' checked={this.state.workingQuery.sortOrder === 'descending'}/>
+            descending
           </label>
           {this._useManualApply()
             ? (
