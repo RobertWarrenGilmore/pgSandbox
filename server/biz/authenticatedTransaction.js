@@ -1,6 +1,7 @@
 var Promise = require('bluebird');
 var AuthenticationError = require('../errors/authenticationError');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
+var escapeForLike = require('./escapeForLike');
 
 function verifyPassword(password, hash) {
   return bcrypt.compareSync(password, hash);
@@ -15,7 +16,7 @@ function authenticatedTransaction(knex, auth, callback) {
       authPromise = trx
         .from('users')
         .select()
-        .where('emailAddress', auth.emailAddress.toLowerCase())
+        .where('emailAddress', 'ilike', escapeForLike(auth.emailAddress))
         .then(function (users) {
           var authUser = users[0];
           if (authUser && verifyPassword(auth.password, authUser.passwordHash)) {
