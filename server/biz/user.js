@@ -311,11 +311,11 @@ module.exports = function (knex, emailer) {
             return new MalformedRequestError('Cannot filter by parameter ' + attribute + '.');
           }).then(function () {
             if (searchParams.givenName) {
-              query = query.where('givenName', 'ilike', escapeForLike(searchParams.givenName) + '%');
+              query = query.whereRaw('unaccent("givenName") ilike unaccent(?) || \'%\'', [escapeForLike(searchParams.givenName)]);
               delete searchParams.givenName;
             }
             if (searchParams.familyName) {
-              query = query.where('familyName', 'ilike', escapeForLike(searchParams.familyName) + '%');
+              query = query.whereRaw('unaccent("familyName") ilike unaccent(?)', [escapeForLike(searchParams.familyName) + '%']);
               delete searchParams.familyName;
             }
             if (searchParams.emailAddress) {
