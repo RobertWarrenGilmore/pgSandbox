@@ -1,5 +1,6 @@
 var _ = require('lodash');
 var React = require('react');
+var BusyIndicator = require('./busyIndicator.jsx');
 var TitleMixin = require('./titleMixin');
 var appScroll = require('../utilities/appScroll');
 var ajax = require('../utilities/ajax');
@@ -207,6 +208,23 @@ var Users = React.createClass({
     this.setState({workingQuery: this.props.location.query});
   },
   render: function() {
+    var caboose = null;
+    if (this.state.endReached) {
+      if (!this.state.results.length) {
+        caboose = (
+          <li className='caboose' ref='caboose'>
+            no results
+          </li>
+        );
+      }
+    } else {
+      caboose = (
+        <li className='caboose' ref='caboose'>
+          <BusyIndicator/>
+          loading more
+        </li>
+      );
+    }
     return (
       <div id='userSearch'>
         <form id='filter' onChange={this._updateWorkingQuery}>
@@ -257,9 +275,7 @@ var Users = React.createClass({
           {_.map(this.state.results, function(user) {
             return <Entry user={user} key={user.id}/>;
           })}
-          {this.state.endReached
-            ? null
-            : <li ref='caboose'>loading more</li>}
+          {caboose}
         </ol>
       </div>
     );

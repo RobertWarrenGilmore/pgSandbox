@@ -80,6 +80,10 @@ Promise.join(clientScriptPromise, clientStylePromise, knexMigratePromise,
       res.type('text/css');
       res.send(clientStyle.css.toString());
     });
+    app.use('/assets', express.static(path.join(__dirname, 'client', 'assets')));
+    app.use('/assets/*', function (req, res) {
+      res.status(404).send('There is no such asset.');
+    });
     app.get('/*', function (req, res) {
       res.sendFile((path.join(__dirname, 'client', 'index.html')));
     });

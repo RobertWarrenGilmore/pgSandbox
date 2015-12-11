@@ -1,0 +1,16 @@
+@keyframes anim-rotate
+  0%
+    transform: rotate(0)
+  100%
+    transform: rotate(360deg)
+
+.busyIndicator
+  display: inline-block
+  vertical-align: middle
+  > .icon-spinner2
+    display: inline-block
+    font-size: 1.5em
+    height: 1em
+    line-height: 1
+    margin: $small-padding
+    animation: anim-rotate 0.5s infinite linear
