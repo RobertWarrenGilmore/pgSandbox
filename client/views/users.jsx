@@ -171,6 +171,10 @@ var Users = React.createClass({
   componentDidUpdate: function(prevProps, prevState) {
     var urlQueryChanged = !_.isEqual(this.props.location.query, prevProps.location.query);
     if (urlQueryChanged) {
+      this._setUrlQuery(this.props.location.query, {
+        replace: true,
+        delayed: false
+      });
       this._doSearch();
     }
   },
