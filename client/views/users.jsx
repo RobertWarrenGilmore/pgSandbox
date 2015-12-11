@@ -255,7 +255,7 @@ var Users = React.createClass({
         </form>
         <ol>
           {_.map(this.state.results, function(user) {
-            return <Entry user={user}/>;
+            return <Entry user={user} key={user.id}/>;
           })}
           {this.state.endReached
             ? null
@@ -271,7 +271,7 @@ var Entry = React.createClass({
   render: function() {
     var user = this.props.user;
     return (
-      <li className='user' key={user.id}>
+      <li className='user'>
         <div className='name'>
           {user.givenName} {user.familyName}
         </div>
