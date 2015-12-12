@@ -131,6 +131,7 @@ var Users = React.createClass({
           runningRequest: null,
           endReached: !response.body.length
         }, self._loadMoreResults);
+        return null;
       } else {
         self.setState({busy: false, error: response.body, runningRequest: null});
       }
