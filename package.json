@@ -47,6 +47,7 @@
     "history": "~1.13.0",
     "knex": "^0.8.6",
     "lodash": "^3.10.1",
+    "marked": "^0.3.5",
     "node-sass": "^3.4.1",
     "nodemailer": "^1.8.0",
     "nodemailer-sparkpost-transport": "^0.1.0",

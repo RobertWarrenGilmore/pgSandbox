@@ -3,11 +3,13 @@ var ReactDom = require('react-dom');
 var ReactRouter = require('react-router');
 var Router = ReactRouter.Router;
 var Route = ReactRouter.Route;
+var IndexRoute = ReactRouter.IndexRoute;
 var Redirect = ReactRouter.Redirect;
 var createBrowserHistory = require('history/lib/createBrowserHistory');
 var auth = require('./flux/auth');
 var Promise = require('bluebird');
 var App = require('./views/app.jsx');
+var Home = require('./views/home.jsx');
 var LogIn = require('./views/logIn.jsx');
 var Register = require('./views/register.jsx');
 var ForgotPassword = require('./views/forgotPassword.jsx');
@@ -43,6 +45,8 @@ document.addEventListener('DOMContentLoaded', function() {
   var router = (
     <Router history={createBrowserHistory()}>
       <Route component={App} path='/'>
+
+        <IndexRoute component={Home}/>
 
         <Route onEnter={requireNoAuth}>
           <Route component={LogIn} path='logIn'/>
