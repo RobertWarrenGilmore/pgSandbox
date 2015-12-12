@@ -30,6 +30,9 @@ module.exports = function (biz) {
   // This list gets longer as API endpoints are added.
   router.use('/auth', authRouter(biz.auth));
   router.use('/users', userRouter(biz.user));
+  router.use('/*', function (req, res) {
+    res.status(404).send('There is no such API endpoint.');
+  });
 
   return router;
 };
