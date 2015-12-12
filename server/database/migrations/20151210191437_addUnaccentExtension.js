@@ -1,5 +1,5 @@
 /**
- * This migration adds the columns givenName, familyName, and active in table users.
+ * This migration adds an extension allowing us to use the function unaccent.
  */
 console.log('Superuser permissions are needed to do this migration. Do it manually with a superuser.');
 
