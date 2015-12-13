@@ -9,7 +9,7 @@ var Home = React.createClass({
         <Prose resource={{
           type: 'infoPages',
           id: 'home'
-        }} escape={false} markdown={true}/>
+        }} escape={false} markdown={true} sanitiseMarkdown={false}/>
       </div>
     );
   }
