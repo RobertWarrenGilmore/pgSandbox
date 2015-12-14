@@ -55,8 +55,10 @@ document.addEventListener('DOMContentLoaded', function() {
         </Route>
 
         <Route onEnter={requireAuth}>
-          <Route component={Users} path='users'/>
-          <Route component={User} path='users/:userId'/>
+          <Route path='users'>
+            <IndexRoute component={Users}/>
+            <Route component={User} path=':userId'/>
+          </Route>
         </Route>
 
         <Route onEnter={logOut}>
