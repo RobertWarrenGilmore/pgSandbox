@@ -54,35 +54,37 @@ var Home = React.createClass({
   },
 
   render: function() {
-    var contents = null;
+    var result = null;
     if (this.state.busy) {
-      contents = [
-        <BusyIndicator/>,
-        'loading'
-      ];
+      result = (
+        <div id='home' className='message'>
+          <BusyIndicator/>
+          'loading'
+        </div>
+      );
     } else {
       if (this.state.error) {
-        contents = (
-          <p className='error'>
-            {this.state.error}
-          </p>
+        result = (
+          <div id='home' className='message'>
+            <p className='error'>
+              {this.state.error}
+            </p>
+          </div>
         );
       } else {
-        contents = (
-          <CustomHtml
-            content={this.state.loadedContent}
-            escape={false}
-            markdown={false}
-            sanitiseMarkdown={false}/>
+        result = (
+          <div id='home'>
+            <CustomHtml
+              content={this.state.loadedContent}
+              escape={false}
+              markdown={false}
+              sanitiseMarkdown={false}/>
+          </div>
         );
       }
     }
 
-    return (
-      <div id='home'>
-        {contents}
-      </div>
-    );
+    return result;
   }
 
 });
