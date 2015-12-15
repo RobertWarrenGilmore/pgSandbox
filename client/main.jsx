@@ -16,6 +16,7 @@ var ForgotPassword = require('./views/forgotPassword.jsx');
 var SetPassword = require('./views/setPassword.jsx');
 var Users = require('./views/users.jsx');
 var User = require('./views/user.jsx');
+var BlogPost = require('./views/blogPost.jsx');
 var NotFound = require('./views/notFound.jsx');
 
 Promise.config({
@@ -47,6 +48,10 @@ document.addEventListener('DOMContentLoaded', function() {
       <Route component={App} path='/'>
 
         <IndexRoute component={Home}/>
+
+        <Route path='blog'>
+          <Route component={BlogPost} path=':postId'/>
+        </Route>
 
         <Route onEnter={requireNoAuth}>
           <Route component={LogIn} path='logIn'/>
