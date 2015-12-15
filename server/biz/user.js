@@ -58,30 +58,25 @@ function generatePasswordResetKey() {
 }
 
 function acceptOnlyAttributes(object, acceptible, error) {
-  return new Promise(function (resolve, reject) {
-    for (var attribute in object) {
-      if (acceptible.indexOf(attribute) === -1) {
-        reject(error(attribute));
-      }
+  for (var attribute in object) {
+    if (acceptible.indexOf(attribute) === -1) {
+      throw error(attribute);
     }
-    resolve();
-  });
+  }
 }
 
 function authenticatedUpdate(authUser, trx, id, newUser) {
   // Reject bad attributes.
-  return acceptOnlyAttributes(newUser, updatableAttributes,
-      function (attribute) {
-        return new MalformedRequestError('The attribute ' + attribute + ' cannot be written.');
-      }
-    ).then(function () {
-
-      // Get the existing user.
-      return trx
-        .from('users')
-        .where('id', id)
-        .select();
-    })
+  acceptOnlyAttributes(newUser, updatableAttributes,
+    function (attribute) {
+      return new MalformedRequestError('The attribute ' + attribute + ' cannot be written.');
+    }
+  );
+  // Get the existing user.
+  return trx
+    .from('users')
+    .where('id', id)
+    .select()
     .then(function (users) {
       if (!users.length) {
         throw new NoSuchResourceError();
@@ -115,63 +110,60 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
 function anonymousPasswordUpdate(trx, id, newUser) {
 
   // Reject attributes other than passwordResetKey and password.
-  return acceptOnlyAttributes(newUser, ['password', 'passwordResetKey'],
+  acceptOnlyAttributes(newUser, ['password', 'passwordResetKey'],
     function (attribute) {
       throw new MalformedRequestError('The attribute ' + attribute + ' cannot be written during an anonymous password reset.');
     }
-  ).then(function () {
+  );
+  // Get the existing user.
+  return trx
+    .from('users')
+    .where('id', id)
+    .select()
+    .then(function (users) {
+      if (!users.length) {
+        throw new NoSuchResourceError();
+      }
+      var oldUser = users[0];
 
-    // Get the existing user.
-    return trx
-      .from('users')
-      .where('id', id)
-      .select();
-  }).then(function (users) {
-    if (!users.length) {
-      throw new NoSuchResourceError();
-    }
-    var oldUser = users[0];
+      // Verify the provided password reset key against the hash in the existing user.
+      if (!newUser.passwordResetKey || !oldUser.passwordResetKeyHash || !verifyPasswordResetKey(newUser.passwordResetKey, oldUser.passwordResetKeyHash)) {
+        throw new AuthenticationError();
+      }
 
-    // Verify the provided password reset key against the hash in the existing user.
-    if (!newUser.passwordResetKey || !oldUser.passwordResetKeyHash || !verifyPasswordResetKey(newUser.passwordResetKey, oldUser.passwordResetKeyHash)) {
-      throw new AuthenticationError();
-    }
-
-    // Do the update.
-    return trx
-      .from('users')
-      .where('id', id)
-      .update({
-        passwordHash: hashPassword(newUser.password),
-        passwordResetKeyHash: null
-      })
-      .returning(readableAttributes)
-      .then(function (rows) {
-        return rows[0];
-      });
-  });
+      // Do the update.
+      return trx
+        .from('users')
+        .where('id', id)
+        .update({
+          passwordHash: hashPassword(newUser.password),
+          passwordResetKeyHash: null
+        })
+        .returning(readableAttributes)
+        .then(function (rows) {
+          return rows[0];
+        });
+    });
 }
 
 function anonymousPasswordResetKeyUpdate(trx, newUser, emailer) {
   var key;
 
   // Reject attributes other than passwordResetKey and emailAddress.
-  return acceptOnlyAttributes(newUser, ['passwordResetKey', 'emailAddress'],
-      function (attribute) {
-        throw new MalformedRequestError('The attribute ' + attribute + ' cannot be written during an anonymous password reset key generation.');
-      }
-    ).then(function () {
+  acceptOnlyAttributes(newUser, ['passwordResetKey', 'emailAddress'],
+    function (attribute) {
+      throw new MalformedRequestError('The attribute ' + attribute + ' cannot be written during an anonymous password reset key generation.');
+    }
+  );
+  // Generate a key.
+  key = generatePasswordResetKey();
 
-      // Generate a key.
-      key = generatePasswordResetKey();
-
-      // Set the key hash.
-      return trx
-        .from('users')
-        .where('emailAddress', 'ilike', escapeForLike(newUser.emailAddress))
-        .update({
-          passwordResetKeyHash: key.hash
-        });
+  // Set the key hash.
+  return trx
+    .from('users')
+    .where('emailAddress', 'ilike', escapeForLike(newUser.emailAddress))
+    .update({
+      passwordResetKeyHash: key.hash
     })
     // Send the user an email with the key.
     .then(function () {
@@ -201,60 +193,60 @@ module.exports = function (knex, emailer) {
   return {
 
     create: function (args) {
-      var newUser = _.cloneDeep(args.body);
-      var key;
-      var absentEmailAddressError = new MalformedRequestError('You must supply an email address to create a user.');
-      var notUniqueEmailAddressError = new ConflictingEditError('That email address is already in use by another user.');
-      return acceptOnlyAttributes(newUser, creatableAttributes,
-        function (attribute) {
-          return new MalformedRequestError('The attribute ' + attribute + ' cannot be written during a user creation.');
-        }
-      ).then(function () {
+      return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
+        var newUser = _.cloneDeep(args.body);
+        var key;
+        var absentEmailAddressError = new MalformedRequestError('You must supply an email address to create a user.');
+        var notUniqueEmailAddressError = new ConflictingEditError('That email address is already in use by another user.');
+        acceptOnlyAttributes(newUser, creatableAttributes,
+          function (attribute) {
+            return new MalformedRequestError('The attribute ' + attribute + ' cannot be written during a user creation.');
+          }
+        );
         if (!newUser.emailAddress) {
           throw absentEmailAddressError;
         }
         key = generatePasswordResetKey();
         newUser.passwordResetKeyHash = key.hash;
-        return validationRules.run(newUser);
-      }).then(function () {
-        return knex.transaction(function (trx) {
-          return trx
-            .from('users')
-            .select(['id', 'emailAddress'])
-            .where('emailAddress', 'ilike', escapeForLike(newUser.emailAddress))
-            .then(function (existingUsers) {
-              if (existingUsers && existingUsers.length) {
-                throw notUniqueEmailAddressError;
-              }
-              return trx
-                .into('users')
-                .insert(newUser)
-                .returning('id');
-            })
-            .tap(function (ids) {
-              return sendPasswordResetEmail(emailer, newUser.emailAddress, ids[0], key.key);
-            })
-            .then(function (ids) {
-              return {
-                id: ids[0]
-              };
-            });
-        });
-      }).catch(Checkit.Error, function (err) {
-        var message = '';
-        for (var attribute in err.errors) {
-          message += err.errors[attribute].message + '. ';
-        }
-        message = message.trim();
-        throw new MalformedRequestError(message);
-      }).catch(function (err) {
-        return err.code === '23502';
-      }, function (err) {
-        throw absentEmailAddressError;
-      }).catch(function (err) {
-        return err.code === '23505';
-      }, function (err) {
-        throw notUniqueEmailAddressError;
+        return validationRules.run(newUser)
+          .then(function () {
+            return trx
+              .from('users')
+              .select(['id', 'emailAddress'])
+              .where('emailAddress', 'ilike', escapeForLike(newUser.emailAddress))
+              .then(function (existingUsers) {
+                if (existingUsers && existingUsers.length) {
+                  throw notUniqueEmailAddressError;
+                }
+                return trx
+                  .into('users')
+                  .insert(newUser)
+                  .returning('id');
+              })
+              .tap(function (ids) {
+                return sendPasswordResetEmail(emailer, newUser.emailAddress, ids[0], key.key);
+              })
+              .then(function (ids) {
+                return {
+                  id: ids[0]
+                };
+              });
+          }).catch(Checkit.Error, function (err) {
+            var message = '';
+            for (var attribute in err.errors) {
+              message += err.errors[attribute].message + '. ';
+            }
+            message = message.trim();
+            throw new MalformedRequestError(message);
+          }).catch(function (err) {
+            return err.code === '23502';
+          }, function (err) {
+            throw absentEmailAddressError;
+          }).catch(function (err) {
+            return err.code === '23505';
+          }, function (err) {
+            throw notUniqueEmailAddressError;
+          });
       });
     },
 
@@ -307,26 +299,27 @@ module.exports = function (knex, emailer) {
           delete searchParams.sortBy;
           delete searchParams.sortOrder;
           delete searchParams.offset;
-          return acceptOnlyAttributes(searchParams, searchableParams, function (attribute) {
-            return new MalformedRequestError('Cannot filter by parameter ' + attribute + '.');
-          }).then(function () {
-            if (searchParams.givenName) {
-              query = query.whereRaw('unaccent("givenName") ilike unaccent(?) || \'%\'', [escapeForLike(searchParams.givenName)]);
-              delete searchParams.givenName;
+          acceptOnlyAttributes(searchParams, searchableParams,
+            function (attribute) {
+              return new MalformedRequestError('Cannot filter by parameter ' + attribute + '.');
             }
-            if (searchParams.familyName) {
-              query = query.whereRaw('unaccent("familyName") ilike unaccent(?)', [escapeForLike(searchParams.familyName) + '%']);
-              delete searchParams.familyName;
-            }
-            if (searchParams.emailAddress) {
-              query = query.where('emailAddress', 'ilike', escapeForLike(searchParams.emailAddress) + '%');
-              delete searchParams.emailAddress;
-            }
-            query = query.where(searchParams);
+          );
+          if (searchParams.givenName) {
+            query = query.whereRaw('unaccent("givenName") ilike unaccent(?) || \'%\'', [escapeForLike(searchParams.givenName)]);
+            delete searchParams.givenName;
+          }
+          if (searchParams.familyName) {
+            query = query.whereRaw('unaccent("familyName") ilike unaccent(?)', [escapeForLike(searchParams.familyName) + '%']);
+            delete searchParams.familyName;
+          }
+          if (searchParams.emailAddress) {
+            query = query.where('emailAddress', 'ilike', escapeForLike(searchParams.emailAddress) + '%');
+            delete searchParams.emailAddress;
+          }
+          query = query.where(searchParams);
 
-            // The query is finished. Return it.
-            return query;
-          });
+          // The query is finished. Return it.
+          return query;
         }
       }).then(function (result) {
         return JSON.parse(JSON.stringify(result));
@@ -334,15 +327,15 @@ module.exports = function (knex, emailer) {
     },
 
     update: function (args) {
-      var id;
-      if (args.params) {
-        id = args.params.userId;
-      }
-      var newUser = _.cloneDeep(args.body);
+      return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
+        var id;
+        if (args.params) {
+          id = args.params.userId;
+        }
+        var newUser = _.cloneDeep(args.body);
 
-      return validationRules.run(newUser)
-        .then(function () {
-          return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
+        return validationRules.run(newUser)
+          .then(function () {
 
             // normal, authenticated user update
             if (authUser) {
@@ -360,22 +353,21 @@ module.exports = function (knex, emailer) {
             } else {
               throw new AuthenticationError();
             }
-          });
 
-        })
-        .then(function (user) {
-          if (user instanceof Object) {
-            return JSON.parse(JSON.stringify(user));
-          }
-        })
-        .catch(Checkit.Error, function (err) {
-          var message = '';
-          for (var key in err.errors) {
-            message += err.errors[key].message + '. ';
-          }
-          message = message.trim();
-          throw new MalformedRequestError(message);
-        });
+          });
+      }).then(function (user) {
+        if (user instanceof Object) {
+          return JSON.parse(JSON.stringify(user));
+        }
+      })
+      .catch(Checkit.Error, function (err) {
+        var message = '';
+        for (var key in err.errors) {
+          message += err.errors[key].message + '. ';
+        }
+        message = message.trim();
+        throw new MalformedRequestError(message);
+      });
     }
   };
 };
