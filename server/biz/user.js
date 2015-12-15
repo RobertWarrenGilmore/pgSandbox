@@ -57,21 +57,19 @@ function generatePasswordResetKey() {
   };
 }
 
-function acceptOnlyAttributes(object, acceptible, error) {
+function acceptOnlyAttributes(object, acceptible, errorMessage) {
   for (var attribute in object) {
     if (acceptible.indexOf(attribute) === -1) {
-      throw error(attribute);
+      throw new MalformedRequestError(errorMessage(attribute));
     }
   }
 }
 
 function authenticatedUpdate(authUser, trx, id, newUser) {
   // Reject bad attributes.
-  acceptOnlyAttributes(newUser, updatableAttributes,
-    function (attribute) {
-      return new MalformedRequestError('The attribute ' + attribute + ' cannot be written.');
-    }
-  );
+  acceptOnlyAttributes(newUser, updatableAttributes, function (attribute) {
+    return 'The attribute ' + attribute + ' cannot be written.';
+  });
   // Get the existing user.
   return trx
     .from('users')
@@ -110,11 +108,9 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
 function anonymousPasswordUpdate(trx, id, newUser) {
 
   // Reject attributes other than passwordResetKey and password.
-  acceptOnlyAttributes(newUser, ['password', 'passwordResetKey'],
-    function (attribute) {
-      throw new MalformedRequestError('The attribute ' + attribute + ' cannot be written during an anonymous password reset.');
-    }
-  );
+  acceptOnlyAttributes(newUser, ['password', 'passwordResetKey'], function (attribute) {
+    return 'The attribute ' + attribute + ' cannot be written during an anonymous password reset.';
+  });
   // Get the existing user.
   return trx
     .from('users')
@@ -150,11 +146,9 @@ function anonymousPasswordResetKeyUpdate(trx, newUser, emailer) {
   var key;
 
   // Reject attributes other than passwordResetKey and emailAddress.
-  acceptOnlyAttributes(newUser, ['passwordResetKey', 'emailAddress'],
-    function (attribute) {
-      throw new MalformedRequestError('The attribute ' + attribute + ' cannot be written during an anonymous password reset key generation.');
-    }
-  );
+  acceptOnlyAttributes(newUser, ['passwordResetKey', 'emailAddress'], function (attribute) {
+    return 'The attribute ' + attribute + ' cannot be written during an anonymous password reset key generation.';
+  });
   // Generate a key.
   key = generatePasswordResetKey();
 
@@ -198,11 +192,9 @@ module.exports = function (knex, emailer) {
         var key;
         var absentEmailAddressError = new MalformedRequestError('You must supply an email address to create a user.');
         var notUniqueEmailAddressError = new ConflictingEditError('That email address is already in use by another user.');
-        acceptOnlyAttributes(newUser, creatableAttributes,
-          function (attribute) {
-            return new MalformedRequestError('The attribute ' + attribute + ' cannot be written during a user creation.');
-          }
-        );
+        acceptOnlyAttributes(newUser, creatableAttributes, function (attribute) {
+          return 'The attribute ' + attribute + ' cannot be written during a user creation.';
+        });
         if (!newUser.emailAddress) {
           throw absentEmailAddressError;
         }
@@ -254,7 +246,7 @@ module.exports = function (knex, emailer) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
 
         if (args.params && Object.keys(args.params).length && args.query && Object.keys(args.query).length) {
-          return Promise.reject(new MalformedRequestError('A read against a specific user cannot filter by any other parameters.'));
+          throw new MalformedRequestError('A read against a specific user cannot filter by any other parameters.');
         }
 
         if (args.params && args.params.userId) {
@@ -279,7 +271,7 @@ module.exports = function (knex, emailer) {
           if (args.query && args.query.sortBy) {
             var sortBy = args.query.sortBy;
             if (searchableParams.indexOf(sortBy) === -1) {
-              return Promise.reject(new MalformedRequestError('Cannot sort by ' + sortBy + '.'));
+              throw new MalformedRequestError('Cannot sort by ' + sortBy + '.');
             }
             var sortOrder = 'asc';
             if (args.query.sortOrder === 'descending') {
@@ -299,11 +291,9 @@ module.exports = function (knex, emailer) {
           delete searchParams.sortBy;
           delete searchParams.sortOrder;
           delete searchParams.offset;
-          acceptOnlyAttributes(searchParams, searchableParams,
-            function (attribute) {
-              return new MalformedRequestError('Cannot filter by parameter ' + attribute + '.');
-            }
-          );
+          acceptOnlyAttributes(searchParams, searchableParams, function (attribute) {
+            return 'Cannot filter by parameter ' + attribute + '.';
+          });
           if (searchParams.givenName) {
             query = query.whereRaw('unaccent("givenName") ilike unaccent(?) || \'%\'', [escapeForLike(searchParams.givenName)]);
             delete searchParams.givenName;
