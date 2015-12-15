@@ -41,7 +41,6 @@ var BlogPost = React.createClass({
     var self = this;
     return r.then(function (response) {
       if (response.statusCode === 200) {
-        response.body.postedTime = new Date(response.body.postedTime);
         self.setState({
           loadedContent: response.body,
           busy: false
@@ -101,8 +100,8 @@ var BlogPost = React.createClass({
                   {post.author.givenName} {post.author.familyName}
                 </Link>
               </h2>
-              <time className='postedTime' dateTime={post.postedTime.toISOString()}>
-                {post.postedTime.toISOString().substring(0,10)}
+              <time className='postedTime' dateTime={post.postedTime}>
+                {post.postedTime.substring(0,10)}
               </time>
             </header>
             <CustomHtml content={post.body} markdown={true}/>
