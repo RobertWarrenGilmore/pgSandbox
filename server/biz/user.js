@@ -303,7 +303,7 @@ module.exports = function (knex, emailer) {
           }
 
           // Add search parameters.
-          var searchParams = _.clone(args.query);
+          var searchParams = _.clone(args.query) || {};
           delete searchParams.sortBy;
           delete searchParams.sortOrder;
           delete searchParams.offset;
