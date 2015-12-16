@@ -5,7 +5,6 @@ var ReactRouter = require('react-router');
 var Link = ReactRouter.Link;
 var TitleMixin = require('./titleMixin');
 var ajax = require('../utilities/ajax');
-var auth = require('../flux/auth');
 
 var BlogPost = React.createClass({
 
@@ -24,17 +23,9 @@ var BlogPost = React.createClass({
     if (this.state.runningRequest) {
       this.state.runningRequest.cancel();
     }
-    var authCredentials = auth.getCredentials();
-    if (authCredentials) {
-      authCredentials = {
-        user: authCredentials.emailAddress,
-        pass: authCredentials.password
-      };
-    }
     var r = ajax({
       method: 'GET',
       uri: '/api/blog/' + this.props.params.postId,
-      auth: authCredentials,
       json: true
     });
     this.setState({runningRequest: r, busy: true, error: null});
@@ -95,7 +86,7 @@ var BlogPost = React.createClass({
                 <CustomHtml content={post.title} markdown={true}/>
               </h1>
               <h2 className='byLine'>
-                by
+                by&nbsp;
                 <Link to={'/users/' + post.author.id}>
                   {post.author.givenName} {post.author.familyName}
                 </Link>

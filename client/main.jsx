@@ -17,6 +17,7 @@ var SetPassword = require('./views/setPassword.jsx');
 var Users = require('./views/users.jsx');
 var User = require('./views/user.jsx');
 var BlogPost = require('./views/blogPost.jsx');
+var BlogSearch = require('./views/blogSearch.jsx');
 var NotFound = require('./views/notFound.jsx');
 
 Promise.config({
@@ -50,6 +51,7 @@ auth.resume().then(function () {
           <IndexRoute component={Home}/>
 
           <Route path='blog'>
+            <IndexRoute component={BlogSearch}/>
             <Route component={BlogPost} path=':postId'/>
           </Route>
 
