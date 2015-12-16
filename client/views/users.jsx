@@ -100,7 +100,6 @@ var Users = React.createClass({
       this.state.runningRequest.cancel();
     }
     var authCredentials = auth.getCredentials();
-    // TODO Add limit and offset.
     var query = _.cloneDeep(this.props.location.query);
     if (offset) {
       query.offset = offset;
