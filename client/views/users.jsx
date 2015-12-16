@@ -108,10 +108,7 @@ var Users = React.createClass({
     var r = ajax({
       method: 'GET',
       uri: '/api/users',
-      auth: {
-        user: authCredentials.emailAddress,
-        pass: authCredentials.password
-      },
+      auth: authCredentials,
       json: true,
       qs: query
     });

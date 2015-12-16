@@ -16,12 +16,6 @@ var Home = React.createClass({
 
   componentWillMount: function() {
     var authCredentials = auth.getCredentials();
-    if (authCredentials) {
-      authCredentials = {
-        user: authCredentials.emailAddress,
-        pass: authCredentials.password
-      };
-    }
     this.setState({
       busy: true,
       error: null

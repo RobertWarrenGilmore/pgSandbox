@@ -5,6 +5,10 @@ var _ = require('lodash');
 module.exports = function ajax(options) {
   return new Promise(function (resolve, reject, onCancel) {
     var optionsClone = _.cloneDeep(options);
+    if (optionsClone.auth && optionsClone.auth.emailAddress) {
+      optionsClone.auth.username = optionsClone.auth.emailAddress;
+      delete optionsClone.auth.emailAddress;
+    }
     if (_.startsWith(optionsClone.uri, '/')) {
       if (!window.location.origin) {
         window.location.origin = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
