@@ -43,8 +43,8 @@ var Users = React.createClass({
     };
     this.setState({workingQuery: parameters});
   },
-  // Redirect the URL to the provided query.
-  _setUrlQuery: function(query, options) {
+  // Correct any errors in the provided query.
+  _correctUrlQuery: function(query, options) {
     var delayed = options && !!options.delayed;
     var replace = options && !!options.replace;
     var validQuery = {};
@@ -143,7 +143,7 @@ var Users = React.createClass({
   },
   componentWillMount: function() {
     // Correct the URL query if it's invalid.
-    this._setUrlQuery(this.props.location.query, {
+    this._correctUrlQuery(this.props.location.query, {
       replace: true,
       delayed: false
     });
@@ -160,7 +160,7 @@ var Users = React.createClass({
       var workingQueryChanged = !_.isEqual(nextState.workingQuery, this.state.workingQuery);
       var urlQueryIsBehindWorkingQuery = !_.isEqual(nextState.workingQuery, nextProps.location.query);
       if (workingQueryChanged && urlQueryIsBehindWorkingQuery) {
-        this._setUrlQuery(nextState.workingQuery, {
+        this._correctUrlQuery(nextState.workingQuery, {
           replace: false,
           delayed: true
         });
@@ -170,7 +170,7 @@ var Users = React.createClass({
   componentDidUpdate: function(prevProps, prevState) {
     var urlQueryChanged = !_.isEqual(this.props.location.query, prevProps.location.query);
     if (urlQueryChanged) {
-      this._setUrlQuery(this.props.location.query, {
+      this._correctUrlQuery(this.props.location.query, {
         replace: true,
         delayed: false
       });
@@ -196,7 +196,7 @@ var Users = React.createClass({
   },
   _onApply: function(event) {
     event.preventDefault();
-    this._setUrlQuery(this.state.workingQuery, {
+    this._correctUrlQuery(this.state.workingQuery, {
       replace: false,
       delayed: false
     });
