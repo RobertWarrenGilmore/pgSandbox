@@ -42,8 +42,8 @@ function logOut(nextState, replaceState) {
   auth.logOut();
 }
 
-auth.resume().then(function () {
-  document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
+  auth.resume().then(function () {
     var router = (
       <Router history={createBrowserHistory()}>
         <Route component={App} path='/'>
