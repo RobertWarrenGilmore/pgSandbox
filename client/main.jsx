@@ -41,41 +41,42 @@ function logOut(nextState, replaceState) {
   auth.logOut();
 }
 
-auth.resume();
-document.addEventListener('DOMContentLoaded', function() {
-  var router = (
-    <Router history={createBrowserHistory()}>
-      <Route component={App} path='/'>
+auth.resume().then(function () {
+  document.addEventListener('DOMContentLoaded', function() {
+    var router = (
+      <Router history={createBrowserHistory()}>
+        <Route component={App} path='/'>
 
-        <IndexRoute component={Home}/>
+          <IndexRoute component={Home}/>
 
-        <Route path='blog'>
-          <Route component={BlogPost} path=':postId'/>
-        </Route>
-
-        <Route onEnter={requireNoAuth}>
-          <Route component={LogIn} path='logIn'/>
-          <Route component={Register} path='register'/>
-          <Route component={ForgotPassword} path='forgotPassword'/>
-        </Route>
-
-        <Route onEnter={requireAuth}>
-          <Route path='users'>
-            <IndexRoute component={Users}/>
-            <Route component={User} path=':userId'/>
+          <Route path='blog'>
+            <Route component={BlogPost} path=':postId'/>
           </Route>
+
+          <Route onEnter={requireNoAuth}>
+            <Route component={LogIn} path='logIn'/>
+            <Route component={Register} path='register'/>
+            <Route component={ForgotPassword} path='forgotPassword'/>
+          </Route>
+
+          <Route onEnter={requireAuth}>
+            <Route path='users'>
+              <IndexRoute component={Users}/>
+              <Route component={User} path=':userId'/>
+            </Route>
+          </Route>
+
+          <Route onEnter={logOut}>
+            <Route component={SetPassword} path='users/:userId/setPassword'/>
+            <Redirect from='/logOut' to='/'/>
+          </Route>
+
+          <Route component={NotFound} path='*'/>
+
         </Route>
-
-        <Route onEnter={logOut}>
-          <Route component={SetPassword} path='users/:userId/setPassword'/>
-          <Redirect from='/logOut' to='/'/>
-        </Route>
-
-        <Route component={NotFound} path='*'/>
-
-      </Route>
-    </Router>
-  );
-  var element = document.getElementById('appContainer');
-  ReactDom.render(router, element);
+      </Router>
+    );
+    var element = document.getElementById('appContainer');
+    ReactDom.render(router, element);
+  });
 });

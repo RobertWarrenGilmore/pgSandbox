@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var Emitter = require('./emitter');
 var ajax = require('../utilities/ajax');
 var Promise = require('bluebird');
@@ -30,14 +31,12 @@ var methods = {
   logIn: function (auth) {
     busy = true;
     error = null;
+    credentials = _.clone(auth);
     emitter.emit();
     return ajax({
       method: 'GET',
       uri: '/api/auth',
-      auth: {
-        user: auth.emailAddress,
-        pass: auth.password
-      }
+      auth: credentials
     }).tap(function (response) {
       if (response.statusCode === 200) {
         credentials = auth;
