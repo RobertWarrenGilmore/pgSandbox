@@ -40,10 +40,6 @@ describe('user', function () {
     });
   });
 
-  after('Destroy knex.', function () {
-    return knex.destroy();
-  });
-
   describe('create', function () {
     var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
     var badEmailAddress = 'NotAValidEmailAddress.com';
