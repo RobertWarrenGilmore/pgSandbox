@@ -97,28 +97,6 @@ describe('blog post', function () {
       }).catch(AuthenticationError, function () {});
     });
 
-    it('should fail with someone else\'s auth and minimal attributes', function () {
-      assert(false, 'This test does not have an auth user yet.');
-      return BlogPost.create({
-        auth: {
-          emailAddress: emailAddress, // TODO another user
-          password: password + 'a'
-        },
-        body: {
-          id: id,
-          title: title,
-          body: body,
-          postedTime: postedTime,
-          author: authorId
-        }
-      }).then(function (post) {
-        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
-      }).then(function (posts) {
-        createdIds.push(posts[0].id);
-        assert(false, 'The creation succeeded.');
-      }).catch(AuthenticationError, function () {});
-    });
-
     it('should fail with no auth and minimal attributes', function () {
       return BlogPost.create({
         body: {
@@ -136,6 +114,42 @@ describe('blog post', function () {
       }).catch(AuthenticationError, function () {});
     });
 
+    it('should fail with a poorly formatted postedTime');
+    it('should reject silly attributes');
+    it('should fail if the id is omitted');
+    it('should fail if the id is not unique');
+    it('should fail if the body is omitted');
+    it('should fail if the title is omitted');
+    it('should fail if the postedTime is omitted');
+    it('should fail if the author is omitted');
+    it('should fail if the author is not a user');
+    it('should fail if the author is not the authenticated user');
+    it('should fail if the user is not authorised to blog');
+
+  });
+
+  describe('read', function () {
+    it('should be able to look up by postId');
+    it('should fail to look up a non-existent post');
+    describe('search', function () {
+      it('should be able to list posts');
+    });
+  });
+
+  describe('update', function () {
+    it('should be able to change the body');
+    it('should be able to change the title');
+    it('should be able to change the preview');
+    it('should be able to remove the preview');
+    it('should be able to set active');
+    it('should be able to set inactive');
+    it('should be fail to set the author to someone else');
+    it('should fail with someone else\'s auth');
+  });
+
+  describe('delete', function () {
+    it('should work in the happy case');
+    it('should fail with someone else\'s auth');
   });
 
 });
