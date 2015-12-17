@@ -5,6 +5,8 @@ var escapeForLike = require('../../../server/biz/escapeForLike');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
 var BlogPost = require('../../../server/biz/blogPost')(knex);
 var AuthenticationError = require('../../../server/errors/authenticationError');
+var MalformedRequestError = require('../../../server/errors/malformedRequestError');
+var ConflictingEditError = require('../../../server/errors/conflictingEditError');
 
 describe('blog post', function () {
   var createdIds = [];
@@ -76,6 +78,28 @@ describe('blog post', function () {
       });
     });
 
+    it('should work with good auth and all attributes', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        body: {
+          id: id,
+          title: title,
+          body: body,
+          preview: preview,
+          postedTime: postedTime,
+          author: authorId
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(id);
+        assert(posts[0], 'No post was created.');
+      });
+    });
+
     it('should fail with bad auth and minimal attributes', function () {
       return BlogPost.create({
         auth: {
@@ -114,15 +138,172 @@ describe('blog post', function () {
       }).catch(AuthenticationError, function () {});
     });
 
-    it('should fail with a poorly formatted postedTime');
-    it('should reject silly attributes');
-    it('should fail if the id is omitted');
+    it('should fail with a poorly formatted posted time', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        body: {
+          id: id,
+          title: title,
+          body: body,
+          postedTime: new Date('the third of October in the year twenty fifteen'),
+          author: authorId
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(MalformedRequestError, function () {});
+    });
+
+    it('should reject silly attributes', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        body: {
+          id: id,
+          title: title,
+          body: body,
+          postedTime: postedTime,
+          author: authorId,
+          silly: 'this is not a legal attribute'
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(MalformedRequestError, function () {});
+    });
     it('should fail if the id is not unique');
-    it('should fail if the body is omitted');
-    it('should fail if the title is omitted');
-    it('should fail if the postedTime is omitted');
-    it('should fail if the author is omitted');
-    it('should fail if the author is not a user');
+
+    it('should fail if the id is omitted', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        body: {
+          title: title,
+          body: body,
+          postedTime: postedTime,
+          author: authorId
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(MalformedRequestError, function () {});
+    });
+
+
+    it('should fail if the body is omitted', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        body: {
+          id: id,
+          title: title,
+          postedTime: postedTime,
+          author: authorId
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(MalformedRequestError, function () {});
+    });
+
+    it('should fail if the title is omitted', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        body: {
+          id: id,
+          body: body,
+          postedTime: postedTime,
+          author: authorId
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(MalformedRequestError, function () {});
+    });
+
+    it('should fail if the postedTime is omitted', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        body: {
+          id: id,
+          title: title,
+          body: body,
+          author: authorId
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(MalformedRequestError, function () {});
+    });
+
+    it('should fail if the author is omitted', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        body: {
+          id: id,
+          title: title,
+          body: body,
+          postedTime: postedTime
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(MalformedRequestError, function () {});
+    });
+
+    it('should fail if the author is not a user', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        body: {
+          id: id,
+          title: title,
+          body: body,
+          postedTime: postedTime,
+          author: authorId + 1
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(ConflictingEditError, function () {});
+    });
+
     it('should fail if the author is not the authenticated user');
     it('should fail if the user is not authorised to blog');
 
@@ -138,9 +319,13 @@ describe('blog post', function () {
 
   describe('update', function () {
     it('should be able to change the body');
+    it('should fail to remove the body');
     it('should be able to change the title');
+    it('should fail to remove the title');
     it('should be able to change the preview');
     it('should be able to remove the preview');
+    it('should be able to change the posted time');
+    it('should fail to remove the posted time');
     it('should be able to set active');
     it('should be able to set inactive');
     it('should be fail to set the author to someone else');
