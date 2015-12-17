@@ -192,37 +192,50 @@ module.exports = function (knex, emailer) {
         var key;
         var absentEmailAddressError = new MalformedRequestError('You must supply an email address to create a user.');
         var notUniqueEmailAddressError = new ConflictingEditError('That email address is already in use by another user.');
+
         acceptOnlyAttributes(newUser, creatableAttributes, function (attribute) {
           return 'The attribute ' + attribute + ' cannot be written during a user creation.';
         });
+
+        // Ensure that the email address is set.
         if (!newUser.emailAddress) {
           throw absentEmailAddressError;
         }
+
+        // Set the password reset key.
         key = generatePasswordResetKey();
         newUser.passwordResetKeyHash = key.hash;
+
         return validationRules.run(newUser)
           .then(function () {
+
+            // Check for case-insensitive uniqueness of email address.
             return trx
               .from('users')
               .select(['id', 'emailAddress'])
-              .where('emailAddress', 'ilike', escapeForLike(newUser.emailAddress))
-              .then(function (existingUsers) {
-                if (existingUsers && existingUsers.length) {
-                  throw notUniqueEmailAddressError;
-                }
-                return trx
-                  .into('users')
-                  .insert(newUser)
-                  .returning('id');
-              })
-              .tap(function (ids) {
-                return sendPasswordResetEmail(emailer, newUser.emailAddress, ids[0], key.key);
-              })
-              .then(function (ids) {
-                return {
-                  id: ids[0]
-                };
-              });
+              .where('emailAddress', 'ilike', escapeForLike(newUser.emailAddress));
+          }).then(function (existingUsers) {
+            if (existingUsers && existingUsers.length) {
+              throw notUniqueEmailAddressError;
+            }
+
+            // Do the insertion.
+            return trx
+              .into('users')
+              .insert(newUser)
+              .returning('id');
+          }).tap(function (ids) {
+
+            // Send the password reset email. Note that the transaction can still fail at this point.
+            return sendPasswordResetEmail(emailer, newUser.emailAddress, ids[0], key.key);
+          }).then(function (ids) {
+
+            // Respond withan object containing only the ID.
+            return {
+              id: ids[0]
+            };
+
+            // handle errors.
           }).catch(Checkit.Error, function (err) {
             var message = '';
             for (var attribute in err.errors) {
