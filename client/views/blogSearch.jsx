@@ -133,27 +133,27 @@ var BlogSearch = React.createClass({
     if (this.state.endReached) {
       if (!this.state.results.length) {
         caboose = (
-          <li className='caboose' ref='caboose'>
+          <div className='caboose' ref='caboose'>
             no posts
-          </li>
+          </div>
         );
       }
     } else {
       caboose = (
-        <li className='caboose' ref='caboose'>
+        <div className='caboose' ref='caboose'>
           <BusyIndicator/>
           loading more
-        </li>
+        </div>
       );
     }
     return (
       <div id='blogSearch'>
-        <ol>
+        <div id='blogPostList'>
           {_.map(this.state.results, function(post) {
             return <Entry post={post} key={post.id}/>;
           })}
           {caboose}
-        </ol>
+        </div>
       </div>
     );
   }
@@ -163,25 +163,36 @@ var Entry = React.createClass({
 
   render: function() {
     var post = this.props.post;
+    var preview = post.preview;
+    // If no preview was provided, use the first paragraph of the body.
+    if (!preview) {
+      preview = post.body.split(/(\r?\n){2,}/)[0].trim();
+    }
     return (
-      <li className='post'>
-        <Link to={'/blog/' + post.id}>
-          <header>
-            <h1>
-              <CustomHtml content={post.title} markdown={true}/>
-            </h1>
-            <h2 className='byLine'>
-              by {post.author.givenName} {post.author.familyName}
-            </h2>
-            <time className='postedTime' dateTime={post.postedTime}>
-              {post.postedTime.substring(0,10)}
+      <Link className='blogPost' to={'/blog/' + post.id}>
+        <header>
+          <h1>
+            <CustomHtml content={post.title} inline/>
+          </h1>
+          <p className='byLine'>
+            by {post.author.givenName} {post.author.familyName}
+          </p>
+          <p className='postedTime'>
+            <time dateTime={post.postedTime}>
+              {post.postedTime.substring(0, 10)}
             </time>
-          </header>
-          <div className='preview'>
-            <CustomHtml content={post.body} markdown={true}/>
-          </div>
-        </Link>
-      </li>
+          </p>
+        </header>
+        <div className='preview'>
+          <CustomHtml content={preview}/>
+          {(preview.length < post.body.trim().length)
+            ? (
+              <p>
+                Read more...
+              </p>
+          ) : null}
+        </div>
+      </Link>
     );
   }
 

@@ -55,15 +55,20 @@ body
       background-color: white
       color: $body-colour
       +body-text
+      line-height: 1.5
       h1
         +header-text
-        font-size: 130%
+        font-size: 150%
         margin-bottom: $medium-padding
       h2
+        +header-text
         font-size: 120%
-        margin-bottom: $small-padding
-      p
-        line-height: 1.5
+        margin-bottom: $medium-padding
+      *
+        + h1, + h2, + h3, + h4, + h5, + h6
+          margin-top: 1em
+      p, ul, ol, dl
+        margin-bottom: $medium-padding
       a
         color: lighten($body-colour, 20%)
         text-decoration: underline
@@ -71,6 +76,29 @@ body
           color: inherit
       em
         font-style: italic
+      strong
+        font-weight: bold
+      s
+        text-decoration: line-through
+      sup, sub
+        font-size: 80%
+        position: relative
+      sup
+        bottom: 0.3em
+      sub
+        top: 0.3em
+      ul, ol, dl
+        margin-left: $large-padding
+      ul
+        list-style-type: disc
+      ol
+        list-style-type: decimal
+      li, dd
+        > ul,
+        > ol
+          margin-bottom: 0
+      dd
+        margin-left: $large-padding
       input, select
         border: thin solid $body-colour
         padding: $small-padding

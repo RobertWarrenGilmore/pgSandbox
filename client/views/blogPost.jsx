@@ -5,6 +5,7 @@ var ReactRouter = require('react-router');
 var Link = ReactRouter.Link;
 var TitleMixin = require('./titleMixin');
 var ajax = require('../utilities/ajax');
+var sanitiseHtml = require('sanitize-html');
 
 var BlogPost = React.createClass({
 
@@ -36,7 +37,7 @@ var BlogPost = React.createClass({
           loadedContent: response.body,
           busy: false
         });
-        self.setTitle(response.body.title);
+        self.setTitle(sanitiseHtml(response.body.title, {allowedTags: []}));
         return null;
       } else {
         self.setState({busy: false, error: response.body, runningRequest: null});
@@ -80,22 +81,26 @@ var BlogPost = React.createClass({
       } else {
         var post = this.state.loadedContent;
         result = (
-          <div id='blogPost'>
+          <div id='blogPost' className='blogPost'>
             <header>
               <h1>
-                <CustomHtml content={post.title} markdown={true}/>
+                <CustomHtml content={post.title} inline/>
               </h1>
-              <h2 className='byLine'>
+              <p className='byLine'>
                 by&nbsp;
                 <Link to={'/users/' + post.author.id}>
                   {post.author.givenName} {post.author.familyName}
                 </Link>
-              </h2>
-              <time className='postedTime' dateTime={post.postedTime}>
-                {post.postedTime.substring(0,10)}
-              </time>
+              </p>
+              <p className='postedTime'>
+                <time dateTime={post.postedTime}>
+                  {post.postedTime.substring(0,10)}
+                </time>
+              </p>
             </header>
-            <CustomHtml content={post.body} markdown={true}/>
+            <div className='body'>
+              <CustomHtml content={post.body}/>
+            </div>
           </div>
         );
       }

@@ -1,4 +1,10 @@
-#appContainer > div > main > #blogPost:not(.message)
-  +full-content
-  > header
-    text-align: center
+#appContainer > div > main
+  > #blogPost:not(.message)
+    +full-content
+  .blogPost
+    header
+      text-align: center
+      margin-bottom: $large-padding
+      p
+        font-size: 120%
+        margin-bottom: 0

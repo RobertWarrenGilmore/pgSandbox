@@ -34,6 +34,7 @@ module.exports = function (knex) {
             'blogPosts.title',
             'blogPosts.postedTime',
             'blogPosts.body',
+            'blogPosts.preview',
             'blogPosts.active',
             'users.id as authorId',
             'users.givenName as authorGivenName',
@@ -48,6 +49,7 @@ module.exports = function (knex) {
               title: post.title,
               postedTime: post.postedTime,
               body: post.body,
+              preview: post.preview,
               active: post.active,
               author: {
                 id: post.authorId,
@@ -80,7 +82,7 @@ module.exports = function (knex) {
         } else {
 
           // Add sorting.
-          query = query.orderBy('postedTime', 'asc');
+          query = query.orderBy('postedTime', 'desc');
 
           // Add offset.
           query = query.limit(20);

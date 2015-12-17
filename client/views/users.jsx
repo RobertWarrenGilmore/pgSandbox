@@ -209,17 +209,17 @@ var Users = React.createClass({
     if (this.state.endReached) {
       if (!this.state.results.length) {
         caboose = (
-          <li className='caboose' ref='caboose'>
+          <div className='caboose' ref='caboose'>
             no results
-          </li>
+          </div>
         );
       }
     } else {
       caboose = (
-        <li className='caboose' ref='caboose'>
+        <div className='caboose' ref='caboose'>
           <BusyIndicator/>
           loading more
-        </li>
+        </div>
       );
     }
     return (
@@ -268,12 +268,12 @@ var Users = React.createClass({
             )
             : (null)}
         </form>
-        <ol>
+        <div id='userList'>
           {_.map(this.state.results, function(user) {
             return <Entry user={user} key={user.id}/>;
           })}
           {caboose}
-        </ol>
+        </div>
       </div>
     );
   }
@@ -284,14 +284,14 @@ var Entry = React.createClass({
   render: function() {
     var user = this.props.user;
     return (
-      <li className='user'>
+      <div className='user'>
         <div className='name'>
           {user.givenName} {user.familyName}
         </div>
         <div className='emailAddress'>
           {user.emailAddress}
         </div>
-      </li>
+      </div>
     );
   }
 

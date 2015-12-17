@@ -10,20 +10,19 @@
         display: block
       > input[type=checkbox]
         margin: $small-padding
-  > ol
-    > li
-      &.user
-        padding: $medium-padding
-        border-bottom: thin solid grey
-        &:first-of-type
-          border-top: thin solid grey
-        > *
-          margin: $small-padding
-        > div.name
-          font-size: 120%
-      &.caboose
-        text-align: center
-        padding: $small-padding
+  > #userList
+    > .user
+      padding: $medium-padding
+      border-bottom: thin solid grey
+      &:first-of-type
+        border-top: thin solid grey
+      > *
+        margin: $small-padding
+      > div.name
+        font-size: 120%
+    > .caboose
+      text-align: center
+      padding: $small-padding
   @media (min-width: $app-max-width)
     // common
     > #filter
@@ -37,7 +36,7 @@
     > #filter
       margin-left: -1 * $filter-width
       width: $filter-width
-    > ol
+    > #userList
       width: 100%
     > *
       display: inline-block
@@ -49,7 +48,7 @@
       > #filter
         margin-left: initial
         width: initial
-      > ol
+      > #userList
         width: initial
       > *
         display: initial
@@ -62,5 +61,5 @@
       flex-wrap: nowrap
       > #filter
         flex: 0 1 $filter-width
-      > ol
+      > #userList
         flex: 1 1

@@ -68,11 +68,7 @@ var Home = React.createClass({
       } else {
         result = (
           <div id='home'>
-            <CustomHtml
-              content={this.state.loadedContent}
-              escape={false}
-              markdown={false}
-              sanitiseMarkdown={false}/>
+            <CustomHtml content={this.state.loadedContent} sanitise={false}/>
           </div>
         );
       }
