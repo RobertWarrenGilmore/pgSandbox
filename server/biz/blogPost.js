@@ -3,14 +3,27 @@ var authenticatedTransaction = require('./authenticatedTransaction');
 var AuthorisationError = require('../errors/authorisationError');
 var NoSuchResourceError = require('../errors/noSuchResourceError');
 var MalformedRequestError = require('../errors/malformedRequestError');
+var ConflictingEditError = require('../errors/conflictingEditError');
+var Checkit = require('checkit');
 var escapeForLike = require('./escapeForLike');
 
-var searchableParams = [];
+var validationRules = new Checkit({
+  id: ['required', 'alphaDash', 'minLength:10', 'maxLength:255'],
+  title: ['required', 'minLength:1', 'maxLength:255'],
+  body: ['required', 'minLength:1', 'maxLength:5000'],
+  preview: [],
+  author: ['required', 'natural'],
+  postedTime: ['required', 'date'],
+  active: ['boolean']
+});
 
-function acceptOnlyAttributes(object, acceptible, error) {
+var searchableParams = [];
+var creatableAttributes = ['id', 'title', 'body', 'preview', 'author', 'postedTime', 'active'];
+
+function acceptOnlyAttributes(object, acceptible, errorMessage) {
   for (var attribute in object) {
     if (acceptible.indexOf(attribute) === -1) {
-      throw error(attribute);
+      throw new MalformedRequestError(errorMessage(attribute));
     }
   }
 }
@@ -18,6 +31,68 @@ function acceptOnlyAttributes(object, acceptible, error) {
 module.exports = function (knex) {
 
   return {
+
+    create: function (args) {
+      return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
+        var newPost = _.cloneDeep(args.body);
+        var absentIdError = new MalformedRequestError('You must supply an id to create a post.');
+        var notUniqueIdError = new ConflictingEditError('That id already belongs to another post.');
+
+        acceptOnlyAttributes(newPost, creatableAttributes, function (attribute) {
+          return 'The attribute ' + attribute + ' cannot be written during a post creation.';
+        });
+
+        // Convert postedTime to a Date and ensure that it's valid.
+        newPost.postedTime = new Date(newPost.postedTime);
+        if (isNaN(newPost.postedTime.getTime())) {
+          throw new MalformedRequestError('postedTime must be a dateTime.');
+        }
+
+        return validationRules.run(newPost)
+          .then(function () {
+
+            // Check for case-insensitive uniqueness of ID.
+            return trx
+              .from('blogPosts')
+              .select(['id'])
+              .where('id', 'ilike', escapeForLike(newPost.id));
+          }).then(function (existingPosts) {
+            if (existingPosts && existingPosts.length) {
+              throw notUniqueIdError;
+            }
+
+            // Do the insertion.
+            return trx
+              .into('blogPosts')
+              .insert(newPost)
+              .returning('id');
+          }).then(function (ids) {
+
+            // Respond with an object containing only the ID.
+            return {
+              id: ids[0]
+            };
+
+            // Handle errors.
+          }).catch(Checkit.Error, function (err) {
+            var message = '';
+            for (var attribute in err.errors) {
+              message += err.errors[attribute].message + '. ';
+            }
+            message = message.trim();
+            throw new MalformedRequestError(message);
+          }).catch(function (err) {
+            return err.code === '23502';
+          }, function (err) {
+            throw absentIdError;
+          }).catch(function (err) {
+            return err.code === '23505';
+          }, function (err) {
+            throw notUniqueIdError;
+          });
+
+      });
+    },
 
     read: function (args) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {

@@ -1,0 +1,141 @@
+var assert = require('assert');
+var Promise = require('bluebird');
+var knex = require('../../../server/database/knex');
+var escapeForLike = require('../../../server/biz/escapeForLike');
+var bcrypt = Promise.promisifyAll(require('bcrypt'));
+var BlogPost = require('../../../server/biz/blogPost')(knex);
+var AuthenticationError = require('../../../server/errors/authenticationError');
+
+describe('blog post', function () {
+  var createdIds = [];
+  var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
+  var authorId;
+  var password = 'taco tuesday';
+  var givenName = 'Victor';
+  var familyName = 'Frankenstein';
+  var passwordHash = bcrypt.hashSync(password, 8);
+
+  before('Create an author.', function () {
+    return knex.into('users').insert({
+      emailAddress: emailAddress,
+      givenName: givenName,
+      familyName: familyName,
+      passwordHash: passwordHash
+    }).returning('id').then(function (ids) {
+      authorId = ids[0];
+    });
+  });
+
+  afterEach('Delete any created test posts.', function () {
+    return Promise.all(createdIds.map(function (id) {
+      return knex
+        .from('blogPosts')
+        .where('id', 'ilike', escapeForLike(id))
+        .del();
+    })).then(function () {
+      createdIds.length = 0;
+    });
+  });
+
+  after('Destroy the author.', function () {
+    return knex
+      .from('users')
+      .where('id', authorId)
+      .del();
+  });
+
+  describe('create', function () {
+    var id = '2015-12-17_a_test_post_for_the_mocha_test_suite';
+    var title = 'A Test Post for the Mocha Test Suite';
+    var body = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ipsum erat, porttitor vitae bibendum eu, interdum at metus. Etiam fermentum lectus eu leo semper suscipit. Nam pharetra nisl quis nisi ullamcorper viverra. Donec vehicula ac neque a euismod. Duis venenatis, massa ut porttitor gravida, velit arcu porttitor erat, vitae fringilla sapien velit vel urna. Duis vel orci eget ante feugiat molestie eu a felis. Aenean sollicitudin interdum eros, vitae euismod ligula suscipit ac. Proin nec libero lacus. Aenean libero justo, placerat sed nisl vel, sollicitudin pellentesque erat. Morbi rhoncus risus et dolor auctor posuere. Nam aliquam, eros in vulputate euismod, purus odio mollis velit, ut tincidunt eros elit eu ex. Donec libero lorem, suscipit non augue nec, vulputate sodales dui. Sed semper felis a augue imperdiet eleifend. Proin semper viverra eleifend. Morbi vehicula pretium eros, sit amet hendrerit enim posuere sed. Nam venenatis malesuada purus ut pulvinar.\n\n' +
+      'Nulla eu odio accumsan, efficitur mauris vitae, placerat nulla. Mauris nec ornare orci, a pretium orci. Vivamus mollis lorem non diam sagittis, nec rutrum dui tempor. Sed sed convallis libero. Proin mattis quam vel justo ultricies efficitur. Etiam aliquet vitae ex non gravida. Cras eget molestie ipsum. Praesent viverra cursus tempus. Nulla diam tortor, dictum ac ullamcorper id, blandit a odio. Sed fermentum purus eu ipsum suscipit, quis egestas mauris porta. In hac habitasse platea dictumst. Maecenas pharetra nisl ut justo accumsan ornare. Vestibulum massa mi, semper eu ex vel, hendrerit auctor velit.\n\n' +
+      'Nulla tempus nisi varius, lacinia tortor id, dapibus quam. Phasellus venenatis eu dolor et dapibus. Nunc placerat porta enim sed fringilla. Suspendisse vel mi quam. Morbi facilisis gravida eros, nec dapibus nulla efficitur vel. Ut quam turpis, volutpat ac egestas in, ullamcorper eu velit. Fusce laoreet, elit mattis congue pellentesque, lacus dolor lobortis leo, id malesuada turpis ante id elit. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.\n\n' +
+      'Pellentesque in risus quis mi egestas tempus. Vestibulum ex mi, aliquet sit amet dui eu, viverra tristique libero. Aliquam erat volutpat. Donec pharetra semper ex, in finibus nisi lobortis vitae. Nam quis arcu mi. Donec gravida iaculis ultricies. Ut vitae enim sit amet velit ornare consectetur sit amet eget mi. Sed eleifend, nunc rhoncus lacinia placerat, ante enim convallis magna, eu vehicula erat dolor posuere dui.\n\n' +
+      'Nullam rhoncus justo quis tellus pulvinar, vel interdum nibh rhoncus. Cras ultrices tempor purus vel mollis. Fusce eget massa aliquam, feugiat orci eget, facilisis tellus. Aenean vel ligula odio. Praesent vel nunc ac purus auctor dapibus vel et ligula. Morbi tristique libero et est cursus suscipit. Ut facilisis sapien neque, et ultrices eros luctus nec. Curabitur placerat dolor eget nibh gravida commodo. Phasellus et blandit sem.';
+    var preview = 'This is a very short preview for a long post.';
+    var postedTime = new Date();
+
+    it('should work with good auth and minimal attributes', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        body: {
+          id: id,
+          title: title,
+          body: body,
+          postedTime: postedTime,
+          author: authorId
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(posts[0], 'No post was created.');
+      });
+    });
+
+    it('should fail with bad auth and minimal attributes', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password + 'a'
+        },
+        body: {
+          id: id,
+          title: title,
+          body: body,
+          postedTime: postedTime,
+          author: authorId
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(AuthenticationError, function () {});
+    });
+
+    it('should fail with someone else\'s auth and minimal attributes', function () {
+      assert(false, 'This test does not have an auth user yet.');
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress, // TODO another user
+          password: password + 'a'
+        },
+        body: {
+          id: id,
+          title: title,
+          body: body,
+          postedTime: postedTime,
+          author: authorId
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(AuthenticationError, function () {});
+    });
+
+    it('should fail with no auth and minimal attributes', function () {
+      return BlogPost.create({
+        body: {
+          id: id,
+          title: title,
+          body: body,
+          postedTime: postedTime,
+          author: authorId
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(AuthenticationError, function () {});
+    });
+
+  });
+
+});
