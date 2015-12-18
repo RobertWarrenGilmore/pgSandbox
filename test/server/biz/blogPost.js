@@ -405,8 +405,12 @@ describe('blog post', function () {
   describe('read', function () {
     it('should be able to look up by postId');
     it('should fail to look up a non-existent post');
+    it('should fail to look up an inactive post that belongs to someone else');
+    it('should be able to look up an inactive post that belongs to oneself');
     describe('search', function () {
       it('should be able to list posts');
+      it('should see a post list that omits the inactive posts of others');
+      it('should see a post list that includes the inactive posts of oneself');
     });
   });
 
