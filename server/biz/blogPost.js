@@ -235,14 +235,15 @@ module.exports = function (knex) {
           // Read a specific post.
           var post;
           return query
-            .where('blogPosts.id', args.params.postId)
+            .where('blogPosts.id', 'ilike', escapeForLike(args.params.postId))
             .then(transformAuthor)
             .then(function (posts) {
               if (!posts.length) {
                 throw new NoSuchResourceError();
               }
               post = posts[0];
-              if (!post.active) {
+              if (!post.active &&
+                (!authUser || authUser.id !== post.author.id)) {
                 throw new AuthorisationError();
               }
               return post;
