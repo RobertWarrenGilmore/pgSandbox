@@ -16,6 +16,10 @@ module.exports = function (knex) {
 
     create: function (args) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
+        if (!authUser) {
+          throw new AuthorisationError('Blog posts cannot be created anonymously');
+        }
+
         var absentIdError = new MalformedRequestError('You must supply an id to create a post');
         var notUniqueIdError = new ConflictingEditError('That id already belongs to another post');
         var noSuchAuthorError = new ConflictingEditError('The given author does not exist');
@@ -102,6 +106,11 @@ module.exports = function (knex) {
                       throw noSuchAuthorError;
                     }
                   });
+              }, function (val) {
+                // Check that the author is the authenticated user.
+                if (val.id !== authUser.id) {
+                  throw new AuthorisationError('You cannot create a post that belongs to someone else');
+                }
               }
             ],
             postedTime: [

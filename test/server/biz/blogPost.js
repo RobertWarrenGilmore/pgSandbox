@@ -5,6 +5,7 @@ var escapeForLike = require('../../../server/biz/utilities/escapeForLike');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
 var BlogPost = require('../../../server/biz/blogPost')(knex);
 var AuthenticationError = require('../../../server/errors/authenticationError');
+var AuthorisationError = require('../../../server/errors/authorisationError');
 var MalformedRequestError = require('../../../server/errors/malformedRequestError');
 var ConflictingEditError = require('../../../server/errors/conflictingEditError');
 
@@ -143,7 +144,7 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(AuthenticationError, function () {});
+      }).catch(AuthorisationError, function () {});
     });
 
     it('should fail with a poorly formatted posted time', function () {
@@ -353,10 +354,50 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(ConflictingEditError, function () {});
+      }).catch(AuthorisationError, function () {});
     });
 
-    it('should fail if the author is not the authenticated user');
+    it('should fail if the author is not the authenticated user', function () {
+      var otherAuthorId;
+      var otherAuthorEmailAddress = 'a' + emailAddress;
+      return knex.into('users').insert({
+        emailAddress: otherAuthorEmailAddress,
+        givenName: givenName,
+        familyName: familyName,
+        passwordHash: passwordHash
+      }).returning('id').then(function (ids) {
+        otherAuthorId = ids[0];
+      }).then(function () {
+        return BlogPost.create({
+          auth: {
+            emailAddress: emailAddress,
+            password: password
+          },
+          body: {
+            id: id,
+            title: title,
+            body: body,
+            postedTime: postedTime,
+            author: {
+              id: otherAuthorId
+            }
+          }
+        });
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(AuthorisationError, function () {})
+      .finally(function () {
+        return knex
+          .from('users')
+          .where('id', otherAuthorId)
+          .del();
+      });
+
+    });
+
     it('should fail if the user is not authorised to blog');
 
   });
