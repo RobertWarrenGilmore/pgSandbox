@@ -1,7 +1,7 @@
 var assert = require('assert');
 var Promise = require('bluebird');
 var knex = require('../../../server/database/knex');
-var escapeForLike = require('../../../server/biz/escapeForLike');
+var escapeForLike = require('../../../server/biz/utilities/escapeForLike');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
 var BlogPost = require('../../../server/biz/blogPost')(knex);
 var AuthenticationError = require('../../../server/errors/authenticationError');
@@ -17,7 +17,7 @@ describe('blog post', function () {
   var familyName = 'Frankenstein';
   var passwordHash = bcrypt.hashSync(password, 8);
 
-  before('Create an author.', function () {
+  beforeEach('Create an author.', function () {
     return knex.into('users').insert({
       emailAddress: emailAddress,
       givenName: givenName,
@@ -39,7 +39,7 @@ describe('blog post', function () {
     });
   });
 
-  after('Destroy the author.', function () {
+  afterEach('Destroy the author.', function () {
     return knex
       .from('users')
       .where('id', authorId)
@@ -68,7 +68,9 @@ describe('blog post', function () {
           title: title,
           body: body,
           postedTime: postedTime,
-          author: authorId
+          author: {
+            id: authorId
+          }
         }
       }).then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
@@ -90,7 +92,9 @@ describe('blog post', function () {
           body: body,
           preview: preview,
           postedTime: postedTime,
-          author: authorId
+          author: {
+            id: authorId
+          }
         }
       }).then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
@@ -111,7 +115,9 @@ describe('blog post', function () {
           title: title,
           body: body,
           postedTime: postedTime,
-          author: authorId
+          author: {
+            id: authorId
+          }
         }
       }).then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
@@ -128,7 +134,9 @@ describe('blog post', function () {
           title: title,
           body: body,
           postedTime: postedTime,
-          author: authorId
+          author: {
+            id: authorId
+          }
         }
       }).then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
@@ -149,7 +157,9 @@ describe('blog post', function () {
           title: title,
           body: body,
           postedTime: new Date('the third of October in the year twenty fifteen'),
-          author: authorId
+          author: {
+            id: authorId
+          }
         }
       }).then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
@@ -170,7 +180,9 @@ describe('blog post', function () {
           title: title,
           body: body,
           postedTime: postedTime,
-          author: authorId,
+          author: {
+            id: authorId
+          },
           silly: 'this is not a legal attribute'
         }
       }).then(function (post) {
@@ -180,7 +192,38 @@ describe('blog post', function () {
         assert(false, 'The creation succeeded.');
       }).catch(MalformedRequestError, function () {});
     });
-    it('should fail if the id is not unique');
+
+    it('should fail if the id is not unique', function () {
+      return knex.into('blogPosts').insert({
+        id: id,
+        title: title,
+        body: body,
+        postedTime: postedTime,
+        author: authorId
+      }).then(function () {
+        createdIds.push(id);
+        return BlogPost.create({
+          auth: {
+            emailAddress: emailAddress,
+            password: password
+          },
+          body: {
+            id: id,
+            title: title,
+            body: body,
+            postedTime: postedTime,
+            author: {
+              id: authorId
+            }
+          }
+        });
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(ConflictingEditError, function () {});
+    });
 
     it('should fail if the id is omitted', function () {
       return BlogPost.create({
@@ -192,7 +235,9 @@ describe('blog post', function () {
           title: title,
           body: body,
           postedTime: postedTime,
-          author: authorId
+          author: {
+            id: authorId
+          }
         }
       }).then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
@@ -201,7 +246,6 @@ describe('blog post', function () {
         assert(false, 'The creation succeeded.');
       }).catch(MalformedRequestError, function () {});
     });
-
 
     it('should fail if the body is omitted', function () {
       return BlogPost.create({
@@ -213,7 +257,9 @@ describe('blog post', function () {
           id: id,
           title: title,
           postedTime: postedTime,
-          author: authorId
+          author: {
+            id: authorId
+          }
         }
       }).then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
@@ -233,7 +279,9 @@ describe('blog post', function () {
           id: id,
           body: body,
           postedTime: postedTime,
-          author: authorId
+          author: {
+            id: authorId
+          }
         }
       }).then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
@@ -253,7 +301,9 @@ describe('blog post', function () {
           id: id,
           title: title,
           body: body,
-          author: authorId
+          author: {
+            id: authorId
+          }
         }
       }).then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
@@ -294,7 +344,9 @@ describe('blog post', function () {
           title: title,
           body: body,
           postedTime: postedTime,
-          author: authorId + 1
+          author: {
+            id: authorId + 1
+          }
         }
       }).then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));

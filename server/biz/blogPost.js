@@ -1,32 +1,14 @@
 var _ = require('lodash');
-var authenticatedTransaction = require('./authenticatedTransaction');
 var AuthorisationError = require('../errors/authorisationError');
 var NoSuchResourceError = require('../errors/noSuchResourceError');
 var MalformedRequestError = require('../errors/malformedRequestError');
 var ConflictingEditError = require('../errors/conflictingEditError');
 var Checkit = require('checkit');
-var escapeForLike = require('./escapeForLike');
+var escapeForLike = require('./utilities/escapeForLike');
+var authenticatedTransaction = require('./utilities/authenticatedTransaction');
+var acceptOnlyAttributes = require('./utilities/acceptOnlyAttributes');
+var validateAndTransform = require('./utilities/validateAndTransform');
 
-var validationRules = new Checkit({
-  id: ['required', 'alphaDash', 'minLength:10', 'maxLength:255'],
-  title: ['required', 'minLength:1', 'maxLength:255'],
-  body: ['required', 'minLength:1', 'maxLength:5000'],
-  preview: [],
-  author: ['required', 'natural'],
-  postedTime: ['required', 'date'],
-  active: ['boolean']
-});
-
-var searchableParams = [];
-var creatableAttributes = ['id', 'title', 'body', 'preview', 'author', 'postedTime', 'active'];
-
-function acceptOnlyAttributes(object, acceptible, errorMessage) {
-  for (var attribute in object) {
-    if (acceptible.indexOf(attribute) === -1) {
-      throw new MalformedRequestError(errorMessage(attribute));
-    }
-  }
-}
 
 module.exports = function (knex) {
 
@@ -34,62 +16,162 @@ module.exports = function (knex) {
 
     create: function (args) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
-        var newPost = _.cloneDeep(args.body);
-        var absentIdError = new MalformedRequestError('You must supply an id to create a post.');
-        var notUniqueIdError = new ConflictingEditError('That id already belongs to another post.');
+        var absentIdError = new MalformedRequestError('You must supply an id to create a post');
+        var notUniqueIdError = new ConflictingEditError('That id already belongs to another post');
+        var noSuchAuthorError = new ConflictingEditError('The given author does not exist');
 
-        acceptOnlyAttributes(newPost, creatableAttributes, function (attribute) {
-          return 'The attribute ' + attribute + ' cannot be written during a post creation.';
-        });
+        return validateAndTransform(args.body, {
 
-        // Convert postedTime to a Date and ensure that it's valid.
-        newPost.postedTime = new Date(newPost.postedTime);
-        if (isNaN(newPost.postedTime.getTime())) {
-          throw new MalformedRequestError('postedTime must be a dateTime.');
-        }
+          acceptableAttributes: [
+            'id',
+            'title',
+            'body',
+            'preview',
+            'author',
+            'postedTime',
+            'active'
+          ],
 
-        return validationRules.run(newPost)
-          .then(function () {
+          checkIt: new Checkit({
+            id: [
+              {
+                rule: 'required',
+                message: 'The id is required'
+              }, {
+                rule: 'alphaDash',
+                message: 'The id must consist of letters, numbers, dashes, and underscores'
+              }, {
+                rule: 'minLength:10',
+                message: 'The id must be at least 10 characters long'
+              }, {
+                rule: 'maxLength:255',
+                message: 'The id must be at most 255 characters long'
+              }, function (val) {
+                // Check for case-insensitive uniqueness of ID.
+                return trx
+                  .from('blogPosts')
+                  .select(['id'])
+                  .where('id', 'ilike', escapeForLike(val))
+                  .then(function (existingPosts) {
+                    if (existingPosts && existingPosts.length) {
+                      throw notUniqueIdError;
+                    }
+                  });
+              }, function (val) {
+                // Check that the ID starts with an ISO date.
+                if (!val.substring(0, 10).match(/^\d\d\d\d\-\d\d\-\d\d$/)
+                  || isNaN(new Date(val.substring(0, 10)).getTime())) {
+                  throw new MalformedRequestError('The id must begin with a date in the format yyyy-mm-dd');
+                }
+              }
+            ],
+            title: [
+              {
+                rule: 'required',
+                message: 'The title is required'
+              }, {
+                rule: 'minLength:1',
+                message: 'The title must be at least 1 character long'
+              }, {
+                rule: 'maxLength:255',
+                message: 'The title must be at most 255 characters long'
+              }
+            ],
+            body: ['required', 'maxLength:5000'],
+            preview: ['maxLength:5000'],
+            author: [
+              {
+                rule: 'required',
+                message: 'The id is required'
+              }, function (val) {
+                acceptOnlyAttributes(val, ['id'], function (attribute) {
+                  return 'The attribute author.' + attribute + ' cannot be written during a post creation';
+                });
+              }, function (val) {
+                if (!val.id) {
+                  throw new MalformedRequestError('The id of the author is required');
+                }
+              }, function (val) {
+                // Check for existence of the author.
+                return trx
+                  .from('users')
+                  .select(['id'])
+                  .where('id', val.id)
+                  .then(function (users) {
+                    if (!users || !users.length) {
+                      throw noSuchAuthorError;
+                    }
+                  });
+              }
+            ],
+            postedTime: [
+              {
+                rule: 'required',
+                message: 'The postedTime is required'
+              }, function (val) {
+                if (isNaN(new Date(val).getTime())) {
+                  throw new MalformedRequestError('postedTime must be a dateTime');
+                }
+              }
+            ],
+            active: ['boolean']
+          }),
 
-            // Check for case-insensitive uniqueness of ID.
-            return trx
-              .from('blogPosts')
-              .select(['id'])
-              .where('id', 'ilike', escapeForLike(newPost.id));
-          }).then(function (existingPosts) {
-            if (existingPosts && existingPosts.length) {
-              throw notUniqueIdError;
-            }
+          transform: function (old) {
+            return {
+              id: old.id,
+              title: old.title,
+              body: old.body,
+              preview: old.preview,
+              postedTime: new Date(old.postedTime),
+              author: old.author.id
+            };
+          }
+        }).then(function (newPost) {
 
             // Do the insertion.
-            return trx
-              .into('blogPosts')
-              .insert(newPost)
-              .returning('id');
-          }).then(function (ids) {
+          return trx
+            .into('blogPosts')
+            .insert(newPost)
+            .returning('id');
+        }).then(function (ids) {
 
-            // Respond with an object containing only the ID.
-            return {
-              id: ids[0]
-            };
+          // Respond with an object containing only the ID.
+          return {
+            id: ids[0]
+          };
 
-            // Handle errors.
-          }).catch(Checkit.Error, function (err) {
-            var message = '';
-            for (var attribute in err.errors) {
-              message += err.errors[attribute].message + '. ';
+          // Handle errors.
+        }).catch(Checkit.Error, function (err) {
+          var message = '';
+          for (var attribute in err.errors) {
+            message = attribute + '\n';
+            var attrErrs = err.errors[attribute].errors;
+            for (var i in attrErrs) {
+              var specificErr = attrErrs[i];
+              // If we have anything other than a ValidationError or a MalformedRequestError, throw it and forget about the rest.
+              if (!(specificErr instanceof Checkit.ValidationError)
+                && !(specificErr instanceof MalformedRequestError)) {
+                throw specificErr;
+              }
+              message += '  ' + specificErr.message + '\n';
             }
-            message = message.trim();
-            throw new MalformedRequestError(message);
-          }).catch(function (err) {
-            return err.code === '23502';
-          }, function (err) {
-            throw absentIdError;
-          }).catch(function (err) {
-            return err.code === '23505';
-          }, function (err) {
-            throw notUniqueIdError;
-          });
+          }
+          message = message.trim();
+          throw new MalformedRequestError(message);
+        }).catch(function (err) {
+          return err.code === '23502';
+        }, function (err) {
+          throw absentIdError;
+        }).catch(function (err) {
+          return err.code === '23505';
+        }, function (err) {
+          throw notUniqueIdError;
+        }).catch(function (err) {
+          return err.code === '23503' && err.constraint === 'blogposts_author_foreign';
+        }, function (err) {
+          throw noSuchAuthorError;
+        });
 
       });
     },
@@ -168,6 +250,7 @@ module.exports = function (knex) {
           // Add search parameters.
           var searchParams = _.clone(args.query) || {};
           delete searchParams.offset;
+          var searchableParams = [];
           acceptOnlyAttributes(searchParams, searchableParams, function (attribute) {
             return 'Cannot filter by parameter ' + attribute + '.';
           });

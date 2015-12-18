@@ -1,5 +1,5 @@
 var Promise = require('bluebird');
-var AuthenticationError = require('../errors/authenticationError');
+var AuthenticationError = require('../../errors/authenticationError');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
 var escapeForLike = require('./escapeForLike');
 

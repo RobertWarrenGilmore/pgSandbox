@@ -1,5 +1,4 @@
 var _ = require('lodash');
-var authenticatedTransaction = require('./authenticatedTransaction');
 var appHost = require('../../appInfo.json').host;
 var AuthenticationError = require('../errors/authenticationError');
 var AuthorisationError = require('../errors/authorisationError');
@@ -9,7 +8,9 @@ var ConflictingEditError = require('../errors/conflictingEditError');
 var Promise = require('bluebird');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
 var Checkit = require('checkit');
-var escapeForLike = require('./escapeForLike');
+var authenticatedTransaction = require('./utilities/authenticatedTransaction');
+var acceptOnlyAttributes = require('./utilities/acceptOnlyAttributes');
+var escapeForLike = require('./utilities/escapeForLike');
 
 var validationRules = new Checkit({
   emailAddress: ['email'],
@@ -55,14 +56,6 @@ function generatePasswordResetKey() {
     key: key,
     hash: hash
   };
-}
-
-function acceptOnlyAttributes(object, acceptible, errorMessage) {
-  for (var attribute in object) {
-    if (acceptible.indexOf(attribute) === -1) {
-      throw new MalformedRequestError(errorMessage(attribute));
-    }
-  }
 }
 
 function authenticatedUpdate(authUser, trx, id, newUser) {
