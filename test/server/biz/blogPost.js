@@ -23,7 +23,8 @@ describe('blog post', function () {
       emailAddress: emailAddress,
       givenName: givenName,
       familyName: familyName,
-      passwordHash: passwordHash
+      passwordHash: passwordHash,
+      authorisedToBlog: true
     }).returning('id').then(function (ids) {
       authorId = ids[0];
     });
@@ -398,7 +399,32 @@ describe('blog post', function () {
 
     });
 
-    it('should fail if the user is not authorised to blog');
+    it('should fail if the user is not authorised to blog', function () {
+      return knex.from('users').where('id', authorId).update({
+        authorisedToBlog: false
+      }).then(function () {
+        return BlogPost.create({
+          auth: {
+            emailAddress: emailAddress,
+            password: password
+          },
+          body: {
+            id: id,
+            title: title,
+            body: body,
+            postedTime: postedTime,
+            author: {
+              id: authorId
+            }
+          }
+        });
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(AuthorisationError, function () {});
+    });
 
   });
 

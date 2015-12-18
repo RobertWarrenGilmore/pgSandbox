@@ -19,6 +19,9 @@ module.exports = function (knex) {
         if (!authUser) {
           throw new AuthorisationError('Blog posts cannot be created anonymously');
         }
+        if (!authUser.authorisedToBlog) {
+          throw new AuthorisationError('You are not authorised to create blog posts');
+        }
 
         var absentIdError = new MalformedRequestError('You must supply an id to create a post');
         var notUniqueIdError = new ConflictingEditError('That id already belongs to another post');
