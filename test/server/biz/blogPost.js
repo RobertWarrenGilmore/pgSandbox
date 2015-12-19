@@ -706,7 +706,37 @@ describe('blog post', function () {
   });
 
   describe('update', function () {
-    it('should be able to change the body');
+
+    beforeEach('Create the post to be updated.', function () {
+      return knex.into('blogPosts').insert({
+        id: id,
+        title: title,
+        body: body,
+        postedTime: postedTime,
+        author: authorId
+      }).returning('id')
+        .then(function (returnedIds) {
+          createdIds.push(returnedIds[0]);
+        });
+    });
+
+    it('should be able to change the body', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          body: body + 'a'
+        }
+      }).then(function (post) {
+        assert.strictEqual(post.body, body + 'a', 'The body was not modified correctly.');
+      });
+    });
+
     it('should fail to remove the body');
     it('should be able to change the title');
     it('should fail to remove the title');

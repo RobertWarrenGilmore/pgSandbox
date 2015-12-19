@@ -284,6 +284,169 @@ module.exports = function (knex) {
       }).then(function (result) {
         return JSON.parse(JSON.stringify(result));
       });
+    },
+
+    update: function (args) {
+      return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
+        if (!authUser) {
+          throw new AuthorisationError('Blog posts cannot be updated anonymously');
+        }
+        if (!authUser.authorisedToBlog) {
+          throw new AuthorisationError('You are not authorised to update blog posts');
+        }
+
+        var notUniqueIdError = new ConflictingEditError('That id already belongs to another post');
+        var noSuchAuthorError = new ConflictingEditError('The given author does not exist');
+
+        return validateAndTransform(args.body, {
+
+          acceptableAttributes: [
+            'id',
+            'title',
+            'body',
+            'preview',
+            'author',
+            'postedTime',
+            'active'
+          ],
+
+          checkIt: new Checkit({
+            id: [
+              {
+                rule: 'alphaDash',
+                message: 'The id must consist of letters, numbers, dashes, and underscores'
+              }, {
+                rule: 'minLength:10',
+                message: 'The id must be at least 10 characters long'
+              }, {
+                rule: 'maxLength:255',
+                message: 'The id must be at most 255 characters long'
+              }, function (val) {
+                // Check for case-insensitive uniqueness of ID.
+                return trx
+                  .from('blogPosts')
+                  .select(['id'])
+                  .where('id', 'ilike', escapeForLike(val))
+                  .then(function (existingPosts) {
+                    if (existingPosts && existingPosts.length) {
+                      throw notUniqueIdError;
+                    }
+                  });
+              }, function (val) {
+                // Check that the ID starts with an ISO date.
+                if (!val.substring(0, 10).match(/^\d\d\d\d\-\d\d\-\d\d$/)
+                  || isNaN(new Date(val.substring(0, 10)).getTime())) {
+                  throw new MalformedRequestError('The id must begin with a date in the format yyyy-mm-dd');
+                }
+              }
+            ],
+            title: [
+              {
+                rule: 'minLength:1',
+                message: 'The title must be at least 1 character long'
+              }, {
+                rule: 'maxLength:255',
+                message: 'The title must be at most 255 characters long'
+              }
+            ],
+            body: ['maxLength:5000'],
+            preview: ['maxLength:5000'],
+            author: [
+              function (val) {
+                acceptOnlyAttributes(val, ['id'], function (attribute) {
+                  return 'The attribute author.' + attribute + ' cannot be written during a post update';
+                });
+              }, function (val) {
+                if (!val.id) {
+                  throw new MalformedRequestError('The id of the author is required');
+                }
+              }, function (val) {
+                // Check for existence of the author.
+                return trx
+                  .from('users')
+                  .select(['id'])
+                  .where('id', val.id)
+                  .then(function (users) {
+                    if (!users || !users.length) {
+                      throw noSuchAuthorError;
+                    }
+                  });
+              }, function (val) {
+                // Check that the author is the authenticated user.
+                if (val.id !== authUser.id) {
+                  throw new AuthorisationError('You cannot change the ownership of a post to someone else');
+                }
+              }
+            ],
+            postedTime: [
+              function (val) {
+                if (isNaN(new Date(val).getTime())) {
+                  throw new MalformedRequestError('postedTime must be a dateTime');
+                }
+              }
+            ],
+            active: ['boolean']
+          }),
+
+          transform: function (old) {
+            var result = _.cloneDeep(old);
+            if (result.postedTime) {
+              result.postedTime = new Date(old.postedTime);
+            }
+            if (result.author && result.author.id) {
+              result.author = result.author.id;
+            }
+            return result;
+          }
+        }).then(function (newPost) {
+
+          // Do the insertion.
+          return trx
+            .into('blogPosts')
+            .update(newPost)
+            .returning([
+              'id',
+              'title',
+              'body',
+              'preview',
+              'author',
+              'postedTime',
+              'active'
+            ]);
+        }).then(function (rows) {
+
+          // Respond with the updated post.
+          return rows[0];
+
+          // Handle errors.
+        }).catch(Checkit.Error, function (err) {
+          var message = '';
+          for (var attribute in err.errors) {
+            message = attribute + '\n';
+            var attrErrs = err.errors[attribute].errors;
+            for (var i in attrErrs) {
+              var specificErr = attrErrs[i];
+              // If we have anything other than a ValidationError or a MalformedRequestError, throw it and forget about the rest.
+              if (!(specificErr instanceof Checkit.ValidationError)
+                && !(specificErr instanceof MalformedRequestError)) {
+                throw specificErr;
+              }
+              message += '  ' + specificErr.message + '\n';
+            }
+          }
+          message = message.trim();
+          throw new MalformedRequestError(message);
+        }).catch(function (err) {
+          return err.code === '23505';
+        }, function (err) {
+          throw notUniqueIdError;
+        }).catch(function (err) {
+          return err.code === '23503' && err.constraint === 'blogposts_author_foreign';
+        }, function (err) {
+          throw noSuchAuthorError;
+        });
+
+      });
     }
 
   };
