@@ -662,8 +662,7 @@ describe('blog post', function () {
               assert(post.active, 'The list contained an inactive post.');
               assert.notStrictEqual(post.id, createdIds[0], 'The list contained the post that was deactivated.');
             }
-          }).catch(AuthorisationError, function () {})
-          .finally(function () {
+          }).finally(function () {
 
             // Destroy the other author.
             return knex
@@ -673,7 +672,36 @@ describe('blog post', function () {
           });
       });
 
-      it('should see a post list that includes the inactive posts of oneself');
+      it('should see a post list that includes the inactive posts of oneself', function () {
+        // Deactivate the post.
+        return knex.into('blogPosts').where('id', 'ilike', escapeForLike(createdIds[0]))
+          .update({
+            active: false
+          }).then(function () {
+
+            // Do the read.
+            return BlogPost.read({
+              auth: {
+                emailAddress: emailAddress,
+                password: password
+              }
+            });
+
+          // Assert stuff.
+          }).then(function (posts) {
+            assert.strictEqual(posts.length, searchablePosts.length, 'The list contains the wrong number of posts.');
+            var inactivePostEncountered = false;
+            for (var i in posts) {
+              var post = posts[i];
+              assert.strictEqual(post.author.id, authorId, 'The list contains posts by the wrong author.');
+              if (!post.active && post.id === createdIds[0]) {
+                inactivePostEncountered = true;
+              }
+            }
+            assert(inactivePostEncountered, 'The list did not contain the post that was deactivated.');
+          });
+      });
+
     });
   });
 
