@@ -145,13 +145,19 @@ module.exports = function (knex) {
           return trx
             .into('blogPosts')
             .insert(newPost)
-            .returning('id');
-        }).then(function (ids) {
+            .returning([
+              'id',
+              'title',
+              'body',
+              'preview',
+              'author',
+              'postedTime',
+              'active'
+            ]);
+        }).then(function (rows) {
 
-          // Respond with an object containing only the ID.
-          return {
-            id: ids[0]
-          };
+          // Respond with the newly created post.
+          return rows[0];
 
           // Handle errors.
         }).catch(Checkit.Error, function (err) {
