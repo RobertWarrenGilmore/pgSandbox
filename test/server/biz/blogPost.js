@@ -440,25 +440,25 @@ describe('blog post', function () {
         id: id + 'a',
         title: title,
         body: body,
-        postedTime: postedTime,
+        postedTime: new Date(postedTime.getTime()+(4*1000*60*60*24)),
         author: authorId
       }, {
         id: id + 'b',
         title: title,
         body: body,
-        postedTime: postedTime,
+        postedTime: new Date(postedTime.getTime()+(3*1000*60*60*24)),
         author: authorId
       }, {
         id: id + 'c',
         title: title,
         body: body,
-        postedTime: postedTime,
+        postedTime: new Date(postedTime.getTime()+(2*1000*60*60*24)),
         author: authorId
       }, {
         id: id + 'd',
         title: title,
         body: body,
-        postedTime: postedTime,
+        postedTime: new Date(postedTime.getTime()+(1*1000*60*60*24)),
         author: authorId
       }];
       return knex.into('blogPosts').insert(searchablePosts).returning('id')
@@ -474,8 +474,7 @@ describe('blog post', function () {
         }
       }).then(function (post) {
         assert(!(post instanceof Array), 'An array was returned instead of a single post.');
-        var exp = searchablePosts[0];
-        assert(!!exp.id, 'The returned post had no id.');
+        assert(!!post.id, 'The returned post had no id.');
       });
     });
 
@@ -592,14 +591,88 @@ describe('blog post', function () {
           });
         }).then(function (post) {
           assert(!(post instanceof Array), 'An array was returned instead of a single post.');
-          var exp = searchablePosts[0];
-          assert(!!exp.id, 'The returned post had no id.');
+          assert(!!post.id, 'The returned post had no id.');
         });
     });
 
     describe('search', function () {
-      it('should be able to list posts');
-      it('should see a post list that omits the inactive posts of others');
+
+      it('should be able to list posts', function () {
+        return BlogPost.read({}).then(function (posts) {
+          assert((posts instanceof Array), 'The result was not an array.');
+        });
+      });
+
+      it('should return the proper contents', function () {
+        return BlogPost.read({}).then(function (posts) {
+          assert((posts instanceof Array), 'The result was not an array.');
+          var exp = searchablePosts[0];
+          assert.deepStrictEqual(posts[0], {
+            id: exp.id,
+            title: exp.title,
+            body: exp.body,
+            postedTime: exp.postedTime.toISOString(),
+            author: {
+              id: authorId,
+              givenName: givenName,
+              familyName: familyName,
+              active: true
+            },
+            active: true,
+            preview: null
+          }, 'The returned post was incorrect.');
+        });
+      });
+
+      it('should see a post list that omits the inactive posts of others', function () {
+        // Create the other author.
+        var otherAuthorId;
+        var otherAuthorEmailAddress = 'a' + emailAddress;
+        return knex.into('users')
+          .insert({
+            emailAddress: otherAuthorEmailAddress,
+            givenName: givenName,
+            familyName: familyName,
+            passwordHash: passwordHash
+          }).returning('id').then(function (ids) {
+            otherAuthorId = ids[0];
+          }).then(function () {
+
+            // Deactivate the post.
+            return knex.into('blogPosts').where('id', 'ilike', escapeForLike(createdIds[0]))
+              .update({
+                active: false
+              });
+          }).then(function () {
+
+            // Authenticate as the other author.
+            return BlogPost.read({
+              auth: {
+                emailAddress: otherAuthorEmailAddress,
+                password: password
+              }
+            });
+
+          // Assert stuff.
+          }).then(function (posts) {
+            assert.strictEqual(posts.length, searchablePosts.length - 1, 'The list contains the wrong number of posts.');
+            for (var i in posts) {
+              var post = posts[i];
+              assert.strictEqual(post.author.id, authorId, 'The list contains posts by the wrong author.');
+              assert(post.active, 'The list contained an inactive post.');
+              assert.notStrictEqual(post.id, createdIds[0], 'The list contained the post that was deactivated.');
+            }
+          }).catch(AuthorisationError, function () {})
+          .finally(function () {
+
+            // Destroy the other author.
+            return knex
+              .from('users')
+              .where('id', otherAuthorId)
+              .del();
+          });
+      });
+
       it('should see a post list that includes the inactive posts of oneself');
     });
   });
