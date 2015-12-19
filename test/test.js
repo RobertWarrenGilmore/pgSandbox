@@ -1,4 +1,5 @@
 require('dotenv').load();
+process.env.NODE_ENV = 'testing';
 var knex = require('../server/database/knex');
 var Promise = require('bluebird');
 
