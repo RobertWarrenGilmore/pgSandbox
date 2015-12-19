@@ -233,7 +233,6 @@ module.exports = function (knex) {
         if (args.params && args.params.postId) {
 
           // Read a specific post.
-          var post;
           return query
             .where('blogPosts.id', 'ilike', escapeForLike(args.params.postId))
             .then(transformAuthor)
@@ -241,7 +240,7 @@ module.exports = function (knex) {
               if (!posts.length) {
                 throw new NoSuchResourceError();
               }
-              post = posts[0];
+              var post = posts[0];
               if (!post.active &&
                 (!authUser || authUser.id !== post.author.id)) {
                 throw new AuthorisationError();
@@ -272,7 +271,15 @@ module.exports = function (knex) {
 
           // The query is finished.
           return query
-            .then(transformAuthor);
+            .then(transformAuthor)
+            .then(function (posts) {
+
+              // Remove inactive posts that don't belong to the authenticated user.
+              return _.filter(posts, function (post) {
+                var authorisedToViewInactive = !!authUser && authUser.id === post.author.id;
+                return authorisedToViewInactive || post.active;
+              });
+            });
         }
       }).then(function (result) {
         return JSON.parse(JSON.stringify(result));
