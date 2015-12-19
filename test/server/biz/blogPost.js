@@ -716,7 +716,7 @@ describe('blog post', function () {
     it('should fail to remove the posted time');
     it('should be able to set active');
     it('should be able to set inactive');
-    it('should be fail to set the author to someone else');
+    it('should fail to set the author to someone else');
     it('should fail with someone else\'s auth');
   });
 
