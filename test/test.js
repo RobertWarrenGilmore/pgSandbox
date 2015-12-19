@@ -3,18 +3,22 @@ process.env.NODE_ENV = 'testing';
 var knex = require('../server/database/knex');
 var Promise = require('bluebird');
 
-// Migrate the database to the latest schema.
-before(function (done) {
-  knex.migrate.latest().then(function () {
-    done();
-  });
+before('Migrate the database to the latest schema.', function () {
+  return knex.migrate.latest();
 });
 
-// Canfigure promises.
-before(function () {
+before('Configure promises.', function () {
   Promise.config({
     cancellation: true
   });
+});
+
+after('Roll back the database.', function () {
+  return knex.migrate.rollback();
+});
+
+after('Destroy Knex.', function () {
+  return knex.destroy();
 });
 
 require('./server/server');
