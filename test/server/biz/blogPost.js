@@ -805,7 +805,22 @@ describe('blog post', function () {
       });
     });
 
-    it('should be able to remove the preview');
+    it('should be able to remove the preview', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          preview: null
+        }
+      }).then(function (post) {
+        assert.strictEqual(post.preview, null, 'The preview was not removed.');
+      });
+    });
 
     it('should be able to change the posted time', function () {
       var modifiedPostedTime = new Date(postedTime.getTime() + (1000 * 60 * 60 * 24)); // add one day
@@ -825,7 +840,74 @@ describe('blog post', function () {
       });
     });
 
-    it('should fail to remove the posted time');
+    it('should be able to set the posted time to a string representing a good date', function () {
+      var dateString = postedTime.toISOString();
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          postedTime: dateString
+        }
+      }).then(function (post) {
+        assert.strictEqual(post.postedTime.getTime(), postedTime.getTime(), 'The posted time was not modified correctly.');
+      });
+    });
+
+    it('should fail to remove the posted time', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          postedTime: null
+        }
+      }).then(function (post) {
+        assert(false, 'The postedTime was removed.');
+      }).catch(MalformedRequestError);
+    });
+
+    it('should fail to set the posted time to an invalid date', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          postedTime: '2015-02-29T22:43:21.845Z'
+        }
+      }).then(function (post) {
+        assert(false, 'The postedTime was set to ' + post.postedTime + '.');
+      }).catch(MalformedRequestError);
+    });
+
+    it('should fail to set the posted time to a nonsense string', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          postedTime: 'This string is not a date.'
+        }
+      }).then(function (post) {
+        assert(false, 'The postedTime was set to ' + post.postedTime + '.');
+      }).catch(MalformedRequestError);
+    });
 
     it('should be able to set active', function () {
       return knex
