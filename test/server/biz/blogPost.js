@@ -737,17 +737,200 @@ describe('blog post', function () {
       });
     });
 
-    it('should fail to remove the body');
-    it('should be able to change the title');
-    it('should fail to remove the title');
-    it('should be able to change the preview');
+    it('should fail to remove the body', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          body: null
+        }
+      }).then(function (post) {
+        assert(false, 'The body was removed.');
+      }).catch(MalformedRequestError);
+    });
+
+    it('should be able to change the title', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          title: title + 'a'
+        }
+      }).then(function (post) {
+        assert.strictEqual(post.title, title + 'a', 'The title was not modified correctly.');
+      });
+    });
+
+    it('should fail to remove the title', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          title: null
+        }
+      }).then(function (post) {
+        assert(false, 'The title was removed.');
+      }).catch(MalformedRequestError);
+    });
+
+    it('should be able to change the preview', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          preview: preview + 'a'
+        }
+      }).then(function (post) {
+        assert.strictEqual(post.preview, preview + 'a', 'The preview was not modified correctly.');
+      });
+    });
+
     it('should be able to remove the preview');
-    it('should be able to change the posted time');
+
+    it('should be able to change the posted time', function () {
+      var modifiedPostedTime = new Date(postedTime.getTime() + (1000 * 60 * 60 * 24)); // add one day
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          postedTime: modifiedPostedTime
+        }
+      }).then(function (post) {
+        assert.strictEqual(post.postedTime.getTime(), modifiedPostedTime.getTime(), 'The posted time was not modified correctly.');
+      });
+    });
+
     it('should fail to remove the posted time');
-    it('should be able to set active');
-    it('should be able to set inactive');
-    it('should fail to set the author to someone else');
-    it('should fail with someone else\'s auth');
+
+    it('should be able to set active', function () {
+      return knex
+        .into('blogPosts')
+        .where('id', 'ilike', escapeForLike(id))
+        .update({
+          active: false
+        })
+        .then(function () {
+          return BlogPost.update({
+            auth: {
+              emailAddress: emailAddress,
+              password: password
+            },
+            params: {
+              postId: createdIds[0]
+            },
+            body: {
+              active: true
+            }
+          });
+        }).then(function (post) {
+          assert.strictEqual(post.active, true, 'The active attribute was not modified correctly.');
+        });
+    });
+
+    it('should be able to set inactive', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          active: false
+        }
+      }).then(function (post) {
+        assert.strictEqual(post.active, false, 'The active attribute was not modified correctly.');
+      });
+    });
+
+    it('should fail to set the author to someone else', function () {
+      var otherAuthorId;
+      return knex
+        .into('users')
+        .insert({
+          emailAddress: 'a' + emailAddress,
+          passwordHash: passwordHash
+        })
+        .returning('id')
+        .then(function (ids) {
+          otherAuthorId = ids[0];
+          return BlogPost.update({
+            auth: {
+              emailAddress: emailAddress,
+              password: password
+            },
+            params: {
+              postId: createdIds[0]
+            },
+            body: {
+              author: {
+                id: otherAuthorId
+              }
+            }
+          });
+        }).then(function (post) {
+          assert(false, 'The author was reassigned.');
+        }).catch(AuthorisationError, function () {})
+        .finally(function () {
+          return knex
+            .from('users')
+            .where('id', otherAuthorId)
+            .del() ;
+        });
+    });
+
+    it('should fail with someone else\'s auth', function () {
+      return knex
+        .into('users')
+        .insert({
+          emailAddress: 'a' + emailAddress,
+          passwordHash: passwordHash
+        })
+        .returning('id')
+        .then(function (ids) {
+          return BlogPost.update({
+            auth: {
+              emailAddress: 'a' + emailAddress,
+              password: password
+            },
+            params: {
+              postId: createdIds[0]
+            },
+            body: {
+              body: body + 'a'
+            }
+          });
+        }).then(function (post) {
+          assert(false, 'The update succeeded.');
+        }).catch(AuthorisationError, function () {});
+    });
+
   });
 
   describe('delete', function () {
