@@ -814,7 +814,7 @@ describe('user', function () {
       var otherEmailAddress = 'somethingElse' + emailAddress;
       var badId;
 
-      before('Get an unassigned ID.', function () {
+      beforeEach('Get an unassigned ID.', function () {
         //Create a user, store his ID, then delete the user.
         return knex.into('users').insert({
           emailAddress: otherEmailAddress
@@ -838,7 +838,7 @@ describe('user', function () {
           }
         }).then(function () {
           assert(false, 'The update did not fail.');
-        }).catch(NoSuchResourceError, function () {});
+        }).catch(AuthorisationError, function () {});
       });
 
       it('should fail to do an anonymous password reset', function () {
