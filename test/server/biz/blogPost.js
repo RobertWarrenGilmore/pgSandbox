@@ -368,7 +368,8 @@ describe('blog post', function () {
           emailAddress: otherAuthorEmailAddress,
           givenName: givenName,
           familyName: familyName,
-          passwordHash: passwordHash
+          passwordHash: passwordHash,
+          authorisedToBlog: true
         }).returning('id').then(function (ids) {
           otherAuthorId = ids[0];
         }).then(function () {
@@ -538,7 +539,8 @@ describe('blog post', function () {
           emailAddress: otherAuthorEmailAddress,
           givenName: givenName,
           familyName: familyName,
-          passwordHash: passwordHash
+          passwordHash: passwordHash,
+          authorisedToBlog: true
         }).returning('id').then(function (ids) {
           otherAuthorId = ids[0];
         }).then(function () {
@@ -633,7 +635,8 @@ describe('blog post', function () {
             emailAddress: otherAuthorEmailAddress,
             givenName: givenName,
             familyName: familyName,
-            passwordHash: passwordHash
+            passwordHash: passwordHash,
+            authorisedToBlog: true
           }).returning('id').then(function (ids) {
             otherAuthorId = ids[0];
           }).then(function () {
@@ -957,7 +960,8 @@ describe('blog post', function () {
         .into('users')
         .insert({
           emailAddress: 'a' + emailAddress,
-          passwordHash: passwordHash
+          passwordHash: passwordHash,
+          authorisedToBlog: true
         })
         .returning('id')
         .then(function (ids) {
@@ -993,7 +997,8 @@ describe('blog post', function () {
         .into('users')
         .insert({
           emailAddress: 'a' + emailAddress,
-          passwordHash: passwordHash
+          passwordHash: passwordHash,
+          authorisedToBlog: true
         })
         .returning('id')
         .then(function (ids) {
