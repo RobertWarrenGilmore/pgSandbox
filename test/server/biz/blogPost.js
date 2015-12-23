@@ -988,6 +988,7 @@ describe('blog post', function () {
     });
 
     it('should fail with someone else\'s auth', function () {
+      var otherAuthorId;
       return knex
         .into('users')
         .insert({
@@ -996,6 +997,7 @@ describe('blog post', function () {
         })
         .returning('id')
         .then(function (ids) {
+          otherAuthorId = ids[0];
           return BlogPost.update({
             auth: {
               emailAddress: 'a' + emailAddress,
