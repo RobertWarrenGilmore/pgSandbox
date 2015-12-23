@@ -99,7 +99,7 @@ describe('user', function () {
       }).then(function (users) {
         createdIds.push(users[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(MalformedRequestError);
     });
 
     it('should fail when the email address is omitted', function () {
@@ -110,7 +110,7 @@ describe('user', function () {
       }).then(function (users) {
         createdIds.push(users[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(MalformedRequestError);
     });
 
     it('should fail when the email address is not unique', function () {
@@ -126,7 +126,7 @@ describe('user', function () {
       }).then(function (user) {
         createdIds.push(user.id);
         assert(false, 'The creation succeeded.');
-      }).catch(ConflictingEditError, function () {});
+      }).catch(ConflictingEditError);
     });
 
     it('should fail with an invalid email address', function () {
@@ -137,7 +137,7 @@ describe('user', function () {
       }).then(function (user) {
         createdIds.push(user.id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(MalformedRequestError);
     });
 
     it('should fail with a failing emailer', function () {
@@ -152,7 +152,7 @@ describe('user', function () {
         createdIds.push(users[0].id);
         assert(!mockEmailer.called, 'The password setting email was sent.');
         assert(false, 'The creation did not fail.');
-      }).catch(EmailerError, function () {});
+      }).catch(EmailerError);
     });
 
   });
@@ -224,7 +224,7 @@ describe('user', function () {
         });
       }).then(function (user) {
         assert(false, 'The read succeeded.');
-      }).catch(NoSuchResourceError, function () {});
+      }).catch(NoSuchResourceError);
     });
 
     it('should fail to authenticate with an unassigned email address', function () {
@@ -238,7 +238,7 @@ describe('user', function () {
         }
       }).then(function (user) {
         assert(false, 'Authentication did not fail.');
-      }).catch(AuthenticationError, function () {});
+      }).catch(AuthenticationError);
     });
 
     it('should fail to authenticate with a wrong password', function () {
@@ -252,7 +252,7 @@ describe('user', function () {
         }
       }).then(function (user) {
         assert(false, 'Authentication did not fail.');
-      }).catch(AuthenticationError, function () {});
+      }).catch(AuthenticationError);
     });
 
     describe('search', function () {
@@ -327,7 +327,7 @@ describe('user', function () {
           }
         }).then(function (users) {
           assert(false, 'The read succeeded.');
-        }).catch(MalformedRequestError, function () {});
+        }).catch(MalformedRequestError);
       });
 
       it('should be able to search by family name', function () {
@@ -419,7 +419,7 @@ describe('user', function () {
           }
         }).then(function () {
           assert(false, 'The read succeeded.');
-        }).catch(MalformedRequestError, function () {});
+        }).catch(MalformedRequestError);
       });
 
       it('should fail to search with a userId', function () {
@@ -432,7 +432,7 @@ describe('user', function () {
           }
         }).then(function () {
           assert(false, 'The read succeeded.');
-        }).catch(MalformedRequestError, function () {});
+        }).catch(MalformedRequestError);
       });
     });
 
@@ -497,7 +497,7 @@ describe('user', function () {
         }
       }).then(function () {
         assert(false, 'The update succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(MalformedRequestError);
     });
 
     it('should fail to set a too long password', function () {
@@ -514,7 +514,7 @@ describe('user', function () {
         }
       }).then(function () {
         assert(false, 'The update succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(MalformedRequestError);
     });
 
     it('should fail to set a property that users do not have', function () {
@@ -531,7 +531,7 @@ describe('user', function () {
         }
       }).then(function () {
         assert(false, 'The update succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(MalformedRequestError);
     });
 
     it('should be able to set an email address', function () {
@@ -578,7 +578,7 @@ describe('user', function () {
       }).then(function (user) {
         assert.strictEqual(user.emailAddress, badEmailAddress, 'The email address was set.');
         assert(false, 'The update succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(MalformedRequestError);
     });
 
     it('should fail to set an email address without authenticating', function () {
@@ -591,7 +591,7 @@ describe('user', function () {
         }
       }).then(function () {
         assert(false, 'The update succeeded.');
-      }).catch(AuthenticationError, function () {});
+      }).catch(AuthenticationError);
     });
 
     it('should be able to set inactive', function () {
@@ -664,7 +664,7 @@ describe('user', function () {
         }
       }).then(function (user) {
         assert(false, 'The email was sent.');
-      }).catch(EmailerError, function () {});
+      }).catch(EmailerError);
     });
 
     it('should fail to send a password reset email with extra attributes', function () {
@@ -677,7 +677,7 @@ describe('user', function () {
       }).then(function () {
         assert(!mockEmailer.called, 'The emailer was called.');
         assert(false, 'The update did not fail.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(MalformedRequestError);
     });
 
     context('after password reset email', function () {
@@ -743,7 +743,7 @@ describe('user', function () {
           }
         }).then(function () {
           assert(false, 'The update succeeded.');
-        }).catch(AuthenticationError, function () {});
+        }).catch(AuthenticationError);
       });
 
       it('should fail to set a password anonymously with extra attributes', function () {
@@ -758,7 +758,7 @@ describe('user', function () {
           }
         }).then(function () {
           assert(false, 'The update succeeded.');
-        }).catch(MalformedRequestError, function () {});
+        }).catch(MalformedRequestError);
       });
 
     });
@@ -788,7 +788,7 @@ describe('user', function () {
           }
         }).then(function () {
           assert(false, 'The update succeeded.');
-        }).catch(AuthorisationError, function () {});
+        }).catch(AuthorisationError);
       });
 
       it('should fail to set a password', function () {
@@ -805,7 +805,7 @@ describe('user', function () {
           }
         }).then(function () {
           assert(false, 'The update succeeded.');
-        }).catch(AuthorisationError, function () {});
+        }).catch(AuthorisationError);
       });
 
     });
@@ -838,7 +838,7 @@ describe('user', function () {
           }
         }).then(function () {
           assert(false, 'The update did not fail.');
-        }).catch(AuthorisationError, function () {});
+        }).catch(AuthorisationError);
       });
 
       it('should fail to do an anonymous password reset', function () {
@@ -852,7 +852,7 @@ describe('user', function () {
           }
         }).then(function () {
           assert(false, 'The update did not fail.');
-        }).catch(NoSuchResourceError, function () {});
+        }).catch(NoSuchResourceError);
       });
 
       it('should fail to send a password reset email', function () {
@@ -864,7 +864,7 @@ describe('user', function () {
         }).then(function () {
           assert(!mockEmailer.called, 'The emailer was called.');
           assert(false, 'The update did not fail.');
-        }).catch(NoSuchResourceError, function () {});
+        }).catch(NoSuchResourceError);
       });
 
     });
