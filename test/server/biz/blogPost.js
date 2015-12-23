@@ -128,7 +128,7 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(AuthenticationError);
+      }).catch(AuthenticationError, function () {});
     });
 
     it('should fail with no auth and minimal attributes', function () {
@@ -147,7 +147,7 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(AuthorisationError);
+      }).catch(AuthorisationError, function () {});
     });
 
     it('should fail with a poorly formatted posted time', function () {
@@ -170,7 +170,7 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError);
+      }).catch(MalformedRequestError, function () {});
     });
 
     it('should reject silly attributes', function () {
@@ -194,7 +194,7 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError);
+      }).catch(MalformedRequestError, function () {});
     });
 
     it('should fail if the id is not unique', function () {
@@ -226,7 +226,7 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(ConflictingEditError);
+      }).catch(ConflictingEditError, function () {});
     });
 
     it('should fail if the id is omitted', function () {
@@ -248,7 +248,7 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError);
+      }).catch(MalformedRequestError, function () {});
     });
 
     it('should fail if the body is omitted', function () {
@@ -270,7 +270,7 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError);
+      }).catch(MalformedRequestError, function () {});
     });
 
     it('should fail if the title is omitted', function () {
@@ -292,7 +292,7 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError);
+      }).catch(MalformedRequestError, function () {});
     });
 
     it('should fail if the postedTime is omitted', function () {
@@ -314,7 +314,7 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError);
+      }).catch(MalformedRequestError, function () {});
     });
 
     it('should fail if the author is omitted', function () {
@@ -334,7 +334,7 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError);
+      }).catch(MalformedRequestError, function () {});
     });
 
     it('should fail if the author is not a user', function () {
@@ -357,7 +357,7 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(AuthorisationError);
+      }).catch(AuthorisationError, function () {});
     });
 
     it('should fail if the author is not the authenticated user', function () {
@@ -392,7 +392,7 @@ describe('blog post', function () {
         }).then(function (posts) {
           createdIds.push(posts[0].id);
           assert(false, 'The creation succeeded.');
-        }).catch(AuthorisationError)
+        }).catch(AuthorisationError, function () {})
         .finally(function () {
           return knex
             .from('users')
@@ -426,7 +426,7 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(AuthorisationError);
+      }).catch(AuthorisationError, function () {});
     });
 
   });
@@ -510,7 +510,7 @@ describe('blog post', function () {
         }
       }).then(function (post) {
         assert(false, 'The read succeeded');
-      }).catch(NoSuchResourceError);
+      }).catch(NoSuchResourceError, function () {});
     });
 
     it('should fail to look up an inactive post without authenticating', function () {
@@ -525,7 +525,7 @@ describe('blog post', function () {
           });
         }).then(function (post) {
           assert(false, 'The read succeeded.');
-        }).catch(AuthorisationError);
+        }).catch(AuthorisationError, function () {});
     });
 
     it('should fail to look up an inactive post that belongs to someone else', function () {
@@ -564,7 +564,7 @@ describe('blog post', function () {
         // Assert stuff.
         }).then(function (post) {
           assert(false, 'The read succeeded.');
-        }).catch(AuthorisationError)
+        }).catch(AuthorisationError, function () {})
         .finally(function () {
 
           // Destroy the other author.
@@ -751,7 +751,7 @@ describe('blog post', function () {
         }
       }).then(function (post) {
         assert(false, 'The body was removed.');
-      }).catch(MalformedRequestError);
+      }).catch(MalformedRequestError, function () {});
     });
 
     it('should be able to change the title', function () {
@@ -785,7 +785,7 @@ describe('blog post', function () {
         }
       }).then(function (post) {
         assert(false, 'The title was removed.');
-      }).catch(MalformedRequestError);
+      }).catch(MalformedRequestError, function () {});
     });
 
     it('should be able to change the preview', function () {
@@ -872,7 +872,7 @@ describe('blog post', function () {
         }
       }).then(function (post) {
         assert(false, 'The postedTime was removed.');
-      }).catch(MalformedRequestError);
+      }).catch(MalformedRequestError, function () {});
     });
 
     it('should fail to set the posted time to an invalid date', function () {
@@ -889,7 +889,7 @@ describe('blog post', function () {
         }
       }).then(function (post) {
         assert(false, 'The postedTime was set to ' + post.postedTime + '.');
-      }).catch(MalformedRequestError);
+      }).catch(MalformedRequestError, function () {});
     });
 
     it('should fail to set the posted time to a nonsense string', function () {
@@ -906,7 +906,7 @@ describe('blog post', function () {
         }
       }).then(function (post) {
         assert(false, 'The postedTime was set to ' + post.postedTime + '.');
-      }).catch(MalformedRequestError);
+      }).catch(MalformedRequestError, function () {});
     });
 
     it('should be able to set active', function () {
@@ -978,7 +978,7 @@ describe('blog post', function () {
           });
         }).then(function (post) {
           assert(false, 'The author was reassigned.');
-        }).catch(AuthorisationError)
+        }).catch(AuthorisationError, function () {})
         .finally(function () {
           return knex
             .from('users')
