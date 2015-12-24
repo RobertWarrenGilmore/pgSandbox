@@ -878,23 +878,6 @@ describe('blog post', function () {
       }).catch(MalformedRequestError, function () {});
     });
 
-    it('should fail to set the posted time to an invalid date', function () {
-      return BlogPost.update({
-        auth: {
-          emailAddress: emailAddress,
-          password: password
-        },
-        params: {
-          postId: createdIds[0]
-        },
-        body: {
-          postedTime: '2015-02-29T22:43:21.845Z'
-        }
-      }).then(function (post) {
-        assert(false, 'The postedTime was set to ' + post.postedTime + '.');
-      }).catch(MalformedRequestError, function () {});
-    });
-
     it('should fail to set the posted time to a nonsense string', function () {
       return BlogPost.update({
         auth: {

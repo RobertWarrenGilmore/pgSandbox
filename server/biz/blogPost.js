@@ -271,132 +271,148 @@ module.exports = function (knex) {
         var notUniqueIdError = new ConflictingEditError('That id already belongs to another post.');
         var noSuchAuthorError = new ConflictingEditError('The given author does not exist.');
 
-        return validate(args.body, {
-          id: [
-            'notNull',
-            {
-              rule: 'alphaDash',
-              message: 'The id must consist of letters, numbers, dashes, and underscores'
-            }, {
-              rule: 'minLength:10',
-              message: 'The id must be at least 10 characters long'
-            }, {
-              rule: 'maxLength:255',
-              message: 'The id must be at most 255 characters long'
-            }, function (val) {
-              // Check for case-insensitive uniqueness of ID.
-              return trx
-                .from('blogPosts')
-                .select(['id'])
-                .where('id', 'ilike', escapeForLike(val))
-                .then(function (existingPosts) {
-                  if (existingPosts && existingPosts.length) {
-                    throw notUniqueIdError;
+        return knex
+          .from('blogPosts')
+          .where('id', 'ilike', escapeForLike(args.params.postId))
+          .select()
+          .then(function (posts) {
+            if (!posts.length) {
+              throw new NoSuchResourceError();
+            }
+            var post = posts[0];
+            if (authUser.id !== post.author) {
+              throw new AuthorisationError('You are not authorised to update this blog post.');
+            }
+            return validate(args.body, {
+              id: [
+                'notNull',
+                {
+                  rule: 'alphaDash',
+                  message: 'The id must consist of letters, numbers, dashes, and underscores'
+                }, {
+                  rule: 'minLength:10',
+                  message: 'The id must be at least 10 characters long'
+                }, {
+                  rule: 'maxLength:255',
+                  message: 'The id must be at most 255 characters long'
+                }, function (val) {
+                  // Check for case-insensitive uniqueness of ID.
+                  return trx
+                    .from('blogPosts')
+                    .select(['id'])
+                    .where('id', 'ilike', escapeForLike(val))
+                    .then(function (existingPosts) {
+                      if (existingPosts && existingPosts.length) {
+                        throw notUniqueIdError;
+                      }
+                    });
+                }, function (val) {
+                  // Check that the ID starts with an ISO date.
+                  if (!val.substring(0, 10).match(/^\d\d\d\d\-\d\d\-\d\d$/)
+                    || isNaN(new Date(val.substring(0, 10)).getTime())) {
+                    throw new MalformedRequestError('The id must begin with a date in the format yyyy-mm-dd.');
                   }
-                });
-            }, function (val) {
-              // Check that the ID starts with an ISO date.
-              if (!val.substring(0, 10).match(/^\d\d\d\d\-\d\d\-\d\d$/)
-                || isNaN(new Date(val.substring(0, 10)).getTime())) {
-                throw new MalformedRequestError('The id must begin with a date in the format yyyy-mm-dd.');
-              }
-            }
-          ],
-          title: [
-            'notNull',
-            {
-              rule: 'minLength:1',
-              message: 'The title must be at least 1 character long'
-            }, {
-              rule: 'maxLength:255',
-              message: 'The title must be at most 255 characters long'
-            }
-          ],
-          body: [
-            'notNull',
-            'maxLength:5000'
-          ],
-          preview: ['maxLength:5000'],
-          author: [
-            'notNull',
-            function (author) {
-              return validate(author, {
-                id: [
-                  'required',
-                  'natural',
-                  // Check for existence of the author.
-                  function (val) {
-                    return trx
-                      .from('users')
-                      .select(['id'])
-                      .where('id', val)
-                      .then(function (users) {
-                        if (!users || !users.length) {
-                          throw noSuchAuthorError;
+                }
+              ],
+              title: [
+                'notNull',
+                {
+                  rule: 'minLength:1',
+                  message: 'The title must be at least 1 character long'
+                }, {
+                  rule: 'maxLength:255',
+                  message: 'The title must be at most 255 characters long'
+                }
+              ],
+              body: [
+                'notNull',
+                'maxLength:5000'
+              ],
+              preview: ['maxLength:5000'],
+              author: [
+                'notNull',
+                function (author) {
+                  return validate(author, {
+                    id: [
+                      'required',
+                      'natural',
+                      // Check for existence of the author.
+                      function (val) {
+                        return trx
+                          .from('users')
+                          .select(['id'])
+                          .where('id', val)
+                          .then(function (users) {
+                            if (!users || !users.length) {
+                              throw noSuchAuthorError;
+                            }
+                          });
+                      },
+                      // Check that the author is the authenticated user.
+                      function (val) {
+                        if (val !== authUser.id) {
+                          throw new AuthorisationError('You cannot change the ownership of a post to someone else.');
                         }
-                      });
-                  },
-                  // Check that the author is the authenticated user.
-                  function (val) {
-                    if (val !== authUser.id) {
-                      throw new AuthorisationError('You cannot change the ownership of a post to someone else.');
-                    }
+                      }
+                    ]
+                  });
+                }
+              ],
+              postedTime: [
+                'notNull',
+                function (val) {
+                  if (isNaN(new Date(val).getTime())) {
+                    throw new MalformedRequestError('postedTime must be a dateTime.');
                   }
-                ]
-              });
+                }
+              ],
+              active: [
+                'notNull',
+                'boolean'
+              ]
+
+            });
+          }).then(function () {
+            var result = _.cloneDeep(args.body);
+            if (result.postedTime) {
+              result.postedTime = new Date(result.postedTime);
             }
-          ],
-          postedTime: [
-            'notNull',
-            function (val) {
-              if (isNaN(new Date(val).getTime())) {
-                throw new MalformedRequestError('postedTime must be a dateTime.');
-              }
+            if (result.author && result.author.id) {
+              result.author = result.author.id;
             }
-          ],
-          active: [
-            'notNull',
-            'boolean'
-          ]
+            return result;
 
-        }).then(function () {
-          var result = _.cloneDeep(args.body);
-          if (result.postedTime) {
-            result.postedTime = new Date(result.postedTime);
-          }
-          if (result.author && result.author.id) {
-            result.author = result.author.id;
-          }
-          return result;
+          }).then(function (newPost) {
+            // Do the insertion.
+            return trx
+              .into('blogPosts')
+              .update(newPost)
+              .returning([
+                'id',
+                'title',
+                'body',
+                'preview',
+                'author',
+                'postedTime',
+                'active'
+              ]);
 
-        }).then(function (newPost) {
-          // Do the insertion.
-          return trx
-            .into('blogPosts')
-            .update(newPost)
-            .returning([
-              'id',
-              'title',
-              'body',
-              'preview',
-              'author',
-              'postedTime',
-              'active'
-            ]);
+          }).then(function (rows) {
+            // Respond with the updated post.
+            return rows[0];
 
-        }).then(function (rows) {
-          // Respond with the updated post.
-          return rows[0];
+          }).catch(function (err) {
+            return err.code === '23505';
+          }, function (err) {
+            throw notUniqueIdError;
+          }).catch(function (err) {
+            return err.code === '23503' && err.constraint === 'blogposts_author_foreign';
+          }, function (err) {
+            throw noSuchAuthorError;
+          });
 
-        }).catch(function (err) {
-          return err.code === '23505';
-        }, function (err) {
-          throw notUniqueIdError;
-        }).catch(function (err) {
-          return err.code === '23503' && err.constraint === 'blogposts_author_foreign';
-        }, function (err) {
-          throw noSuchAuthorError;
-        });
+      });
+    },
 
       });
     }
