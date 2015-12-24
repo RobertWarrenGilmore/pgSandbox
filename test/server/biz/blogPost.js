@@ -67,8 +67,10 @@ describe('blog post', function () {
           emailAddress: emailAddress,
           password: password
         },
+        params: {
+          postId: id
+        },
         body: {
-          id: id,
           title: title,
           body: body,
           postedTime: postedTime,
@@ -90,8 +92,10 @@ describe('blog post', function () {
           emailAddress: emailAddress,
           password: password
         },
+        params: {
+          postId: id
+        },
         body: {
-          id: id,
           title: title,
           body: body,
           preview: preview,
@@ -114,8 +118,10 @@ describe('blog post', function () {
           emailAddress: emailAddress,
           password: password + 'a'
         },
+        params: {
+          postId: id
+        },
         body: {
-          id: id,
           title: title,
           body: body,
           postedTime: postedTime,
@@ -133,8 +139,10 @@ describe('blog post', function () {
 
     it('should fail with no auth and minimal attributes', function () {
       return BlogPost.create({
+        params: {
+          postId: id
+        },
         body: {
-          id: id,
           title: title,
           body: body,
           postedTime: postedTime,
@@ -156,8 +164,10 @@ describe('blog post', function () {
           emailAddress: emailAddress,
           password: password
         },
+        params: {
+          postId: 'This_id_does_not_start_with_a_date'
+        },
         body: {
-          id: 'This_id_does_not_start_with_a_date',
           title: title,
           body: body,
           postedTime: postedTime,
@@ -179,8 +189,10 @@ describe('blog post', function () {
           emailAddress: emailAddress,
           password: password
         },
+        params: {
+          postId: id
+        },
         body: {
-          id: id,
           title: title,
           body: body,
           postedTime: new Date('the third of October in the year twenty fifteen'),
@@ -202,8 +214,10 @@ describe('blog post', function () {
           emailAddress: emailAddress,
           password: password
         },
+        params: {
+          postId: id
+        },
         body: {
-          id: id,
           title: title,
           body: body,
           postedTime: postedTime,
@@ -234,8 +248,10 @@ describe('blog post', function () {
             emailAddress: emailAddress,
             password: password
           },
+          params: {
+            postId: id
+          },
           body: {
-            id: id,
             title: title,
             body: body,
             postedTime: postedTime,
@@ -280,8 +296,10 @@ describe('blog post', function () {
           emailAddress: emailAddress,
           password: password
         },
+        params: {
+          postId: id
+        },
         body: {
-          id: id,
           title: title,
           postedTime: postedTime,
           author: {
@@ -302,8 +320,10 @@ describe('blog post', function () {
           emailAddress: emailAddress,
           password: password
         },
+        params: {
+          postId: id
+        },
         body: {
-          id: id,
           body: body,
           postedTime: postedTime,
           author: {
@@ -346,8 +366,10 @@ describe('blog post', function () {
           emailAddress: emailAddress,
           password: password
         },
+        params: {
+          postId: id
+        },
         body: {
-          id: id,
           title: title,
           body: body,
           postedTime: postedTime
@@ -366,8 +388,10 @@ describe('blog post', function () {
           emailAddress: emailAddress,
           password: password
         },
+        params: {
+          postId: id
+        },
         body: {
-          id: id,
           title: title,
           body: body,
           postedTime: postedTime,
@@ -401,8 +425,10 @@ describe('blog post', function () {
               emailAddress: emailAddress,
               password: password
             },
+            params: {
+              postId: id
+            },
             body: {
-              id: id,
               title: title,
               body: body,
               postedTime: postedTime,
@@ -435,8 +461,10 @@ describe('blog post', function () {
             emailAddress: emailAddress,
             password: password
           },
+          params: {
+            postId: id
+          },
           body: {
-            id: id,
             title: title,
             body: body,
             postedTime: postedTime,

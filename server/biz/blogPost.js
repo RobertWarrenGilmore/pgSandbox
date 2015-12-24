@@ -39,8 +39,8 @@ module.exports = function (knex) {
           throw new AuthorisationError('You are not authorised to create blog posts.');
         }
 
-        return validate(args.body, {
-          id: [
+        return validate(args.params, {
+          postId: [
             {
               rule: 'required',
               message: 'The id is required'
@@ -71,67 +71,69 @@ module.exports = function (knex) {
                 throw new MalformedRequestError('The id must begin with a date in the format yyyy-mm-dd.');
               }
             }
-          ],
-          title: [
-            {
-              rule: 'required',
-              message: 'The title is required.'
-            },
-            {
-              rule: 'minLength:1',
-              message: 'The title must be at least 1 character long.'
-            }, {
-              rule: 'maxLength:255',
-              message: 'The title must be at most 255 characters long.'
-            }
-          ],
-          body: ['required', 'maxLength:5000'],
-          preview: ['maxLength:5000'],
-          author: [
-            'required',
-            function (author) {
-              return validate(author, {
-                id: [
-                  'required',
-                  'natural',
-                  // Check for existence of the author.
-                  function (val) {
-                    return trx
-                      .from('users')
-                      .select(['id'])
-                      .where('id', val)
-                      .then(function (users) {
-                        if (!users || !users.length) {
-                          throw new ConflictingEditError('The given author does not exist.');
-                        }
-                      });
-                  },
-                  // Check that the author is the authenticated user.
-                  function (val) {
-                    if (val !== authUser.id) {
-                      throw new AuthorisationError('You cannot change the ownership of a post to someone else.');
-                    }
-                  }
-                ]
-              });
-            }
-          ],
-          postedTime: [
-            'date',
-            {
-              rule: 'required',
-              message: 'The postedTime is required'
-            }, function (val) {
-              if (isNaN(new Date(val).getTime())) {
-                throw new MalformedRequestError('postedTime must be a dateTime.');
+          ]
+        }).then(function () {
+          return validate(args.body, {
+            title: [
+              {
+                rule: 'required',
+                message: 'The title is required.'
+              },
+              {
+                rule: 'minLength:1',
+                message: 'The title must be at least 1 character long.'
+              }, {
+                rule: 'maxLength:255',
+                message: 'The title must be at most 255 characters long.'
               }
-            }
-          ],
-          active: ['boolean']
-
+            ],
+            body: ['required', 'maxLength:5000'],
+            preview: ['maxLength:5000'],
+            author: [
+              'required',
+              function (author) {
+                return validate(author, {
+                  id: [
+                    'required',
+                    'natural',
+                    // Check for existence of the author.
+                    function (val) {
+                      return trx
+                        .from('users')
+                        .select(['id'])
+                        .where('id', val)
+                        .then(function (users) {
+                          if (!users || !users.length) {
+                            throw new ConflictingEditError('The given author does not exist.');
+                          }
+                        });
+                    },
+                    // Check that the author is the authenticated user.
+                    function (val) {
+                      if (val !== authUser.id) {
+                        throw new AuthorisationError('You cannot change the ownership of a post to someone else.');
+                      }
+                    }
+                  ]
+                });
+              }
+            ],
+            postedTime: [
+              'date',
+              {
+                rule: 'required',
+                message: 'The postedTime is required'
+              }, function (val) {
+                if (isNaN(new Date(val).getTime())) {
+                  throw new MalformedRequestError('postedTime must be a dateTime.');
+                }
+              }
+            ],
+            active: ['boolean']
+          });
         }).then(function () {
           return {
-            id: args.body.id,
+            id: args.params.postId,
             title: args.body.title,
             body: args.body.body,
             preview: args.body.preview,
