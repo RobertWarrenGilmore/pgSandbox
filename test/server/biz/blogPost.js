@@ -1000,14 +1000,82 @@ describe('blog post', function () {
           });
         }).then(function (post) {
           assert(false, 'The update succeeded.');
-        }).catch(AuthorisationError, function () {});
+        }).catch(AuthorisationError, function () {})
+        .finally(function () {
+          return knex
+            .from('users')
+            .where('id', otherAuthorId)
+            .del();
+        });
     });
 
   });
 
   describe('delete', function () {
-    it('should work in the happy case');
-    it('should fail with someone else\'s auth');
+
+    beforeEach('Create the post to be deleted.', function () {
+      return knex.into('blogPosts').insert({
+        id: id,
+        title: title,
+        body: body,
+        postedTime: postedTime,
+        author: authorId
+      }).returning('id')
+        .then(function (returnedIds) {
+          createdIds.push(returnedIds[0]);
+        });
+    });
+
+    it('should work in the happy case', function () {
+      return BlogPost.delete({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        }
+      }).then(function () {
+        return knex
+          .from('blogPosts')
+          .select('id')
+          .where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        assert.strictEqual(posts.length, 0, 'The post was not deleted.');
+      });
+    });
+
+    it('should fail with someone else\'s auth', function () {
+      var otherAuthorId;
+      return knex
+        .into('users')
+        .insert({
+          emailAddress: 'a' + emailAddress,
+          passwordHash: passwordHash,
+          authorisedToBlog: true
+        })
+        .returning('id')
+        .then(function (ids) {
+          otherAuthorId = ids[0];
+          return BlogPost.delete({
+            auth: {
+              emailAddress: 'a' + emailAddress,
+              password: password
+            },
+            params: {
+              postId: createdIds[0]
+            }
+          });
+        }).then(function (post) {
+          assert(false, 'The deletion succeeded.');
+        }).catch(AuthorisationError, function () {})
+        .finally(function () {
+          return knex
+            .from('users')
+            .where('id', otherAuthorId)
+            .del();
+        });
+    });
   });
 
 });

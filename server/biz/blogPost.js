@@ -414,6 +414,31 @@ module.exports = function (knex) {
       });
     },
 
+    delete: function (args) {
+      return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
+        if (!authUser) {
+          throw new AuthorisationError('Blog posts cannot be deleted anonymously.');
+        }
+        if (!authUser.authorisedToBlog) {
+          throw new AuthorisationError('You are not authorised to delete blog posts.');
+        }
+        return knex
+          .from('blogPosts')
+          .where('id', 'ilike', escapeForLike(args.params.postId))
+          .select()
+          .then(function (posts) {
+            if (!posts.length) {
+              throw new NoSuchResourceError();
+            }
+            var post = posts[0];
+            if (authUser.id !== post.author) {
+              throw new AuthorisationError('You are not authorised to delete this blog post.');
+            }
+            return knex
+              .from('blogPosts')
+              .where('id', 'ilike', escapeForLike(args.params.postId))
+              .del();
+          });
       });
     }
 
