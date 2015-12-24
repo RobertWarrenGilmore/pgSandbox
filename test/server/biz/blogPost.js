@@ -157,6 +157,29 @@ describe('blog post', function () {
           password: password
         },
         body: {
+          id: 'This_id_does_not_start_with_a_date',
+          title: title,
+          body: body,
+          postedTime: postedTime,
+          author: {
+            id: authorId
+          }
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(MalformedRequestError, function () {});
+    });
+
+    it('should fail with a poorly formatted posted time', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        body: {
           id: id,
           title: title,
           body: body,
@@ -723,6 +746,125 @@ describe('blog post', function () {
         });
     });
 
+    it('should fail without auth', function () {
+      return BlogPost.update({
+        params: {
+          postId: createdIds[0]
+        }
+      }).then(function (post) {
+        assert(false, 'The update succeeded.');
+      }).catch(AuthorisationError, function () {});
+    });
+
+    it('should fail if the user is not authorised to blog', function () {
+      return knex.from('users').where('id', authorId).update({
+        authorisedToBlog: false
+      }).then(function () {
+        return BlogPost.update({
+          auth: {
+            emailAddress: emailAddress,
+            password: password
+          }
+        });
+      }).then(function (post) {
+        assert(false, 'The update succeeded.');
+      }).catch(AuthorisationError, function () {});
+    });
+
+    it('should fail if the post does not exist', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0] + 1
+        }
+      }).then(function (post) {
+        assert(false, 'The update succeeded.');
+      }).catch(NoSuchResourceError, function () {});
+    });
+
+    it('should be able to change the id', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          id: id + 'a'
+        }
+      }).then(function (post) {
+        createdIds[0] = post.id;
+        assert.strictEqual(post.id, id + 'a', 'The id was not modified correctly.');
+      });
+    });
+
+    it('should fail to remove the id', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          id: null
+        }
+      }).then(function (post) {
+        assert(false, 'The id was removed.');
+      }).catch(MalformedRequestError, function () {});
+    });
+
+    it('should fail to set a conflicting id', function () {
+      return knex
+        .into('blogPosts')
+        .insert({
+          id: id + 'a',
+          title: title,
+          body: body,
+          author: authorId
+        }).returning('id')
+        .then(function (ids) {
+          createdIds.push(ids[0]);
+          return BlogPost.update({
+            auth: {
+              emailAddress: emailAddress,
+              password: password
+            },
+            params: {
+              postId: createdIds[1]
+            },
+            body: {
+              id: createdIds[0]
+            }
+          });
+        }).then(function (post) {
+          assert(false, 'The id was set.');
+        }).catch(ConflictingEditError, function () {});
+    });
+
+    it('should fail to set an id that does not start with a date', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          id: 'This_id_does_not_start_with_a_date'
+        }
+      }).then(function (post) {
+        assert(false, 'The id was set.');
+      }).catch(MalformedRequestError, function () {});
+    });
+
     it('should be able to change the body', function () {
       return BlogPost.update({
         auth: {
@@ -974,6 +1116,42 @@ describe('blog post', function () {
         });
     });
 
+    it('should be able to set the author to the existing author', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          author: {
+            id: authorId
+          }
+        }
+      }).then(function (post) {
+        assert.strictEqual(post.author.id, authorId, 'The author was assigned incorrectly.');
+      });
+    });
+
+    it('should fail to set the author without an id', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          author: {}
+        }
+      }).then(function (post) {
+        assert(false, 'The author was reassigned.');
+      }).catch(MalformedRequestError, function () {});
+    });
+
     it('should fail with someone else\'s auth', function () {
       var otherAuthorId;
       return knex
@@ -1045,6 +1223,25 @@ describe('blog post', function () {
       });
     });
 
+    it('should fail when the post does not exist', function () {
+      return BlogPost.delete({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0] + 1
+        }
+      }).then(function () {
+        return knex
+          .from('blogPosts')
+          .select('id')
+          .where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        assert(false, 'The post was deleted.');
+      }).catch(NoSuchResourceError, function () {});
+    });
+
     it('should fail with someone else\'s auth', function () {
       var otherAuthorId;
       return knex
@@ -1076,6 +1273,39 @@ describe('blog post', function () {
             .del();
         });
     });
+
+    it('should fail with no auth', function () {
+      return BlogPost.delete({
+        params: {
+          postId: createdIds[0]
+        }
+      }).then(function (post) {
+        assert(false, 'The deletion succeeded.');
+      }).catch(AuthorisationError, function () {});
+    });
+
+    it('should fail with an unauthorised user', function () {
+      return knex
+        .into('users')
+        .where('id', authorId)
+        .update({
+          authorisedToBlog: false
+        })
+        .then(function () {
+          return BlogPost.delete({
+            auth: {
+              emailAddress: emailAddress,
+              password: password
+            },
+            params: {
+              postId: createdIds[0]
+            }
+          });
+        }).then(function (post) {
+          assert(false, 'The deletion succeeded.');
+        }).catch(AuthorisationError, function () {});
+    });
+
   });
 
 });

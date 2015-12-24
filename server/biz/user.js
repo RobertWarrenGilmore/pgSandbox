@@ -158,13 +158,8 @@ function anonymousPasswordUpdate(trx, id, newUser) {
 function anonymousPasswordResetKeyUpdate(emailer, trx, body) {
   return validate(body, {
     passwordResetKey: [
-      'required',
-      'boolean',
-      function(val) {
-        if (val !== true) {
-          throw new MalformedRequestError('In order to do an anonymous password reset, set the password reset key to true.');
-        }
-      }
+      'exists',
+      'null'
     ],
     emailAddress: [
       'required',
@@ -377,7 +372,7 @@ module.exports = function (knex, emailer) {
           return anonymousPasswordUpdate(trx, args.params.userId, args.body);
 
           // generating a new password reset key
-        } else if (args.body.passwordResetKey === true) {
+        } else if (args.body.passwordResetKey === null) {
           return anonymousPasswordResetKeyUpdate(emailer, trx, args.body);
 
         // Those are the only options. Otherwise, throw.

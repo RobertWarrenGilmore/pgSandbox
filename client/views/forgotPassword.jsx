@@ -51,7 +51,7 @@ var ForgotPassword = React.createClass({
       json: true,
       body: {
         emailAddress: emailAddress,
-        passwordResetKey: true
+        passwordResetKey: null
       }
     }).then(function(response) {
       if (response.statusCode === 200) {

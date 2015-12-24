@@ -26,7 +26,7 @@ function validate(object, validations) {
   }).catch(Checkit.Error, function (err) {
     var message = '';
     for (var attribute in err.errors) {
-      message = attribute + '\n';
+      message = attribute + ':\n';
       var attrErrs = err.errors[attribute].errors;
       for (var i in attrErrs) {
         var specificErr = attrErrs[i];
@@ -35,8 +35,10 @@ function validate(object, validations) {
           && !(specificErr instanceof MalformedRequestError)) {
           throw specificErr;
         }
-        var messageEndsWithPeriod = _.endsWith(specificErr.message, '.');
-        message += '  ' + specificErr.message + (messageEndsWithPeriod ? '' : '.') + '\n';
+        var specificMessage = specificErr.message;
+        var messageEndsWithPeriod = _.endsWith(specificMessage, '.');
+        specificMessage = specificMessage.split().join('  \n');
+        message += '  ' + specificMessage + (messageEndsWithPeriod ? '' : '.') + '\n';
       }
     }
     message = message.trim();

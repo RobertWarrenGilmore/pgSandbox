@@ -648,7 +648,7 @@ describe('user', function () {
       return User.update({
         body: {
           emailAddress: emailAddress,
-          passwordResetKey: true
+          passwordResetKey: null
         }
       }).then(function () {
         assert(mockEmailer.calledOnce, 'The emailer was not called.');
@@ -660,7 +660,7 @@ describe('user', function () {
       return User.update({
         body: {
           emailAddress: emailAddress,
-          passwordResetKey: true
+          passwordResetKey: null
         }
       }).then(function (user) {
         assert(false, 'The email was sent.');
@@ -671,7 +671,7 @@ describe('user', function () {
       return User.update({
         body: {
           emailAddress: emailAddress,
-          passwordResetKey: true,
+          passwordResetKey: null,
           familyName: familyName
         }
       }).then(function () {
@@ -859,7 +859,7 @@ describe('user', function () {
         return User.update({
           body: {
             emailAddress: 'notAssigned' + emailAddress,
-            passwordResetKey: true
+            passwordResetKey: null
           }
         }).then(function () {
           assert(!mockEmailer.called, 'The emailer was called.');

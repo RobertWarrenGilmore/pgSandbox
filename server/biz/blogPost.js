@@ -7,6 +7,24 @@ var escapeForLike = require('./utilities/escapeForLike');
 var authenticatedTransaction = require('./utilities/authenticatedTransaction');
 var validate = require('./utilities/validate');
 
+function transformAuthor(posts) {
+  return _.map(posts, function (post) {
+    return {
+      id: post.id,
+      title: post.title,
+      postedTime: post.postedTime,
+      body: post.body,
+      preview: post.preview,
+      active: post.active,
+      author: {
+        id: post.authorId,
+        givenName: post.authorGivenName,
+        familyName: post.authorFamilyName,
+        active: post.authorActive
+      }
+    };
+  });
+}
 
 module.exports = function (knex) {
 
@@ -20,10 +38,6 @@ module.exports = function (knex) {
         if (!authUser.authorisedToBlog) {
           throw new AuthorisationError('You are not authorised to create blog posts.');
         }
-
-        var absentIdError = new MalformedRequestError('You must supply an id to create a post.');
-        var notUniqueIdError = new ConflictingEditError('That id already belongs to another post.');
-        var noSuchAuthorError = new ConflictingEditError('The given author does not exist.');
 
         return validate(args.body, {
           id: [
@@ -47,7 +61,7 @@ module.exports = function (knex) {
                 .where('id', 'ilike', escapeForLike(val))
                 .then(function (existingPosts) {
                   if (existingPosts && existingPosts.length) {
-                    throw notUniqueIdError;
+                    throw new ConflictingEditError('That id already belongs to another post.');
                   }
                 });
             }, function (val) {
@@ -88,7 +102,7 @@ module.exports = function (knex) {
                       .where('id', val)
                       .then(function (users) {
                         if (!users || !users.length) {
-                          throw noSuchAuthorError;
+                          throw new ConflictingEditError('The given author does not exist.');
                         }
                       });
                   },
@@ -144,20 +158,6 @@ module.exports = function (knex) {
 
           // Respond with the newly created post.
           return rows[0];
-
-          // Handle errors.
-        }).catch(function (err) {
-          return err.code === '23502';
-        }, function (err) {
-          throw absentIdError;
-        }).catch(function (err) {
-          return err.code === '23505';
-        }, function (err) {
-          throw notUniqueIdError;
-        }).catch(function (err) {
-          return err.code === '23503' && err.constraint === 'blogposts_author_foreign';
-        }, function (err) {
-          throw noSuchAuthorError;
         });
 
       });
@@ -185,25 +185,6 @@ module.exports = function (knex) {
             'users.familyName as authorFamilyName',
             'users.active as authorActive'
           ]);
-
-        function transformAuthor(posts) {
-          return _.map(posts, function (post) {
-            return {
-              id: post.id,
-              title: post.title,
-              postedTime: post.postedTime,
-              body: post.body,
-              preview: post.preview,
-              active: post.active,
-              author: {
-                id: post.authorId,
-                givenName: post.authorGivenName,
-                familyName: post.authorFamilyName,
-                active: post.authorActive
-              }
-            };
-          });
-        }
 
         if (args.params && args.params.postId) {
 
@@ -386,31 +367,28 @@ module.exports = function (knex) {
             // Do the insertion.
             return trx
               .into('blogPosts')
-              .update(newPost)
-              .returning([
-                'id',
-                'title',
-                'body',
-                'preview',
-                'author',
-                'postedTime',
-                'active'
+              .update(newPost);
+          }).then(function () {
+            return trx
+              .from('blogPosts')
+              .leftJoin('users', 'users.id', 'blogPosts.author')
+              .select([
+                'blogPosts.id',
+                'blogPosts.title',
+                'blogPosts.postedTime',
+                'blogPosts.body',
+                'blogPosts.preview',
+                'blogPosts.active',
+                'users.id as authorId',
+                'users.givenName as authorGivenName',
+                'users.familyName as authorFamilyName',
+                'users.active as authorActive'
               ]);
-
-          }).then(function (rows) {
+          }).then(transformAuthor)
+          .then(function (posts) {
             // Respond with the updated post.
-            return rows[0];
-
-          }).catch(function (err) {
-            return err.code === '23505';
-          }, function (err) {
-            throw notUniqueIdError;
-          }).catch(function (err) {
-            return err.code === '23503' && err.constraint === 'blogposts_author_foreign';
-          }, function (err) {
-            throw noSuchAuthorError;
+            return posts[0];
           });
-
       });
     },
 
