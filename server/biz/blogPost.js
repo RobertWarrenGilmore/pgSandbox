@@ -188,6 +188,14 @@ module.exports = function (knex) {
             'users.active as authorActive'
           ]);
 
+        function hideContents(post) {
+          return {
+            id: post.id,
+            active: post.active,
+            author: post.author
+          };
+        }
+
         if (args.params && args.params.postId) {
 
           // Read a specific post.
@@ -199,9 +207,11 @@ module.exports = function (knex) {
                 throw new NoSuchResourceError();
               }
               var post = posts[0];
+
+              // Remove the contents of inactive posts that don't belong to the authenticated user.
               if (!post.active &&
                 (!authUser || authUser.id !== post.author.id)) {
-                throw new AuthorisationError();
+                post = hideContents(post);
               }
               return post;
             });
@@ -230,10 +240,14 @@ module.exports = function (knex) {
           }).then(transformAuthor)
           .then(function (posts) {
 
-              // Remove inactive posts that don't belong to the authenticated user.
-            return _.filter(posts, function (post) {
+            // Remove the contents of inactive posts that don't belong to the authenticated user.
+            return _.map(posts, function (post) {
               var authorisedToViewInactive = !!authUser && authUser.id === post.author.id;
-              return authorisedToViewInactive || post.active;
+              if (authorisedToViewInactive || post.active) {
+                return post;
+              } else {
+                return hideContents(post);
+              }
             });
           });
         }

@@ -565,7 +565,7 @@ describe('blog post', function () {
       }).catch(NoSuchResourceError, function () {});
     });
 
-    it('should fail to look up an inactive post without authenticating', function () {
+    it('should fail to look up the contents of an inactive post without authenticating', function () {
       return knex.into('blogPosts').where('id', 'ilike', escapeForLike(createdIds[0]))
         .update({
           active: false
@@ -576,11 +576,16 @@ describe('blog post', function () {
             }
           });
         }).then(function (post) {
-          assert(false, 'The read succeeded.');
-        }).catch(AuthorisationError, function () {});
+          assert.strictEqual(post.title, undefined, 'The title was returned.');
+          assert.strictEqual(post.body, undefined, 'The body was returned.');
+          assert.strictEqual(post.preview, undefined, 'The preview was returned.');
+          assert.strictEqual(post.postedTime, undefined, 'The posted time was returned.');
+          assert.strictEqual(post.active, false, 'The post was active.');
+          assert.strictEqual(post.author.id, authorId, 'The post did not have the right author.');
+        });
     });
 
-    it('should fail to look up an inactive post that belongs to someone else', function () {
+    it('should fail to look up the contents of an inactive post that belongs to someone else', function () {
 
       // Create the other author.
       var otherAuthorId;
@@ -616,9 +621,13 @@ describe('blog post', function () {
 
         // Assert stuff.
         }).then(function (post) {
-          assert(false, 'The read succeeded.');
-        }).catch(AuthorisationError, function () {})
-        .finally(function () {
+          assert.strictEqual(post.title, undefined, 'The title was returned.');
+          assert.strictEqual(post.body, undefined, 'The body was returned.');
+          assert.strictEqual(post.preview, undefined, 'The preview was returned.');
+          assert.strictEqual(post.postedTime, undefined, 'The posted time was returned.');
+          assert.strictEqual(post.active, false, 'The post was active.');
+          assert.strictEqual(post.author.id, authorId, 'The post did not have the right author.');
+        }).finally(function () {
 
           // Destroy the other author.
           return knex
@@ -628,7 +637,7 @@ describe('blog post', function () {
         });
     });
 
-    it('should be able to look up an inactive post that belongs to oneself', function () {
+    it('should be able to look up the contents of an inactive post that belongs to oneself', function () {
       return knex.into('blogPosts').where('id', 'ilike', escapeForLike(createdIds[0]))
         .update({
           active: false
@@ -644,7 +653,11 @@ describe('blog post', function () {
           });
         }).then(function (post) {
           assert(!(post instanceof Array), 'An array was returned instead of a single post.');
-          assert(!!post.id, 'The returned post had no id.');
+          assert.strictEqual(post.title, searchablePosts[0].title, 'The wrong title was returned.');
+          assert.strictEqual(post.body, searchablePosts[0].body, 'The wrong body was returned.');
+          assert.strictEqual(post.postedTime, searchablePosts[0].postedTime.toISOString(), 'The wrong posted time was returned.');
+          assert.strictEqual(post.active, false, 'The post was active.');
+          assert.strictEqual(post.author.id, searchablePosts[0].author, 'The post did not have the right author.');
         });
     });
 
@@ -677,7 +690,7 @@ describe('blog post', function () {
         });
       });
 
-      it('should see a post list that omits the inactive posts of others', function () {
+      it('should see a post list that omits the contents of the inactive posts of others', function () {
         // Create the other author.
         var otherAuthorId;
         var otherAuthorEmailAddress = 'a' + emailAddress;
@@ -709,13 +722,21 @@ describe('blog post', function () {
 
           // Assert stuff.
           }).then(function (posts) {
-            assert.strictEqual(posts.length, searchablePosts.length - 1, 'The list contains the wrong number of posts.');
+            assert.strictEqual(posts.length, searchablePosts.length, 'The list contains the wrong number of posts.');
+            var activeCount = 0;
             for (var i in posts) {
               var post = posts[i];
+              if (post.active) {
+                ++activeCount;
+              } else if (post.author.id !== otherAuthorId) {
+                assert.strictEqual(post.title, undefined, 'The title was returned.');
+                assert.strictEqual(post.body, undefined, 'The body was returned.');
+                assert.strictEqual(post.preview, undefined, 'The preview was returned.');
+                assert.strictEqual(post.postedTime, undefined, 'The posted time was returned.');
+              }
               assert.strictEqual(post.author.id, authorId, 'The list contains posts by the wrong author.');
-              assert(post.active, 'The list contained an inactive post.');
-              assert.notStrictEqual(post.id, createdIds[0], 'The list contained the post that was deactivated.');
             }
+            assert.strictEqual(activeCount, searchablePosts.length - 1, 'The wrong number of posts were active.');
           }).finally(function () {
 
             // Destroy the other author.
@@ -726,7 +747,7 @@ describe('blog post', function () {
           });
       });
 
-      it('should see a post list that includes the inactive posts of oneself', function () {
+      it('should see a post list that includes the contents of the inactive posts of oneself', function () {
         // Deactivate the post.
         return knex.into('blogPosts').where('id', 'ilike', escapeForLike(createdIds[0]))
           .update({
@@ -748,8 +769,14 @@ describe('blog post', function () {
             for (var i in posts) {
               var post = posts[i];
               assert.strictEqual(post.author.id, authorId, 'The list contains posts by the wrong author.');
-              if (!post.active && post.id === createdIds[0]) {
-                inactivePostEncountered = true;
+              if (!post.active) {
+                if (post.id === createdIds[0]) {
+                  inactivePostEncountered = true;
+                }
+                assert.notStrictEqual(post.title, undefined, 'The title was omitted.');
+                assert.notStrictEqual(post.body, undefined, 'The body was omitted.');
+                assert.notStrictEqual(post.preview, undefined, 'The preview was omitted.');
+                assert.notStrictEqual(post.postedTime, undefined, 'The posted time was omitted.');
               }
             }
             assert(inactivePostEncountered, 'The list did not contain the post that was deactivated.');
