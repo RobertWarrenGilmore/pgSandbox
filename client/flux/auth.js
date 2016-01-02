@@ -35,6 +35,7 @@ var methods = {
     return ajax({
       method: 'GET',
       uri: '/api/auth',
+      json: true,
       auth: auth
     }).then(function (response) {
       if (response.statusCode === 200) {

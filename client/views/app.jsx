@@ -10,10 +10,15 @@ var auth = require('../flux/auth');
 var App = React.createClass({
   mixins: [TitleMixin()],
   getInitialState: function() {
-    return {authCredentials: auth.getCredentials(), authBusy: auth.isBusy(), hamburgerExpanded: false};
+    return {
+      authCredentials: auth.getCredentials(),
+      hamburgerExpanded: false
+    };
   },
   _authListener: function() {
-    this.setState({authCredentials: auth.getCredentials(), authBusy: auth.isBusy()});
+    this.setState({
+      authCredentials: auth.getCredentials()
+    });
   },
   componentWillMount: function() {
     auth.listen(this._authListener);
@@ -22,7 +27,9 @@ var App = React.createClass({
     auth.unlisten(this._authListener);
   },
   render: function() {
-    var headerNavClasses = classnames({hamburgerExpanded: this.state.hamburgerExpanded});
+    var headerNavClasses = classnames({
+      hamburgerExpanded: this.state.hamburgerExpanded
+    });
     var result = (
       <div>
         <header>
@@ -76,7 +83,9 @@ var App = React.createClass({
     });
   },
   _onNavClick: function() {
-    this.setState({hamburgerExpanded: false});
+    this.setState({
+      hamburgerExpanded: false
+    });
   }
 });
 
