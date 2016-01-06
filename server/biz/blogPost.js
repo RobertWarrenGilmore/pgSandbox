@@ -293,16 +293,18 @@ module.exports = function (knex) {
                   rule: 'maxLength:255',
                   message: 'The id must be at most 255 characters long'
                 }, function (val) {
-                  // Check for case-insensitive uniqueness of ID.
-                  return trx
-                    .from('blogPosts')
-                    .select(['id'])
-                    .where('id', 'ilike', escapeForLike(val))
-                    .then(function (existingPosts) {
-                      if (existingPosts && existingPosts.length) {
-                        throw notUniqueIdError;
-                      }
-                    });
+                  // Check for case-insensitive uniqueness of ID if it's being changed.
+                  if (val.toLowerCase() !== args.params.postId.toLowerCase()) {
+                    return trx
+                      .from('blogPosts')
+                      .select(['id'])
+                      .where('id', 'ilike', escapeForLike(val))
+                      .then(function (existingPosts) {
+                        if (existingPosts && existingPosts.length) {
+                          throw notUniqueIdError;
+                        }
+                      });
+                  }
                 }, function (val) {
                   // Check that the ID starts with an ISO date.
                   if (!val.substring(0, 10).match(/^\d\d\d\d\-\d\d\-\d\d$/)
@@ -383,11 +385,14 @@ module.exports = function (knex) {
             // Do the insertion.
             return trx
               .into('blogPosts')
-              .update(newPost);
-          }).then(function () {
+              .where('id', 'ilike', escapeForLike(args.params.postId))
+              .update(newPost)
+              .returning('id');
+          }).then(function (ids) {
             return trx
               .from('blogPosts')
               .leftJoin('users', 'users.id', 'blogPosts.author')
+              .where('blogPosts.id', 'ilike', escapeForLike(ids[0]))
               .select([
                 'blogPosts.id',
                 'blogPosts.title',

@@ -201,7 +201,8 @@ describe('user', function () {
           emailAddress: searchableUsers[0].emailAddress,
           givenName: searchableUsers[0].givenName,
           familyName: searchableUsers[0].familyName,
-          active: true
+          active: true,
+          authorisedToBlog: false
         }, 'The returned user was incorrect.');
       });
     });

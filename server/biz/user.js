@@ -11,7 +11,7 @@ var authenticatedTransaction = require('./utilities/authenticatedTransaction');
 var escapeForLike = require('./utilities/escapeForLike');
 var validate = require('./utilities/validate');
 
-var readableAttributes = ['id', 'emailAddress', 'givenName', 'familyName', 'active'];
+var readableAttributes = ['id', 'emailAddress', 'givenName', 'familyName', 'active', 'authorisedToBlog'];
 
 function uri(id) {
   return 'https://' + appHost + '/users/' + id;

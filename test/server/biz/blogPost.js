@@ -858,6 +858,24 @@ describe('blog post', function () {
       });
     });
 
+    it('should be able to set the existing id', function () {
+      return BlogPost.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: createdIds[0]
+        },
+        body: {
+          id: id
+        }
+      }).then(function (post) {
+        createdIds[0] = post.id;
+        assert.strictEqual(post.id, id, 'The id was not modified correctly.');
+      });
+    });
+
     it('should fail to remove the id', function () {
       return BlogPost.update({
         auth: {
