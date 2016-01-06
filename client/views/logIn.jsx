@@ -34,11 +34,18 @@ var LogIn = React.createClass({
     }
   },
   render: function() {
+    var location = this.props.location;
+    var nextLocation = location.state ? location.state.nextLocation : null;
     return (
       <div id='logIn'>
         <h1>
           log in
         </h1>
+        {nextLocation ? (
+          <p>
+            You must log in before you can go to {nextLocation.pathname}.
+          </p>
+        ) : null}
         <form onSubmit={this._onSubmit}>
           <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={this.state.busy} required/>
           <input type='password' ref='password' name='password' placeholder='password' disabled={this.state.busy} required/>
