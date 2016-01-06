@@ -74,11 +74,11 @@ var BlogPost = React.createClass({
    * This method is meant to be run every time the URL changes and every time we
    *   leave edit mode.
    */
-  _loadPost: function () {
+  _loadPost: function (postId) {
     this._cancelRequest();
     var r = ajax({
       method: 'GET',
-      uri: '/api/blog/' + this.props.params.postId,
+      uri: '/api/blog/' + postId,
       json: true,
       auth: auth.getCredentials()
     });
@@ -233,11 +233,13 @@ var BlogPost = React.createClass({
   componentWillMount: function() {
     var self = this;
     this._loadAuthUser().then(function () {
-      self._loadPost();
+      self._loadPost(self.props.params.postId);
+    }).then(function () {
+      if (self.props.location.state && self.props.location.state.editing) {
+        self._enterEditMode();
+      }
     });
-    if (this.props.location.state && this.props.location.state.editing) {
-      this._enterEditMode();
-    }
+
   },
 
   componentWillReceiveProps: function(nextProps) {
@@ -246,10 +248,14 @@ var BlogPost = React.createClass({
       // TODO Confirm leave without saving changes if in edit mode and unsaved.
       if (!nextProps.location.state || !nextProps.location.state.editing) {
         this._exitEditMode();
+      } else {
+        this.props.history.replaceState(null, nextProps.location.pathname);
       }
-      this._loadPost();
+
+      this._loadPost(nextProps.params.postId);
     }
   },
+
 
   componentWillUnmount: function() {
     this._cancelRequest();
