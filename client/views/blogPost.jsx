@@ -1,5 +1,4 @@
 var React = require('react');
-var CustomHtml = require('./customHtml.jsx');
 var BusyIndicator = require('./busyIndicator.jsx');
 var ReactRouter = require('react-router');
 var Link = ReactRouter.Link;
@@ -9,6 +8,7 @@ var sanitiseHtml = require('sanitize-html');
 var auth = require('../flux/auth');
 var Promise = require('bluebird');
 var appInfo = require('../../appInfo.json');
+var processUserHtml = require('../utilities/processUserHtml');
 
 var BlogPost = React.createClass({
 
@@ -336,9 +336,9 @@ var BlogPost = React.createClass({
           </div>
           <div id='demo' className='blogPost'>
             <header>
-              <h1>
-                <CustomHtml content={post.title} inline/>
-              </h1>
+              <h1 dangerouslySetInnerHTML={processUserHtml(post.title, {
+                inline: true
+              })}/>
               <p className='byLine'>
                 by&nbsp;
                 <Link to={'/users/' + post.author.id}>
@@ -351,9 +351,7 @@ var BlogPost = React.createClass({
                 </time>
               </p>
             </header>
-            <div className='body'>
-              <CustomHtml content={post.body}/>
-            </div>
+            <div className='body' dangerouslySetInnerHTML={processUserHtml(post.body)}/>
           </div>
         </div>
       );
@@ -409,9 +407,9 @@ var BlogPost = React.createClass({
         <div id='blogPost' className='blogPost'>
           <header>
             {editButton}
-            <h1>
-              <CustomHtml content={post.title} inline/>
-            </h1>
+            <h1 dangerouslySetInnerHTML={processUserHtml(post.title, {
+              inline: true
+            })}/>
             <p className='byLine'>
               by&nbsp;
               <Link to={'/users/' + post.author.id}>
@@ -424,9 +422,7 @@ var BlogPost = React.createClass({
               </time>
             </p>
           </header>
-          <div className='body'>
-            <CustomHtml content={post.body}/>
-          </div>
+          <div className='body' dangerouslySetInnerHTML={processUserHtml(post.body)}/>
         </div>
       );
     }

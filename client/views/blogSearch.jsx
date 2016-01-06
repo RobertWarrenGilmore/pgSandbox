@@ -2,12 +2,13 @@ var _ = require('lodash');
 var React = require('react');
 var ReactRouter = require('react-router');
 var Link = ReactRouter.Link;
-var CustomHtml = require('./customHtml.jsx');
 var BusyIndicator = require('./busyIndicator.jsx');
 var TitleMixin = require('./titleMixin');
 var appScroll = require('../utilities/appScroll');
 var ajax = require('../utilities/ajax');
 var auth = require('../flux/auth');
+var processUserHtml = require('../utilities/processUserHtml');
+
 
 var BlogSearch = React.createClass({
   mixins: [TitleMixin('blog')],
@@ -224,9 +225,9 @@ var Entry = React.createClass({
     return (
       <Link className='blogPost' to={'/blog/' + post.id}>
         <header>
-          <h1>
-            <CustomHtml content={post.title} inline/>
-          </h1>
+          <h1 dangerouslySetInnerHTML={processUserHtml(post.title, {
+            inline: true
+          })}/>
           <p className='byLine'>
             by {post.author.givenName} {post.author.familyName}
           </p>
@@ -237,7 +238,7 @@ var Entry = React.createClass({
           </p>
         </header>
         <div className='preview'>
-          <CustomHtml content={preview}/>
+          <div dangerouslySetInnerHTML={processUserHtml(preview)}/>
           {(preview.length < post.body.trim().length)
             ? (
               <p>
