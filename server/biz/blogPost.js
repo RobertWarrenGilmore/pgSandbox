@@ -119,7 +119,6 @@ module.exports = function (knex) {
               }
             ],
             postedTime: [
-              'date',
               {
                 rule: 'required',
                 message: 'The postedTime is required'
@@ -436,7 +435,10 @@ module.exports = function (knex) {
             return knex
               .from('blogPosts')
               .where('id', 'ilike', escapeForLike(args.params.postId))
-              .del();
+              .del()
+              .then(function () {
+                return null;
+              });
           });
       });
     }

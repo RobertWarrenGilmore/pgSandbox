@@ -126,7 +126,6 @@ var BlogPost = React.createClass({
   _savePost: function() {
     this._cancelRequest();
     var post = {
-      id: this.state.editingPost.id,
       title: this.state.editingPost.title,
       author: {
         id: this.state.editingPost.author.id
@@ -138,7 +137,7 @@ var BlogPost = React.createClass({
     };
     var r = ajax ({
       method: this.state.exists ? 'PUT' : 'POST',
-      uri: '/api/blog/' + this.props.params.postId,
+      uri: '/api/blog/' + (this.state.exists ? this.props.params.postId : this.state.editingPost.id),
       body: post,
       json: true,
       auth: auth.getCredentials()
@@ -157,10 +156,10 @@ var BlogPost = React.createClass({
           exists: true
         });
         self.setTitle(sanitiseHtml(response.body.title, {allowedTags: []}));
-        if (post.id !== self.props.params.postId) {
+        if (self.state.editingPost.id !== self.props.params.postId) {
           self.props.history.replaceState({
             editing: true
-          }, '/blog/' + post.id);
+          }, '/blog/' + self.state.editingPost.id);
         }
       } else {
         self.setState({
@@ -186,15 +185,69 @@ var BlogPost = React.createClass({
     });
   },
 
+  _askDeletePost: function () {
+    this.setState({
+      confirmingDelete: true
+    });
+  },
+
+  _stopDeletePost: function () {
+    this.setState({
+      confirmingDelete: false
+    });
+  },
+
+  _deletePost: function () {
+    this._cancelRequest();
+    var r = ajax ({
+      method: 'DELETE',
+      uri: '/api/blog/' + this.props.params.postId,
+      auth: auth.getCredentials()
+    });
+    this.setState({
+      runningRequest: r,
+      error: null
+    });
+    var self = this;
+    return r.then(function (response) {
+      if (response.statusCode === 200) {
+        self.setState({
+          runningRequest: null,
+          editingPost: null,
+          confirmingDelete: false,
+          post: null,
+          exists: false
+        });
+        self.setTitle('blog');
+      } else {
+        self.setState({
+          runningRequest: null,
+          confirmingDelete: false,
+          error: response.body
+        });
+      }
+      return null;
+    }).catch(function(error) {
+      self.setState({
+        runningRequest: null,
+        confirmingDelete: false,
+        error: error.message
+      });
+      self.setTitle('blog');
+    });
+  },
+
   _enterEditMode: function () {
     var editingPost = this.state.post || {
       id: this.props.params.postId,
       title: '',
-      postedTime: new Date(),
+      postedTime: new Date().toISOString(),
       preview: null,
       body: '',
       author: {
-        id: this.state.authUser.id
+        id: this.state.authUser.id,
+        givenName: this.state.authUser.givenName,
+        familyName: this.state.authUser.familyName
       },
       active: false
     };
@@ -219,7 +272,7 @@ var BlogPost = React.createClass({
         body: this.refs.body.value,
         active: this.refs.active.checked,
         postedTime: this.refs.postedTime.value,
-        author: this.state.post.author // TODO No editing author (yet!).
+        author: this.state.editingPost.author // TODO No editing author (yet!).
       }
     });
   },
@@ -256,7 +309,6 @@ var BlogPost = React.createClass({
       this._loadPost(nextProps.params.postId);
     }
   },
-
 
   componentWillUnmount: function() {
     this._cancelRequest();
