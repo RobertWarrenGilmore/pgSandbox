@@ -269,14 +269,21 @@ var BlogPost = React.createClass({
     // editor layout
     if (this.state.editingPost) {
       var post = this.state.editingPost;
+      var preview = post.preview;
+      // If no preview was provided, use the first paragraph of the body.
+      if (!preview) {
+        preview = post.body.split(/(\r?\n){2,}/)[0].trim();
+      }
       result = (
         <div id='blogPost'>
-          <button
-            className='edit'
-            disabled={!!this.state.runningRequest}
-            onClick={this._exitEditMode}>
-            stop editing
-          </button>
+          <div className='actions'>
+            <button
+              className='edit'
+              disabled={!!this.state.runningRequest}
+              onClick={this._exitEditMode}>
+              stop editing
+            </button>
+          </div>
           <div id='editor'>
             <label>
               url
@@ -285,8 +292,10 @@ var BlogPost = React.createClass({
                 /blog/
                 <input
                   type='text'
+                  className='id'
                   ref='id'
                   value={post.id}
+                  disabled={!!this.state.runningRequest}
                   onChange={this._updateEditingPost}/>
               </div>
             </label>
@@ -295,25 +304,33 @@ var BlogPost = React.createClass({
                 type='checkbox'
                 ref='active'
                 checked={post.active}
+                disabled={!!this.state.runningRequest}
                 onChange={this._updateEditingPost}/>
               published
             </label>
-            <header>
+            <p className='info'>
+              Format text fields using <a href='https://gist.github.com/jonschlinkert/5854601'>Markdown</a>.<br/><em>_italic_ *italic*</em><br/><strong>__bold__ **bold**</strong><br/>[This text will become a link.](http://example.com)
+            </p>
+            <label>
+              title
               <h1>
                 <input
                   type='text'
                   ref='title'
                   value={post.title}
+                  disabled={!!this.state.runningRequest}
                   onChange={this._updateEditingPost}/>
               </h1>
-            </header>
+            </label>
             <label>
               preview
               <textarea
                 className='preview'
                 ref='preview'
-                placeholder={post.body.split(/(\r?\n){2,}/)[0].trim()}
+                placeholder={'The preview is shown instead of the body when the post is in a list of posts. It defaults to the first paragraph of the body:\n\n'
+                  + preview}
                 value={post.preview}
+                disabled={!!this.state.runningRequest}
                 onChange={this._updateEditingPost}/>
             </label>
             <label>
@@ -322,8 +339,22 @@ var BlogPost = React.createClass({
                 className='body'
                 ref='body'
                 value={post.body}
+                disabled={!!this.state.runningRequest}
                 onChange={this._updateEditingPost}/>
             </label>
+            {this.state.error
+              ? (
+                <p className='error'>
+                  {this.state.error}
+                </p>
+              ) : null}
+            {this.state.runningRequest
+              ? (
+                <div>
+                  <BusyIndicator/>
+                  saving
+                </div>
+              ) : null}
             <div className='actions'>
               <button
                 id='save'
@@ -357,6 +388,15 @@ var BlogPost = React.createClass({
                 </time>
               </p>
             </header>
+            <div className='preview'>
+              <div dangerouslySetInnerHTML={processUserHtml(preview)}/>
+              {(preview.length < post.body.trim().length)
+                ? (
+                  <p>
+                    Read more...
+                  </p>
+              ) : null}
+            </div>
             <div className='body' dangerouslySetInnerHTML={processUserHtml(post.body)}/>
           </div>
         </div>
@@ -367,7 +407,7 @@ var BlogPost = React.createClass({
       result = (
         <div id='blogPost' className='message'>
           <BusyIndicator/>
-          'loading'
+          loading
         </div>
       );
 
@@ -411,8 +451,10 @@ var BlogPost = React.createClass({
       }
       result = (
         <div id='blogPost' className='blogPost'>
-          <header>
+          <div className='actions'>
             {editButton}
+          </div>
+          <header>
             <h1 dangerouslySetInnerHTML={processUserHtml(post.title, {
               inline: true
             })}/>

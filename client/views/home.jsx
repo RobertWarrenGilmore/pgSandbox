@@ -53,7 +53,7 @@ var Home = React.createClass({
       result = (
         <div id='home' className='message'>
           <BusyIndicator/>
-          'loading'
+          loading
         </div>
       );
     } else {
