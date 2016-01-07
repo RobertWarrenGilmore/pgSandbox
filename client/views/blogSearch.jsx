@@ -2,12 +2,13 @@ var _ = require('lodash');
 var React = require('react');
 var ReactRouter = require('react-router');
 var Link = ReactRouter.Link;
-var CustomHtml = require('./customHtml.jsx');
 var BusyIndicator = require('./busyIndicator.jsx');
 var TitleMixin = require('./titleMixin');
 var appScroll = require('../utilities/appScroll');
 var ajax = require('../utilities/ajax');
 var auth = require('../flux/auth');
+var processUserHtml = require('../utilities/processUserHtml');
+
 
 var BlogSearch = React.createClass({
   mixins: [TitleMixin('blog')],
@@ -16,9 +17,54 @@ var BlogSearch = React.createClass({
       busy: false,
       error: null,
       results: [],
-      endReached: false
+      endReached: false,
+      authUser: null
     };
   },
+
+  /*
+   * Load the full details of the authenticated user and store them in
+   *   this.state.authUser. (We need to know a few things about the
+   *   authenticated user in order to render the blog post.)
+   * If the user is not authenticated, do nothing.
+   * This method is meant to be run only once, when the component mounts. We
+   *   assume that the user will not change while we're on this page. If
+   *   something important does change about the user, the API will give us
+   *   appropriate errors when we try to edit the post.
+   */
+  _loadAuthUser: function () {
+    var credentials = auth.getCredentials();
+    if (credentials) {
+      var r = ajax({
+        method: 'GET',
+        uri: '/api/users/' + credentials.id,
+        json: true,
+        auth: credentials
+      });
+      this.setState({
+        runningRequest: r // Hold on to the Ajax promise in case we need to cancel it later.
+      });
+      var self = this;
+      return r.then(function (response) {
+        if (response.statusCode === 200) {
+          self.setState({
+            authUser: response.body
+          });
+        } else {
+          self.setState({
+            error: response.body
+          });
+        }
+      }).catch(function (error) {
+        self.setState({
+          error: error.message
+        });
+      });
+    } else {
+      return Promise.resolve();
+    }
+  },
+
   // Redirect the URL to the provided query.
   _correctUrlQuery: function(query, options) {
     var replace = options && !!options.replace;
@@ -100,7 +146,10 @@ var BlogSearch = React.createClass({
     this._correctUrlQuery(this.props.location.query, {
       replace: true
     });
-    this._doSearch();
+    var self = this;
+    this._loadAuthUser().then(function () {
+      self._doSearch();
+    });
   },
   componentDidUpdate: function(prevProps, prevState) {
     var urlQueryChanged = !_.isEqual(this.props.location.query, prevProps.location.query);
@@ -146,10 +195,25 @@ var BlogSearch = React.createClass({
         </div>
       );
     }
+    var self = this;
+    var posts = _.filter(this.state.results, function (post) {
+      var hidden = (self.state.authUser === null || post.author.id !== self.state.authUser.id) && (!post.active);
+      return !hidden;
+    });
     return (
       <div id='blogSearch'>
+        <div className='actions'>
+          <Link
+            to='/blog/new'
+            state={{
+              editing: true
+            }}
+            className='button highlighted'>
+            create a new blog post
+          </Link>
+        </div>
         <div id='blogPostList'>
-          {_.map(this.state.results, function(post) {
+          {_.map(posts, function(post) {
             return <Entry post={post} key={post.id}/>;
           })}
           {caboose}
@@ -171,9 +235,9 @@ var Entry = React.createClass({
     return (
       <Link className='blogPost' to={'/blog/' + post.id}>
         <header>
-          <h1>
-            <CustomHtml content={post.title} inline/>
-          </h1>
+          <h1 dangerouslySetInnerHTML={processUserHtml(post.title, {
+            inline: true
+          })}/>
           <p className='byLine'>
             by {post.author.givenName} {post.author.familyName}
           </p>
@@ -184,7 +248,7 @@ var Entry = React.createClass({
           </p>
         </header>
         <div className='preview'>
-          <CustomHtml content={preview}/>
+          <div dangerouslySetInnerHTML={processUserHtml(preview)}/>
           {(preview.length < post.body.trim().length)
             ? (
               <p>

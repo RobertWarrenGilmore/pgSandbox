@@ -1,4 +1,4 @@
-var authenticatedTransaction = require('./authenticatedTransaction');
+var authenticatedTransaction = require('./utilities/authenticatedTransaction');
 var AuthorisationError = require('../errors/authorisationError');
 var NoSuchResourceError = require('../errors/noSuchResourceError');
 

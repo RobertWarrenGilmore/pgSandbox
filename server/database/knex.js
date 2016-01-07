@@ -1,7 +1,6 @@
 var knexFile = require('./knexfile');
-var knexConfig = (process.env.NODE_ENV === 'production' ?
-  knexFile.production :
-  knexFile.development);
+var configName = process.env.NODE_ENV || 'development';
+var knexConfig = knexFile[configName];
 var knex = require('knex')(knexConfig);
 
 module.exports = knex;

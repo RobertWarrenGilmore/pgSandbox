@@ -1,8 +1,8 @@
 var React = require('react');
-var CustomHtml = require('./customHtml.jsx');
 var BusyIndicator = require('./busyIndicator.jsx');
 var ajax = require('../utilities/ajax');
 var auth = require('../flux/auth');
+var processUserHtml = require('../utilities/processUserHtml');
 
 var Home = React.createClass({
 
@@ -53,7 +53,7 @@ var Home = React.createClass({
       result = (
         <div id='home' className='message'>
           <BusyIndicator/>
-          'loading'
+          loading
         </div>
       );
     } else {
@@ -67,9 +67,9 @@ var Home = React.createClass({
         );
       } else {
         result = (
-          <div id='home'>
-            <CustomHtml content={this.state.loadedContent} sanitise={false}/>
-          </div>
+          <div id='home' dangerouslySetInnerHTML={processUserHtml(this.state.loadedContent, {
+            sanitise: false
+          })}/>
         );
       }
     }

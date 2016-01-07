@@ -48,3 +48,13 @@ npm test
 ```
 npm run lint
 ```
+
+## to run the application
+This will run the application synchronously.
+```
+sudo $(which node) index.js
+```
+Alternatively, this will run the application and free the current shell.
+```
+npm start
+```

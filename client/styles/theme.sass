@@ -33,6 +33,7 @@ $body-colour: rgb(29, 29, 29)
   color: darken($colour, 30%)
 
 body
+  background-color: #eee
   > #appContainer > div
     // background-image: url('http://communications.oregonstate.edu/sites/communications.oregonstate.edu/files/social_background.jpeg')
     > header
@@ -51,7 +52,6 @@ body
           &.active
             background-color: desaturate(lighten($theme-colour, 20%), 10%)
     > main
-      box-shadow: 0px 0px 100px 0px rgba(0, 0, 0, 0.05)
       background-color: white
       color: $body-colour
       +body-text
@@ -99,18 +99,22 @@ body
           margin-bottom: 0
       dd
         margin-left: $large-padding
-      input, select
+      input, select, textarea
         border: thin solid $body-colour
         padding: $small-padding
       .info
         +message(rgb(141, 183, 207))
       .error
         +message(rgb(212, 111, 111))
-      button
+      button,
+      .button
+        display: inline-block
+        text-decoration: initial
         +header-text
         +no-select
         background-color: lighten($body-colour, 60%)
-        &:disabled
+        &:disabled,
+        &.disabled
           background-color: lighten($body-colour, 30%)
           color: lighten($body-colour, 20%)
         &.highlighted

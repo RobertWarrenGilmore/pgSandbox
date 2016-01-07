@@ -40,10 +40,6 @@ describe('user', function () {
     });
   });
 
-  after('Destroy knex.', function () {
-    return knex.destroy();
-  });
-
   describe('create', function () {
     var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
     var badEmailAddress = 'NotAValidEmailAddress.com';
@@ -205,7 +201,8 @@ describe('user', function () {
           emailAddress: searchableUsers[0].emailAddress,
           givenName: searchableUsers[0].givenName,
           familyName: searchableUsers[0].familyName,
-          active: true
+          active: true,
+          authorisedToBlog: false
         }, 'The returned user was incorrect.');
       });
     });
@@ -652,7 +649,7 @@ describe('user', function () {
       return User.update({
         body: {
           emailAddress: emailAddress,
-          passwordResetKey: true
+          passwordResetKey: null
         }
       }).then(function () {
         assert(mockEmailer.calledOnce, 'The emailer was not called.');
@@ -664,7 +661,7 @@ describe('user', function () {
       return User.update({
         body: {
           emailAddress: emailAddress,
-          passwordResetKey: true
+          passwordResetKey: null
         }
       }).then(function (user) {
         assert(false, 'The email was sent.');
@@ -675,7 +672,7 @@ describe('user', function () {
       return User.update({
         body: {
           emailAddress: emailAddress,
-          passwordResetKey: true,
+          passwordResetKey: null,
           familyName: familyName
         }
       }).then(function () {
@@ -818,7 +815,7 @@ describe('user', function () {
       var otherEmailAddress = 'somethingElse' + emailAddress;
       var badId;
 
-      before('Get an unassigned ID.', function () {
+      beforeEach('Get an unassigned ID.', function () {
         //Create a user, store his ID, then delete the user.
         return knex.into('users').insert({
           emailAddress: otherEmailAddress
@@ -842,7 +839,7 @@ describe('user', function () {
           }
         }).then(function () {
           assert(false, 'The update did not fail.');
-        }).catch(NoSuchResourceError, function () {});
+        }).catch(AuthorisationError, function () {});
       });
 
       it('should fail to do an anonymous password reset', function () {
@@ -863,7 +860,7 @@ describe('user', function () {
         return User.update({
           body: {
             emailAddress: 'notAssigned' + emailAddress,
-            passwordResetKey: true
+            passwordResetKey: null
           }
         }).then(function () {
           assert(!mockEmailer.called, 'The emailer was called.');

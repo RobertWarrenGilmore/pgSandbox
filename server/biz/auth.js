@@ -1,4 +1,4 @@
-var authenticatedTransaction = require('./authenticatedTransaction');
+var authenticatedTransaction = require('./utilities/authenticatedTransaction');
 var AuthenticationError = require('../errors/authenticationError');
 var Promise = require('bluebird');
 
@@ -10,7 +10,10 @@ module.exports = function (knex) {
         if (!authUser) {
           return Promise.reject(new AuthenticationError());
         } else {
-          return Promise.resolve();
+          return Promise.resolve({
+            id: authUser.id,
+            emailAddress: authUser.emailAddress
+          });
         }
       });
     }

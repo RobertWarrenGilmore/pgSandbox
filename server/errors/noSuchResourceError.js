@@ -1,7 +1,6 @@
 function NoSuchResourceError(message) {
   Error.call(this);
   this.name = this.constructor.name;
-  /* istanbul ignore next */
   this.message = message || 'The resource was not found.';
   this.errorCode = 404;
   Error.captureStackTrace(this, this.constructor);

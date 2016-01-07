@@ -9,10 +9,18 @@ var LogIn = React.createClass({
     TitleMixin('log in')
   ],
   getInitialState: function() {
-    return {credentials: auth.getCredentials(), busy: auth.isBusy(), error: null};
+    return {
+      credentials: auth.getCredentials(),
+      busy: auth.isBusy(),
+      error: null
+    };
   },
   _authListener: function() {
-    this.setState({credentials: auth.getCredentials(), busy: auth.isBusy(), error: auth.getError()});
+    this.setState({
+      credentials: auth.getCredentials(),
+      busy: auth.isBusy(),
+      error: auth.getError()
+    });
   },
   componentWillMount: function() {
     auth.clearError();
@@ -68,7 +76,10 @@ var LogIn = React.createClass({
     event.preventDefault();
     var emailAddress = this.refs.emailAddress.value;
     var password = this.refs.password.value;
-    auth.logIn({emailAddress: emailAddress, password: password});
+    auth.logIn({
+      emailAddress: emailAddress,
+      password: password
+    });
   }
 });
 

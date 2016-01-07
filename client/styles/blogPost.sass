@@ -1,6 +1,27 @@
 #appContainer > div > main
   > #blogPost:not(.message)
     +full-content
+    > #editor
+      > label
+        display: block
+        margin: $small-padding
+        input:not([type=checkbox]):not(.id),
+        select,
+        textarea
+          width: 100%
+          display: block
+          &.preview
+            height: 10em
+          &.body
+            height: 20em
+        input[type=checkbox]
+          margin: $small-padding
+        h1
+          margin: 0
+    > #demo
+      border-top: thin solid grey
+      margin-top: $medium-padding
+      padding-top: $medium-padding
   .blogPost
     header
       text-align: center
@@ -8,3 +29,6 @@
       p
         font-size: 120%
         margin-bottom: 0
+    .preview~.body
+      border-top: thin dotted grey
+      padding-top: $medium-padding

@@ -31,15 +31,16 @@ var methods = {
   logIn: function (auth) {
     busy = true;
     error = null;
-    credentials = _.clone(auth);
     emitter.emit();
     return ajax({
       method: 'GET',
       uri: '/api/auth',
-      auth: credentials
-    }).tap(function (response) {
+      json: true,
+      auth: auth
+    }).then(function (response) {
       if (response.statusCode === 200) {
-        credentials = auth;
+        credentials = _.clone(auth);
+        credentials.id = response.body.id;
         localStorage.auth = JSON.stringify(credentials);
       } else {
         error = response.body;
