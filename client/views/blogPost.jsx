@@ -181,7 +181,8 @@ var BlogPost = React.createClass({
 
   _revertPost: function () {
     this.setState({
-      editingPost: this.state.post
+      editingPost: this.state.post,
+      error: null
     });
   },
 
@@ -217,7 +218,7 @@ var BlogPost = React.createClass({
         preview: this.refs.preview.value ? this.refs.preview.value : null,
         body: this.refs.body.value,
         active: this.refs.active.checked,
-        postedTime: this.state.post.postedTime, // TODO No editing postedTime (yet!).
+        postedTime: this.refs.postedTime.value,
         author: this.state.post.author // TODO No editing author (yet!).
       }
     });
@@ -321,6 +322,15 @@ var BlogPost = React.createClass({
                   disabled={!!this.state.runningRequest}
                   onChange={this._updateEditingPost}/>
               </h1>
+            </label>
+            <label>
+              date (yyyy-mm-dd)
+              <input
+                type='text'
+                ref='postedTime'
+                value={post.postedTime.substring(0,10)}
+                disabled={!!this.state.runningRequest}
+                onChange={this._updateEditingPost}/>
             </label>
             <label>
               preview
