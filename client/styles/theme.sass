@@ -106,11 +106,15 @@ body
         +message(rgb(141, 183, 207))
       .error
         +message(rgb(212, 111, 111))
-      button
+      button,
+      .button
+        display: inline-block
+        text-decoration: initial
         +header-text
         +no-select
         background-color: lighten($body-colour, 60%)
-        &:disabled
+        &:disabled,
+        &.disabled
           background-color: lighten($body-colour, 30%)
           color: lighten($body-colour, 20%)
         &.highlighted

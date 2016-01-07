@@ -202,6 +202,16 @@ var BlogSearch = React.createClass({
     });
     return (
       <div id='blogSearch'>
+        <div className='actions'>
+          <Link
+            to='/blog/new'
+            state={{
+              editing: true
+            }}
+            className='button highlighted'>
+            create a new blog post
+          </Link>
+        </div>
         <div id='blogPostList'>
           {_.map(posts, function(post) {
             return <Entry post={post} key={post.id}/>;

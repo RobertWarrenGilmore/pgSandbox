@@ -55,6 +55,9 @@ body
     > main
       position: relative
       padding: $large-padding
+      .actions
+        > button ~ button
+          margin-left: $small-padding
     > footer
       position: relative
 
@@ -101,6 +104,10 @@ body > #appContainer
             float: right
     > main
       min-height: 100%
+      .actions
+        text-align: right
+        > *
+          text-align: left
     > footer
       height: $footer-height
 
@@ -147,6 +154,10 @@ body > #appContainer
               float: none
       > main
         min-height: initial
+        .actions
+          text-align: initial
+          > *
+            text-align: initial
       > footer
         height: initial
   // Define a flexbox layout.
@@ -210,5 +221,9 @@ body > #appContainer
           display: flex
           align-items: center
           justify-content: center
+          .actions
+            display: flex
+            align-items: flex-start
+            justify-content: flex-end
         > footer
           flex: 0 0 $footer-height

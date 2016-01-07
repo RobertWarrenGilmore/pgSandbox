@@ -289,13 +289,12 @@ var BlogPost = React.createClass({
   componentWillMount: function() {
     var self = this;
     this._loadAuthUser().then(function () {
-      self._loadPost(self.props.params.postId);
+      return self._loadPost(self.props.params.postId);
     }).then(function () {
       if (self.props.location.state && self.props.location.state.editing) {
         self._enterEditMode();
       }
     });
-
   },
 
   componentWillReceiveProps: function(nextProps) {
@@ -307,7 +306,6 @@ var BlogPost = React.createClass({
       } else {
         this.props.history.replaceState(null, nextProps.location.pathname);
       }
-
       this._loadPost(nextProps.params.postId);
     }
   },
