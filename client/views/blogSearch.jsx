@@ -200,18 +200,22 @@ var BlogSearch = React.createClass({
       var hidden = (self.state.authUser === null || post.author.id !== self.state.authUser.id) && (!post.active);
       return !hidden;
     });
+    var authorisedToBlog = this.state.authUser && this.state.authUser.authorisedToBlog;
+
     return (
       <div id='blogSearch'>
-        <div className='actions'>
-          <Link
-            to='/blog/new'
-            state={{
-              editing: true
-            }}
-            className='button highlighted'>
-            create a new blog post
-          </Link>
-        </div>
+        {(authorisedToBlog) ? (
+          <div className='actions'>
+            <Link
+              to='/blog/new'
+              state={{
+                editing: true
+              }}
+              className='button highlighted'>
+              create a new blog post
+            </Link>
+          </div>
+        ) : null}
         <div id='blogPostList'>
           {_.map(posts, function(post) {
             return <Entry post={post} key={post.id}/>;
