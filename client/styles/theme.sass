@@ -33,6 +33,7 @@ $body-colour: rgb(29, 29, 29)
   color: darken($colour, 30%)
 
 body
+  background-color: #eee
   > #appContainer > div
     // background-image: url('http://communications.oregonstate.edu/sites/communications.oregonstate.edu/files/social_background.jpeg')
     > header
@@ -51,7 +52,6 @@ body
           &.active
             background-color: desaturate(lighten($theme-colour, 20%), 10%)
     > main
-      box-shadow: 0px 0px 100px 0px rgba(0, 0, 0, 0.05)
       background-color: white
       color: $body-colour
       +body-text

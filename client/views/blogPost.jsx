@@ -6,6 +6,7 @@ var TitleMixin = require('./titleMixin');
 var ajax = require('../utilities/ajax');
 var sanitiseHtml = require('sanitize-html');
 var auth = require('../flux/auth');
+var Modal = require('./modal.jsx');
 var Promise = require('bluebird');
 var appInfo = require('../../appInfo.json');
 var processUserHtml = require('../utilities/processUserHtml');
@@ -21,6 +22,7 @@ var BlogPost = React.createClass({
       post: null,
       exists: null, // Boolean; true means the post exists; false means no such post; null means we don't whether the post exists, for instance before the request has finished or if there was an error
       error: null,
+      confirmingDelete: false,
       authUser: null
     };
   },
@@ -327,8 +329,29 @@ var BlogPost = React.createClass({
       if (!preview) {
         preview = post.body.split(/(\r?\n){2,}/)[0].trim();
       }
+      var deletionModal = (
+        <Modal>
+          <p>
+            Are you sure that you want to delete the post?
+          </p>
+          <div className='actions'>
+            <button
+              className='highlighted'
+              disabled={!!this.state.runningRequest}
+              onClick={this._deletePost}>
+              delete
+            </button>
+            <button
+              disabled={!!this.state.runningRequest}
+              onClick={this._stopDeletePost}>
+              cancel
+            </button>
+          </div>
+        </Modal>
+      );
       result = (
         <div id='blogPost'>
+          {this.state.confirmingDelete ? deletionModal : null}
           <div className='actions'>
             <button
               className='edit'
@@ -425,12 +448,22 @@ var BlogPost = React.createClass({
                 className='highlighted'>
                 save
               </button>
-              <button
-                id='revert'
-                disabled={!!this.state.runningRequest}
-                onClick={this._revertPost}>
-                revert
-              </button>
+              {
+                this.state.exists ? [
+                  <button
+                    id='revert'
+                    disabled={!!this.state.runningRequest}
+                    onClick={this._revertPost}>
+                    revert
+                  </button>,
+                  <button
+                    id='delete'
+                    disabled={!!this.state.runningRequest}
+                    onClick={this._askDeletePost}>
+                    delete
+                  </button>
+                ] : null
+              }
             </div>
           </div>
           <div id='demo' className='blogPost'>
