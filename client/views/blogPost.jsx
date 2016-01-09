@@ -337,11 +337,15 @@ var BlogPost = React.createClass({
               className='highlighted'
               disabled={!!this.state.runningRequest}
               onClick={this._deletePost}>
+              <span className='icon-bin'/>
+              &nbsp;
               delete
             </button>
             <button
               disabled={!!this.state.runningRequest}
               onClick={this._stopDeletePost}>
+              <span className='icon-cancel-circle'/>
+              &nbsp;
               cancel
             </button>
           </div>
@@ -355,6 +359,8 @@ var BlogPost = React.createClass({
               className='edit'
               disabled={!!this.state.runningRequest}
               onClick={this._exitEditMode}>
+              <span className='icon-pencil'/>
+              &nbsp;
               stop editing
             </button>
           </div>
@@ -444,6 +450,8 @@ var BlogPost = React.createClass({
                 disabled={!!this.state.runningRequest}
                 onClick={this._savePost}
                 className='highlighted'>
+                <span className='icon-floppy-disk'/>
+                &nbsp;
                 save
               </button>
               {
@@ -452,12 +460,16 @@ var BlogPost = React.createClass({
                     id='revert'
                     disabled={!!this.state.runningRequest}
                     onClick={this._revertPost}>
+                    <span className='icon-undo2'/>
+                    &nbsp;
                     revert
                   </button>,
                   <button
                     id='delete'
                     disabled={!!this.state.runningRequest}
                     onClick={this._askDeletePost}>
+                    <span className='icon-bin'/>
+                    &nbsp;
                     delete
                   </button>
                 ] : null
@@ -513,6 +525,8 @@ var BlogPost = React.createClass({
             className='edit'
             disabled={!!this.state.runningRequest}
             onClick={this._enterEditMode}>
+            <span className='icon-plus'/>
+            &nbsp;
             create a post here
           </button>
         );
@@ -538,6 +552,8 @@ var BlogPost = React.createClass({
             className='edit'
             disabled={!!this.state.runningRequest}
             onClick={this._enterEditMode}>
+            <span className='icon-pencil'/>
+            &nbsp;
             edit
           </button>
         );

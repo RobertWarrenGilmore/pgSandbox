@@ -212,6 +212,8 @@ var BlogSearch = React.createClass({
                 editing: true
               }}
               className='button highlighted'>
+              <span className='icon-plus'/>
+              &nbsp;
               create a new blog post
             </Link>
           </div>
@@ -238,6 +240,9 @@ var Entry = React.createClass({
     }
     return (
       <Link className='blogPost' to={'/blog/' + post.id}>
+        {post.active ? null : (
+          <span className='icon-eye-blocked' title='This post is not published.'/>
+        )}
         <header>
           <h1 dangerouslySetInnerHTML={processUserHtml(post.title, {
             inline: true
