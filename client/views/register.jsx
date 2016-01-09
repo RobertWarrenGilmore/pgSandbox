@@ -34,7 +34,7 @@ var Register = React.createClass({
                   {this.state.error}
                 </p>
               : null}
-            <div>
+            <div className='actions'>
               <button disabled={this.state.busy} className='highlighted'>register</button>
             </div>
           </form>

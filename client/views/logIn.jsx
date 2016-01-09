@@ -62,11 +62,11 @@ var LogIn = React.createClass({
                 {this.state.error}
               </p>
             : null}
-          <div>
-            <button disabled={this.state.busy} className='highlighted'>log in</button>
+          <div className='actions'>
             <Link to='/forgotPassword'>
               Are you locked out?
             </Link>
+            <button disabled={this.state.busy} className='highlighted'>log in</button>
           </div>
         </form>
       </div>
