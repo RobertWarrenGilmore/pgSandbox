@@ -1,4 +1,3 @@
-var _ = require('lodash');
 var Emitter = require('./emitter');
 var ajax = require('../utilities/ajax');
 var Promise = require('bluebird');
@@ -39,8 +38,11 @@ var methods = {
       auth: auth
     }).then(function (response) {
       if (response.statusCode === 200) {
-        credentials = _.clone(auth);
-        credentials.id = response.body.id;
+        credentials = {
+          id: response.body.id,
+          emailAddress: response.body.emailAddress,
+          password: auth.password
+        };
         localStorage.auth = JSON.stringify(credentials);
       } else {
         error = response.body;

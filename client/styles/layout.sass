@@ -8,16 +8,8 @@ $app-max-width: 1000px
 
 =floater-content($width)
   max-width: $width
-  margin: auto
   @supports (display: flex)
-    max-width: initial
-    margin: initial
-    flex: 0 1 $width
-
-=full-content
-  @supports (display: flex)
-    flex: 1 0
-    align-self: stretch
+    flex-grow: 0 !important
 
 // things in common between the two layouts
 body
@@ -55,6 +47,13 @@ body
     > main
       position: relative
       padding: $large-padding
+      > #authIndicator
+        text-align: right
+        margin-top: -1em
+        margin-bottom: 1em
+      > *:not(#authIndicator)
+        width: 100%
+        margin: auto
       .actions
         > * ~ *
           margin-left: $small-padding
@@ -104,6 +103,8 @@ body > #appContainer
             float: right
     > main
       min-height: 100%
+      > #authIndicator
+        width: 100%
       .actions
         text-align: right
         > *
@@ -154,6 +155,8 @@ body > #appContainer
               float: none
       > main
         min-height: initial
+        > #authIndicator
+          width: auto
         .actions
           text-align: initial
           > *
@@ -219,8 +222,15 @@ body > #appContainer
         > main
           flex: 1 0 auto
           display: flex
-          align-items: center
-          justify-content: center
+          align-items: stretch
+          justify-content: flex-start
+          flex-wrap: wrap
+          flex-flow: column nowrap
+          > #authIndicator
+            flex: 0 0 auto
+          > *:not(#authIndicator)
+            align-self: center
+            flex-grow: 1
           .actions
             display: flex
             align-items: center

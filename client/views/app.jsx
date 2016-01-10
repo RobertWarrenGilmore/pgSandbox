@@ -6,22 +6,56 @@ var IndexLink = ReactRouter.IndexLink;
 var TitleMixin = require('./titleMixin');
 var classnames = require('classnames');
 var auth = require('../flux/auth');
+var ajax = require('../utilities/ajax');
 
 var App = React.createClass({
   mixins: [TitleMixin()],
   getInitialState: function() {
     return {
       authCredentials: auth.getCredentials(),
+      authUser: null,
       hamburgerExpanded: false
     };
   },
+  _loadAuthUser: function () {
+    var credentials = this.state.authCredentials;
+    if (credentials) {
+      var r = ajax({
+        method: 'GET',
+        uri: '/api/users/' + credentials.id,
+        json: true,
+        auth: credentials
+      });
+      this.setState({
+        authUser: null,
+        runningRequest: r // Hold on to the Ajax promise in case we need to cancel it later.
+      });
+      var self = this;
+      return r.then(function (response) {
+        if (response.statusCode === 200) {
+          self.setState({
+            authUser: response.body
+          });
+        }
+        return null;
+      }).catch();
+    } else {
+      this.setState({
+        authUser: null
+      });
+    }
+  },
   _authListener: function() {
+    var self = this;
     this.setState({
       authCredentials: auth.getCredentials()
+    }, function () {
+      self._loadAuthUser();
     });
   },
   componentWillMount: function() {
     auth.listen(this._authListener);
+    this._loadAuthUser();
   },
   componentWillUnmount: function() {
     auth.unlisten(this._authListener);
@@ -69,6 +103,15 @@ var App = React.createClass({
           </nav>
         </header>
         <main>
+          {this.state.authUser ? (
+            <div id='authIndicator'>
+              <Link to={'/users/' + this.state.authUser.id}>
+                <span className='icon-user'/>
+                &nbsp;
+                {this.state.authUser.givenName} {this.state.authUser.familyName}
+              </Link>
+            </div>
+          ) : null}
           {this.props.children}
         </main>
         <footer>

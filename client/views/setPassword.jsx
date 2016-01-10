@@ -21,7 +21,7 @@ var SetPassword = React.createClass({
     var userId = this.props.params.userId;
     if (!userId || !passwordResetKey) {
       return (
-        <div id='message'>
+        <div className='message'>
           <p>
             The URL was malformed.
           </p>

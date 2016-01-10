@@ -7,7 +7,7 @@ var NotFound = React.createClass({
   ],
   render: function() {
     return (
-      <div id='message'>
+      <div className='message'>
         <h1>
           no such page
         </h1>

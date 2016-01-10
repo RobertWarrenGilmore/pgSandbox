@@ -7,7 +7,7 @@ var User = React.createClass({
   ],
   render: function() {
     return (
-      <div id='message'>
+      <div className='message'>
         <p>
           Let's look at a user.
         </p>

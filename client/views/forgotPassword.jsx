@@ -10,7 +10,7 @@ var ForgotPassword = React.createClass({
   render: function() {
     if (this.state.success) {
       return (
-        <div id='message'>
+        <div className='message'>
           <p>
             Success! You'll recieve a password reset email soon.
           </p>
