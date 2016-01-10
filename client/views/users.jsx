@@ -1,5 +1,7 @@
 var _ = require('lodash');
 var React = require('react');
+var ReactRouter = require('react-router');
+var Link = ReactRouter.Link;
 var BusyIndicator = require('./busyIndicator.jsx');
 var TitleMixin = require('./titleMixin');
 var appScroll = require('../utilities/appScroll');
@@ -284,14 +286,14 @@ var Entry = React.createClass({
   render: function() {
     var user = this.props.user;
     return (
-      <div className='user'>
+      <Link className='user' to={'/users/' + user.id}>
         <div className='name'>
           {user.givenName} {user.familyName}
         </div>
         <div className='emailAddress'>
           {user.emailAddress}
         </div>
-      </div>
+      </Link>
     );
   }
 
