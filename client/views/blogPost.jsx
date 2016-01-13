@@ -168,7 +168,6 @@ var BlogPost = React.createClass({
           runningRequest: null,
           error: response.body
         });
-        self.setTitle('blog');
       }
       return null;
     }).catch(function(error) {
@@ -176,7 +175,6 @@ var BlogPost = React.createClass({
         runningRequest: null,
         error: error.message
       });
-      self.setTitle('blog');
     });
   },
 
@@ -290,7 +288,9 @@ var BlogPost = React.createClass({
     var self = this;
     this._loadAuthUser().then(function () {
       return self._loadPost(self.props.params.postId);
-    }).then(function () {
+    })
+    // Enter edit mode if we arrived on this page with a truthy .editing in the location state.
+    .then(function () {
       if (self.props.location.state && self.props.location.state.editing) {
         self._enterEditMode();
       }
@@ -301,8 +301,10 @@ var BlogPost = React.createClass({
     var postIdChanged = nextProps.params.postId !== this.props.params.postId;
     if (postIdChanged) {
       // TODO Confirm leave without saving changes if in edit mode and unsaved.
+      // Exit edit mode if the new location state doesn't include a truthy .editing.
       if (!nextProps.location.state || !nextProps.location.state.editing) {
         this._exitEditMode();
+      // Otherwise, redirect to this page without that location state so that a refresh won't return us to the editor.
       } else {
         this.props.history.replaceState(null, nextProps.location.pathname);
       }
