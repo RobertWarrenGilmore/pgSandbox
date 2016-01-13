@@ -49,7 +49,7 @@ function generatePasswordResetKey() {
 
 function authenticatedUpdate(authUser, trx, id, body) {
   // Reject unauthorised updates.
-  if (authUser.id !== id) {
+  if (authUser.id != id) {
     throw new AuthorisationError();
   }
 
@@ -63,7 +63,7 @@ function authenticatedUpdate(authUser, trx, id, body) {
           .select(['id', 'emailAddress'])
           .where('emailAddress', 'ilike', escapeForLike(val))
           .then(function (existingUsers) {
-            if (existingUsers && existingUsers.length) {
+            if (existingUsers && existingUsers.length && existingUsers[0].id != id) {
               throw new ConflictingEditError('That email address is already in use by another user.');
             }
           });
@@ -118,7 +118,8 @@ function anonymousPasswordUpdate(trx, id, newUser) {
     password: [
       'required',
       'minLength:8',
-      'maxLength:30'],
+      'maxLength:30'
+    ],
     passwordResetKey: [
       'required',
       'exactLength:30',

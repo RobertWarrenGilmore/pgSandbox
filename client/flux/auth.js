@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var Emitter = require('./emitter');
 var ajax = require('../utilities/ajax');
 var Promise = require('bluebird');
@@ -15,7 +16,7 @@ var methods = {
     emitter.unlisten(listener);
   },
   getCredentials: function () {
-    return credentials;
+    return _.cloneDeep(credentials);
   },
   isBusy: function () {
     return busy;
