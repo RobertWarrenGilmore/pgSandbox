@@ -132,6 +132,18 @@ var User = React.createClass({
           exists: true
         });
         self.setTitle(response.body.givenName + ' ' + response.body.familyName);
+        var userIsSelf = self.state.authUser && response.body.id === self.state.authUser.id;
+        if (userIsSelf) {
+          var oldPassword = auth.getCredentials().password;
+          var newPassword = user.password || oldPassword;
+          auth.logIn({
+            emailAddress: user.emailAddress,
+            password: newPassword
+          });
+          self.setState({
+            authUser: response.body
+          });
+        }
       } else {
         self.setState({
           runningRequest: null,
