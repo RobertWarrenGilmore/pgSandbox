@@ -320,22 +320,20 @@ var User = React.createClass({
             <label>
               name
               <div className='nameLine'>
-                <h1>
-                  <input
-                    type='text'
-                    ref='givenName'
-                    value={user.givenName}
-                    placeholder='first name'
-                    disabled={!!this.state.runningRequest}
-                    onChange={this._updateEditingUser}/>
-                    <input
-                      type='text'
-                      ref='familyName'
-                      value={user.familyName}
-                      placeholder='last name'
-                      disabled={!!this.state.runningRequest}
-                      onChange={this._updateEditingUser}/>
-                </h1>
+                <input
+                  type='text'
+                  ref='givenName'
+                  value={user.givenName}
+                  placeholder='first name'
+                  disabled={!!this.state.runningRequest}
+                  onChange={this._updateEditingUser}/>
+                <input
+                  type='text'
+                  ref='familyName'
+                  value={user.familyName}
+                  placeholder='last name'
+                  disabled={!!this.state.runningRequest}
+                  onChange={this._updateEditingUser}/>
                 {fieldErrorBox('givenName')}
                 {fieldErrorBox('familyName')}
               </div>
@@ -352,26 +350,28 @@ var User = React.createClass({
               onChange={this._updateEditingUser}/>
             {fieldErrorBox('emailAddress')}
           </label>
-          <label>
-            password
-            <input
-              type='password'
-              ref='password'
-              value={user.password}
-              disabled={!!this.state.runningRequest}
-              onChange={this._updateEditingUser}/>
-            {fieldErrorBox('password')}
-          </label>
-          <label>
-            repeat password
-            <input
-              type='password'
-              ref='repeatPassword'
-              value={user.repeatPassword}
-              disabled={!!this.state.runningRequest}
-              onChange={this._updateEditingUser}/>
-            {fieldErrorBox('repeatPassword')}
-          </label>
+          <div className='passwordPair'>
+            <label>
+              password
+              <input
+                type='password'
+                ref='password'
+                value={user.password}
+                disabled={!!this.state.runningRequest}
+                onChange={this._updateEditingUser}/>
+              {fieldErrorBox('password')}
+            </label>
+            <label>
+              repeat password
+              <input
+                type='password'
+                ref='repeatPassword'
+                value={user.repeatPassword}
+                disabled={!!this.state.runningRequest}
+                onChange={this._updateEditingUser}/>
+              {fieldErrorBox('repeatPassword')}
+            </label>
+          </div>
           {this.state.serverError
             ? (
               <p className='error'>

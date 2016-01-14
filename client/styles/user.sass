@@ -1,0 +1,37 @@
+#appContainer > div > main
+  > #user
+    &.editor
+      > *
+        margin: $medium-padding
+      label
+        display: block
+        input:not([type=checkbox]),
+        select,
+        textarea
+          width: 100%
+          display: block
+        .nameLine
+          input
+            width: 50%
+            display: inline-block
+            min-width: 150px
+        input[type=checkbox]
+          margin: $small-padding
+        h1
+          margin: 0
+      @supports (display: flex)
+        display: flex
+        flex-flow: row wrap
+        align-content: flex-start
+        justify-content: space-around
+        > *
+          flex: 0 1 ($app-max-width / 3)
+        > .actions
+          flex: 1 1 100%
+        label
+          .nameLine
+            display: flex
+            flex-flow: row wrap
+            input
+              min-width: auto
+              flex: 1 1 150px
