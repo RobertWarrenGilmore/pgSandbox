@@ -11,8 +11,7 @@ module.exports = function (knex) {
           return Promise.reject(new AuthenticationError());
         } else {
           return Promise.resolve({
-            id: authUser.id,
-            emailAddress: authUser.emailAddress
+            id: authUser.id
           });
         }
       });

@@ -41,7 +41,7 @@ var methods = {
       if (response.statusCode === 200) {
         credentials = {
           id: response.body.id,
-          emailAddress: response.body.emailAddress,
+          emailAddress: auth.emailAddress,
           password: auth.password
         };
         localStorage.auth = JSON.stringify(credentials);
