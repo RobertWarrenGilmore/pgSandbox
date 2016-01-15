@@ -36,6 +36,12 @@ app.use(function enforceSsl(req, res, next) {
   }
 });
 
+// Enforce future visits to HTTPS using the HSTS header.
+app.use(function (req, res, next) {
+  res.set('Strict-Transport-Security', 'max-age=15552000; includeSubDomains; preload'); // HSTS expires after 180 days.
+  next();
+});
+
 // Create Browserify promise.
 var b = browserify({
   debug: (process.env.NODE_ENV !== 'production')
