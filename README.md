@@ -1,4 +1,6 @@
 # pgSandbox
+
+[![Join the chat at https://gitter.im/RobertWarrenGilmore/pgSandbox](https://badges.gitter.im/RobertWarrenGilmore/pgSandbox.svg)](https://gitter.im/RobertWarrenGilmore/pgSandbox?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 a first attempt at a database wrapper app over postgres
 
 # instructions
