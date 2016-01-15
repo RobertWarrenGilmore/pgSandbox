@@ -656,6 +656,17 @@ describe('user', function () {
       });
     });
 
+    it('should be able to send a password reset email with an all-caps email address', function () {
+      return User.update({
+        body: {
+          emailAddress: emailAddress.toUpperCase(),
+          passwordResetKey: null
+        }
+      }).then(function () {
+        assert(mockEmailer.calledOnce, 'The emailer was not called.');
+      });
+    });
+
     it('should fail to send a password reset email with a failing emailer', function () {
       mockEmailer.err = new EmailerError();
       return User.update({
