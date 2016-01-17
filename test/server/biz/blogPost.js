@@ -1298,7 +1298,7 @@ describe('blog post', function () {
           return knex
             .from('users')
             .where('id', otherAuthorId)
-            .del() ;
+            .del();
         });
     });
 
@@ -1319,6 +1319,51 @@ describe('blog post', function () {
       }).then(function (post) {
         assert.strictEqual(post.author.id, authorId, 'The author was assigned incorrectly.');
       });
+    });
+
+    it('should be able to set the author to someone else as an admin', function () {
+      var otherAuthorId;
+      return knex
+        .into('users')
+        .insert({
+          emailAddress: 'a' + emailAddress,
+          passwordHash: passwordHash,
+          admin: true
+        })
+        .returning('id')
+        .then(function (ids) {
+          otherAuthorId = ids[0];
+          return BlogPost.update({
+            auth: {
+              emailAddress: 'a' + emailAddress,
+              password: password
+            },
+            params: {
+              postId: createdIds[0]
+            },
+            body: {
+              author: {
+                id: otherAuthorId
+              }
+            }
+          });
+        }).then(function (post) {
+          assert.strictEqual(post.author.id, otherAuthorId, 'The author was assigned incorrectly.');
+        }).catch(AuthorisationError, function () {})
+        .finally(function () {
+          // Change the author of the post back so that we can delete the other author.
+          return knex
+            .into('blogPosts')
+            .where('id', createdIds[0])
+            .update({
+              author: authorId
+            }).then(function () {
+              return knex
+                .from('users')
+                .where('id', otherAuthorId)
+                .del();
+            });
+        });
     });
 
     it('should fail to set the author without an id', function () {

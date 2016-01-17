@@ -35,7 +35,7 @@ module.exports = function (knex) {
         if (!authUser) {
           throw new AuthorisationError('Blog posts cannot be created anonymously.');
         }
-        if (!authUser.authorisedToBlog) {
+        if (!authUser.authorisedToBlog && !authUser.admin) {
           throw new AuthorisationError('You are not authorised to create blog posts.');
         }
 
@@ -108,9 +108,9 @@ module.exports = function (knex) {
                           }
                         });
                     },
-                    // Check that the author is the authenticated user.
+                    // Check that the author is the authenticated user or that the authenticated user is an admin.
                     function (val) {
-                      if (val !== authUser.id) {
+                      if (val !== authUser.id && !authUser.admin) {
                         throw new AuthorisationError('You cannot change the ownership of a post to someone else.');
                       }
                     }
@@ -260,7 +260,7 @@ module.exports = function (knex) {
         if (!authUser) {
           throw new AuthorisationError('Blog posts cannot be updated anonymously.');
         }
-        if (!authUser.authorisedToBlog) {
+        if (!authUser.authorisedToBlog && !authUser.admin) {
           throw new AuthorisationError('You are not authorised to update blog posts.');
         }
 
@@ -276,7 +276,7 @@ module.exports = function (knex) {
               throw new NoSuchResourceError();
             }
             var post = posts[0];
-            if (authUser.id !== post.author) {
+            if (authUser.id !== post.author && !authUser.admin) {
               throw new AuthorisationError('You are not authorised to update this blog post.');
             }
             return validate(args.body, {
@@ -346,9 +346,9 @@ module.exports = function (knex) {
                             }
                           });
                       },
-                      // Check that the author is the authenticated user.
+                      // Check that the author is the authenticated user or that the authenticated user is an admin.
                       function (val) {
-                        if (val !== authUser.id) {
+                        if (val !== authUser.id && !authUser.admin) {
                           throw new AuthorisationError('You cannot change the ownership of a post to someone else.');
                         }
                       }
@@ -417,7 +417,7 @@ module.exports = function (knex) {
         if (!authUser) {
           throw new AuthorisationError('Blog posts cannot be deleted anonymously.');
         }
-        if (!authUser.authorisedToBlog) {
+        if (!authUser.authorisedToBlog && !authUser.admin) {
           throw new AuthorisationError('You are not authorised to delete blog posts.');
         }
         return knex

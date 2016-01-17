@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var React = require('react');
 var BusyIndicator = require('./busyIndicator.jsx');
 var ReactRouter = require('react-router');
@@ -21,6 +22,7 @@ var BlogPost = React.createClass({
       editingPost: null,
       post: null,
       exists: null, // Boolean; true means the post exists; false means no such post; null means we don't whether the post exists, for instance before the request has finished or if there was an error
+      blogUsers: null, // a list of all users that can be set as authors of a post
       error: null,
       confirmingDelete: false,
       authUser: null
@@ -69,6 +71,48 @@ var BlogPost = React.createClass({
     } else {
       return Promise.resolve();
     }
+  },
+
+  _loadBlogUsers: function () {
+    this._cancelRequest();
+    var r = ajax({
+      method: 'GET',
+      uri: '/api/users',
+      json: true,
+      auth: auth.getCredentials()
+    });
+    this.setState({
+      runningRequest: r,
+      error: null
+    });
+    var self = this;
+    return r.then(function (response) {
+      if (response.statusCode === 200) {
+        var blogUsers = _.map(response.body, function (user) {
+          return _.pick(user, [
+            'id',
+            'givenName',
+            'familyName'
+          ]);
+        });
+        self.setState({
+          blogUsers: blogUsers
+        });
+      } else {
+        self.setState({
+          error: response.body
+        });
+      }
+      return null;
+    }).catch(function (error) {
+      self.setState({
+        error: error.message
+      });
+    }).finally(function () {
+      self.setState({
+        runningRequest: null
+      });
+    });
   },
 
   /*
@@ -264,6 +308,13 @@ var BlogPost = React.createClass({
   },
 
   _updateEditingPost: function () {
+    var self = this;
+    var author;
+    if (this.state.blogUsers) {
+      author = _.find(this.state.blogUsers, function (user) {
+        return self.refs.author.value == user.id;
+      });
+    }
     this.setState({
       editingPost: {
         id: this.refs.id.value,
@@ -272,7 +323,7 @@ var BlogPost = React.createClass({
         body: this.refs.body.value,
         active: this.refs.active.checked,
         postedTime: this.refs.postedTime.value,
-        author: this.state.editingPost.author // TODO No editing author (yet!).
+        author: author
       }
     });
   },
@@ -287,6 +338,10 @@ var BlogPost = React.createClass({
   componentWillMount: function() {
     var self = this;
     this._loadAuthUser().then(function () {
+      if (self.state.authUser.admin) {
+        return self._loadBlogUsers();
+      }
+    }).then(function () {
       return self._loadPost(self.props.params.postId);
     })
     // Enter edit mode if we arrived on this page with a truthy .editing in the location state.
@@ -382,7 +437,7 @@ var BlogPost = React.createClass({
                   onChange={this._updateEditingPost}/>
               </div>
             </label>
-            <label title='An unpublished post is visible only to you. A published post is visible to the world.'>
+            <label title='An unpublished post is visible only to admins and its author. A published post is visible to the public.'>
               <input
                 type='checkbox'
                 ref='active'
@@ -405,6 +460,24 @@ var BlogPost = React.createClass({
                   onChange={this._updateEditingPost}/>
               </h1>
             </label>
+            {this.state.blogUsers ? (
+              <label>
+                author
+                <select
+                  ref='author'
+                  value={post.author.id}
+                  disabled={!!this.state.runningRequest}
+                  onChange={this._updateEditingPost}>
+                  {_.map(this.state.blogUsers, function (user) {
+                    return (
+                      <option value={user.id}>
+                        {user.givenName} {user.familyName}
+                      </option>
+                    );
+                  })}
+                </select>
+              </label>
+            ) : null}
             <label>
               date (yyyy-mm-dd)
               <input
@@ -520,7 +593,7 @@ var BlogPost = React.createClass({
       );
 
     // error layout
-    } else if (this.state.error || postIsHidden || !this.state.exists) {
+    } else if (this.state.error || (postIsHidden && !isAdmin) || !this.state.exists) {
       var editButton = null;
       if ((authorisedToBlog || isAdmin) && this.state.exists === false) {
         editButton = (
@@ -549,7 +622,7 @@ var BlogPost = React.createClass({
       var post = this.state.post;
       var editButton = null;
       var postIsOwn = this.state.authUser && post.author.id === this.state.authUser.id;
-      if ((authorisedToBlog || isAdmin) && (postIsOwn || this.state.exists === false)) {
+      if ((authorisedToBlog && postIsOwn) || isAdmin) {
         editButton = (
           <button
             className='edit'
