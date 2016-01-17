@@ -12,6 +12,7 @@ var escapeForLike = require('./utilities/escapeForLike');
 var validate = require('./utilities/validate');
 
 var readableAttributes = ['id', 'emailAddress', 'givenName', 'familyName', 'active', 'authorisedToBlog'];
+var adminReadableAttributes = ['id', 'emailAddress', 'givenName', 'familyName', 'active', 'authorisedToBlog', 'admin'];
 
 function uri(id) {
   return 'https://' + appHost + '/users/' + id;
@@ -49,11 +50,11 @@ function generatePasswordResetKey() {
 
 function authenticatedUpdate(authUser, trx, id, body) {
   // Reject unauthorised updates.
-  if (authUser.id != id) {
+  if (authUser.id != id && !authUser.admin) {
     throw new AuthorisationError();
   }
 
-  return validate(body, {
+  var validationRules = {
     emailAddress: [
       'email',
       // Check for case-insensitive uniqueness of email address.
@@ -79,7 +80,15 @@ function authenticatedUpdate(authUser, trx, id, body) {
     ],
     familyName: ['minLength:1', 'maxLength:30'],
     active: ['boolean']
-  }).then(function() {
+  };
+  if (authUser.admin) {
+    _.merge(validationRules, {
+      authorisedToBlog: ['boolean'],
+      admin: ['boolean']
+    });
+  }
+
+  return validate(body, validationRules).then(function() {
     // Get the existing user.
     return trx
       .from('users')
@@ -104,7 +113,7 @@ function authenticatedUpdate(authUser, trx, id, body) {
       .from('users')
       .where('id', id)
       .update(newUser)
-      .returning(readableAttributes)
+      .returning(authUser.admin ? adminReadableAttributes : readableAttributes)
       .then(function (rows) {
         return rows[0];
       });
@@ -274,7 +283,7 @@ module.exports = function (knex, emailer) {
           return trx
             .from('users')
             .where('id', args.params.userId)
-            .select(readableAttributes).then(function (users) {
+            .select((authUser && authUser.admin) ? adminReadableAttributes : readableAttributes).then(function (users) {
               if (!users.length) {
                 throw new NoSuchResourceError();
               }
@@ -316,7 +325,7 @@ module.exports = function (knex, emailer) {
             // Create a query for a search.
             var query = trx
               .from('users')
-              .select(readableAttributes)
+              .select((authUser && authUser.admin) ? adminReadableAttributes : readableAttributes)
               .limit(20);
 
             if (args.query) {

@@ -692,6 +692,76 @@ describe('user', function () {
       }).catch(MalformedRequestError, function () {});
     });
 
+    context('as an admin', function () {
+      var adminUser = {
+        emailAddress: 'mocha.test.admin@example.com',
+        password: 'I do what I want.'
+      };
+
+      beforeEach(function () {
+        return knex.into('users').insert({
+          emailAddress: adminUser.emailAddress,
+          passwordHash: bcrypt.hashSync(adminUser.password, 8),
+          admin: true,
+          active: true
+        }).returning('id').then(function (ids) {
+          createdIds.push(ids[0]);
+        });
+      });
+
+      it('should be able to modify the given name of another user', function () {
+        return User.update({
+          params: {
+            userId: createdIds[0]
+          },
+          body: {
+            givenName: givenName + 'ia'
+          },
+          auth: {
+            emailAddress: adminUser.emailAddress,
+            password: adminUser.password
+          }
+        }).then(function (user) {
+          assert.strictEqual(user.givenName, givenName + 'ia', 'The edit failed.');
+        });
+      });
+
+      it('should be able to make another user an admin', function () {
+        return User.update({
+          params: {
+            userId: createdIds[0]
+          },
+          body: {
+            admin: true
+          },
+          auth: {
+            emailAddress: adminUser.emailAddress,
+            password: adminUser.password
+          }
+        }).then(function (user) {
+          assert(user.admin, 'The edit failed.');
+        });
+      });
+
+      it('should be able to make another user a blogger', function () {
+        return User.update({
+          params: {
+            userId: createdIds[0]
+          },
+          body: {
+            authorisedToBlog: true
+          },
+          auth: {
+            emailAddress: adminUser.emailAddress,
+            password: adminUser.password
+          }
+        }).then(function (user) {
+          assert(user.authorisedToBlog, 'The edit failed.');
+        });
+      });
+
+    });
+
     context('after password reset email', function () {
       var passwordResetKey = {
         key: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd'

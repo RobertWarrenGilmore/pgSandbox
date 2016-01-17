@@ -109,7 +109,9 @@ var User = React.createClass({
       emailAddress: this.state.editingUser.emailAddress,
       givenName: this.state.editingUser.givenName,
       familyName: this.state.editingUser.familyName,
-      password: this.state.editingUser.password
+      password: this.state.editingUser.password,
+      authorisedToBlog: this.state.editingUser.authorisedToBlog,
+      admin: this.state.editingUser.admin
     };
     var r = ajax ({
       method: 'PUT',
@@ -251,7 +253,9 @@ var User = React.createClass({
         givenName: this.refs.givenName.value,
         familyName: this.refs.familyName.value,
         password: this.refs.password.value,
-        repeatPassword: this.refs.repeatPassword.value
+        repeatPassword: this.refs.repeatPassword.value,
+        authorisedToBlog: this.refs.authorisedToBlog.checked,
+        admin: this.refs.admin.checked
       }
     }, function () {
       self._validateFields();
@@ -373,6 +377,30 @@ var User = React.createClass({
               {fieldErrorBox('repeatPassword')}
             </label>
           </div>
+          {!!this.state.authUser.admin ? (
+              <div>
+              <label>
+                <input
+                  type='checkbox'
+                  ref='authorisedToBlog'
+                  checked={user.authorisedToBlog}
+                  disabled={!!this.state.runningRequest}
+                  onChange={this._updateEditingUser}/>
+                authorised to blog
+                {fieldErrorBox('authorisedToBlog')}
+              </label>
+              <label>
+                <input
+                  type='checkbox'
+                  ref='admin'
+                  checked={user.admin}
+                  disabled={!!this.state.runningRequest}
+                  onChange={this._updateEditingUser}/>
+                administrator
+                {fieldErrorBox('admin')}
+              </label>
+            </div>
+          ) : null}
           {this.state.serverError
             ? (
               <p className='error'>
@@ -431,8 +459,8 @@ var User = React.createClass({
     } else {
       var user = this.state.user;
       var editButton = null;
-      var userIsSelf = this.state.authUser && user.id === this.state.authUser.id;
-      if (userIsSelf) {
+      var canEdit = this.state.authUser && (user.id === this.state.authUser.id || !!this.state.authUser.admin);
+      if (canEdit) {
         editButton = (
           <button
             className='edit'
