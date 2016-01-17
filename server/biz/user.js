@@ -296,6 +296,7 @@ module.exports = function (knex, emailer) {
             emailAddress: [],
             givenName: [],
             familyName: [],
+            authorisedToBlog: ['boolean'],
             sortBy: [
               function (val) {
                 var legalValues = [
@@ -357,7 +358,7 @@ module.exports = function (knex, emailer) {
               }
               // The remaining parameters can be used as they are.
               var remainingParameters = _.pick(args.query, [
-                // There are no more parameters yet.
+                'authorisedToBlog'
               ]) || {};
               query = query.where(remainingParameters);
             }

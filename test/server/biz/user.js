@@ -167,19 +167,23 @@ describe('user', function () {
     var searchableUsers = [{
       emailAddress: '0' + emailAddress,
       givenName: givenName1,
-      familyName: familyName1
+      familyName: familyName1,
+      authorisedToBlog: false
     }, {
       emailAddress: '1' + emailAddress,
       givenName: givenName2,
-      familyName: familyName2
+      familyName: familyName2,
+      authorisedToBlog: true
     }, {
       emailAddress: '2' + emailAddress,
       givenName: givenName2,
-      familyName: familyName1
+      familyName: familyName1,
+      authorisedToBlog: true
     }, {
       emailAddress: '3' + emailAddress,
       givenName: givenName1,
-      familyName: familyName2
+      familyName: familyName2,
+      authorisedToBlog: false
     }];
 
     beforeEach('Create the searchable users.', function () {
@@ -409,6 +413,22 @@ describe('user', function () {
             assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.');
           }
           assert.strictEqual(users[0].givenName, givenName1, 'The wrong user was first.');
+        });
+      });
+
+      it('should be able to search by blog authorisation and sort by family name, ascending', function () {
+        return User.read({
+          query: {
+            authorisedToBlog: true,
+            sortBy: 'familyName',
+            sortOrder: 'ascending'
+          }
+        }).then(function (users) {
+          assert.strictEqual(users.length, 2, 'The wrong number of users was returned.');
+          for (var i in users) {
+            assert(users[i].authorisedToBlog, 'The wrong users were returned.');
+          }
+          assert.strictEqual(users[0].familyName, familyName1, 'The wrong user was first.');
         });
       });
 
