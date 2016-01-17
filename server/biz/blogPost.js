@@ -209,7 +209,7 @@ module.exports = function (knex) {
 
               // Remove the contents of inactive posts that don't belong to the authenticated user.
               if (!post.active &&
-                (!authUser || authUser.id !== post.author.id)) {
+                (!authUser || (authUser.id !== post.author.id && !authUser.admin))) {
                 post = hideContents(post);
               }
               return post;
@@ -241,7 +241,7 @@ module.exports = function (knex) {
 
             // Remove the contents of inactive posts that don't belong to the authenticated user.
             return _.map(posts, function (post) {
-              var authorisedToViewInactive = !!authUser && authUser.id === post.author.id;
+              var authorisedToViewInactive = !!authUser && (authUser.id === post.author.id || !!authUser.admin);
               if (authorisedToViewInactive || post.active) {
                 return post;
               } else {

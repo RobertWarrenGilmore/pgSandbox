@@ -320,6 +320,7 @@ var BlogPost = React.createClass({
     var result = null;
     var postIsHidden = this.state.post && (this.state.authUser === null || this.state.post.author.id !== this.state.authUser.id) && !this.state.post.active;
     var authorisedToBlog = this.state.authUser && this.state.authUser.authorisedToBlog;
+    var isAdmin = this.state.authUser && this.state.authUser.admin;
 
     // editor layout
     if (this.state.editingPost) {
@@ -521,7 +522,7 @@ var BlogPost = React.createClass({
     // error layout
     } else if (this.state.error || postIsHidden || !this.state.exists) {
       var editButton = null;
-      if (authorisedToBlog && this.state.exists === false) {
+      if ((authorisedToBlog || isAdmin) && this.state.exists === false) {
         editButton = (
           <button
             className='edit'
@@ -548,7 +549,7 @@ var BlogPost = React.createClass({
       var post = this.state.post;
       var editButton = null;
       var postIsOwn = this.state.authUser && post.author.id === this.state.authUser.id;
-      if (authorisedToBlog && (postIsOwn || this.state.exists === false)) {
+      if ((authorisedToBlog || isAdmin) && (postIsOwn || this.state.exists === false)) {
         editButton = (
           <button
             className='edit'

@@ -661,6 +661,61 @@ describe('blog post', function () {
         });
     });
 
+    it('should be able to look up the contents of an inactive post of another user as an admin', function () {
+
+      // Create the other author.
+      var otherAuthorId;
+      var otherAuthorEmailAddress = 'a' + emailAddress;
+      return knex.into('users')
+        .insert({
+          emailAddress: otherAuthorEmailAddress,
+          givenName: givenName,
+          familyName: familyName,
+          passwordHash: passwordHash,
+          authorisedToBlog: false,
+          admin: true
+        }).returning('id').then(function (ids) {
+          otherAuthorId = ids[0];
+        }).then(function () {
+
+          // Deactivate the post.
+          return knex.into('blogPosts').where('id', 'ilike', escapeForLike(createdIds[0]))
+            .update({
+              active: false
+            });
+        }).then(function () {
+
+          // Authenticate as the other author.
+          return BlogPost.read({
+            auth: {
+              emailAddress: otherAuthorEmailAddress,
+              password: password
+            },
+            params: {
+              postId: createdIds[0]
+            }
+          });
+
+        // Assert stuff.
+        }).then(function (post) {
+          assert(!(post instanceof Array), 'An array was returned instead of a single post.');
+          assert.strictEqual(post.title, searchablePosts[0].title, 'The wrong title was returned.');
+          assert.strictEqual(post.body, searchablePosts[0].body, 'The wrong body was returned.');
+          assert.strictEqual(post.postedTime, searchablePosts[0].postedTime.toISOString(), 'The wrong posted time was returned.');
+          assert.strictEqual(post.active, false, 'The post was active.');
+          assert.strictEqual(post.author.id, searchablePosts[0].author, 'The post did not have the right author.');
+        }).finally(function () {
+
+          // Destroy the other author.
+          return knex
+            .from('users')
+            .where('id', otherAuthorId)
+            .del();
+        });
+    });
+
+
+
     describe('search', function () {
 
       it('should be able to list posts', function () {
@@ -783,6 +838,64 @@ describe('blog post', function () {
           });
       });
 
+      it('should see a post list that includes the contents of the inactive posts of others as an admin', function () {
+        // Create the other author.
+        var otherAuthorId;
+        var otherAuthorEmailAddress = 'a' + emailAddress;
+        return knex.into('users')
+          .insert({
+            emailAddress: otherAuthorEmailAddress,
+            givenName: givenName,
+            familyName: familyName,
+            passwordHash: passwordHash,
+            authorisedToBlog: false,
+            admin: true
+          }).returning('id').then(function (ids) {
+            otherAuthorId = ids[0];
+          }).then(function () {
+
+            // Deactivate the post.
+            return knex.into('blogPosts').where('id', 'ilike', escapeForLike(createdIds[0]))
+              .update({
+                active: false
+              });
+          }).then(function () {
+
+            // Authenticate as the other author.
+            return BlogPost.read({
+              auth: {
+                emailAddress: otherAuthorEmailAddress,
+                password: password
+              }
+            });
+
+          // Assert stuff.
+          }).then(function (posts) {
+            assert.strictEqual(posts.length, searchablePosts.length, 'The list contains the wrong number of posts.');
+            var inactivePostEncountered = false;
+            for (var i in posts) {
+              var post = posts[i];
+              assert.strictEqual(post.author.id, authorId, 'The list contains posts by the wrong author.');
+              if (!post.active) {
+                if (post.id === createdIds[0]) {
+                  inactivePostEncountered = true;
+                }
+                assert.notStrictEqual(post.title, undefined, 'The title was omitted.');
+                assert.notStrictEqual(post.body, undefined, 'The body was omitted.');
+                assert.notStrictEqual(post.preview, undefined, 'The preview was omitted.');
+                assert.notStrictEqual(post.postedTime, undefined, 'The posted time was omitted.');
+              }
+            }
+            assert(inactivePostEncountered, 'The list did not contain the post that was deactivated.');
+          }).finally(function () {
+
+            // Destroy the other author.
+            return knex
+              .from('users')
+              .where('id', otherAuthorId)
+              .del();
+          });
+      });
     });
   });
 

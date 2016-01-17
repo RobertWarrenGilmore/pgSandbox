@@ -197,14 +197,15 @@ var BlogSearch = React.createClass({
     }
     var self = this;
     var posts = _.filter(this.state.results, function (post) {
-      var hidden = (self.state.authUser === null || post.author.id !== self.state.authUser.id) && (!post.active);
+      var hidden = (self.state.authUser === null || (post.author.id !== self.state.authUser.id && !self.state.authUser.admin)) && (!post.active);
       return !hidden;
     });
     var authorisedToBlog = this.state.authUser && this.state.authUser.authorisedToBlog;
+    var isAdmin = this.state.authUser && this.state.authUser.admin;
 
     return (
       <div id='blogSearch'>
-        {(authorisedToBlog) ? (
+        {(authorisedToBlog || isAdmin) ? (
           <div className='actions'>
             <Link
               to='/blog/new'
