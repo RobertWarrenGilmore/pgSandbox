@@ -276,6 +276,7 @@ var User = React.createClass({
     var userIdChanged = nextProps.params.userId !== this.props.params.userId;
     if (userIdChanged) {
       // TODO Confirm leave without saving changes if in edit mode and unsaved.
+      this._exitEditMode();
       this._loadUser(nextProps.params.userId);
     }
   },
