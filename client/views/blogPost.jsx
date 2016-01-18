@@ -142,9 +142,14 @@ var BlogPost = React.createClass({
           post: response.body,
           exists: true
         });
-        if (response.body.title) {
-          self.setTitle(sanitiseHtml(response.body.title, {allowedTags: []}));
-        }
+        var parsedTitle = processUserHtml(response.body.title, {
+          inline: true
+        }).__html;
+        var fullySanitisedTitle = sanitiseHtml(
+          parsedTitle,
+          {allowedTags: []}
+        );
+        self.setTitle(fullySanitisedTitle);
       } else {
         if (response.statusCode === 404) {
           self.setState({
@@ -201,7 +206,14 @@ var BlogPost = React.createClass({
           post: response.body,
           exists: true
         });
-        self.setTitle(sanitiseHtml(response.body.title, {allowedTags: []}));
+        var parsedTitle = processUserHtml(response.body.title, {
+          inline: true
+        }).__html;
+        var fullySanitisedTitle = sanitiseHtml(
+          parsedTitle,
+          {allowedTags: []}
+        );
+        self.setTitle(fullySanitisedTitle);
         if (self.state.editingPost.id !== self.props.params.postId) {
           self.props.history.replaceState({
             editing: true
