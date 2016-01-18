@@ -1,7 +1,7 @@
 {
-  "name": "pgSandbox",
+  "name": "genericNodeReactApp",
   "version": "0.2.0",
-  "description": "a first attempt at a database wrapper app over postgres",
+  "description": "a simple web app with auth, info pages, a blog, and admins",
   "scripts": {
     "start": "sudo $(which node) node_modules/.bin/forever start index.js",
     "stop": "sudo $(which node) node_modules/.bin/forever stop index.js",
