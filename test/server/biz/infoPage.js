@@ -166,6 +166,28 @@ describe('infoPage', function () {
       });
     });
 
+    it('should be able to update a page that does not yet exist', function () {
+      return knex.from('infoPages').where('id', ids[0]).del().then(function () {
+        return InfoPage.update({
+          params: {
+            pageId: ids[0]
+          },
+          auth: {
+            emailAddress: admin.emailAddress,
+            password: admin.password
+          },
+          body: {
+            body: otherBody
+          }
+        });
+      }).then(function (page) {
+        assert.deepEqual(page, {
+          title: '',
+          body: otherBody
+        }, 'The returned page was wrong.');
+      });
+    });
+
     it('should fail to update a page as a not admin user', function () {
       return InfoPage.update({
         params: {

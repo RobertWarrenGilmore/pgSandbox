@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var authenticatedTransaction = require('./utilities/authenticatedTransaction');
 var AuthorisationError = require('../errors/authorisationError');
 var NoSuchResourceError = require('../errors/noSuchResourceError');
@@ -34,8 +35,12 @@ module.exports = function (knex) {
           throw new NoSuchResourceError();
         }
         return validate(args.body, {
-          title: [],
-          body: []
+          title: [
+            'notNull'
+          ],
+          body: [
+            'notNull'
+          ]
         }).then(function () {
           return trx
             .from('infoPages')
@@ -43,23 +48,22 @@ module.exports = function (knex) {
             .select();
         }).then(function (pages) {
           if (!pages.length) {
+            var newPage = _.clone(args.body);
+            newPage.id = args.params.pageId;
             return trx
               .into('infoPages')
-              .insert({
-                id: args.params.pageId,
-                title: args.body.title,
-                body: args.body.body
-              }).returning(['title', 'body']).then(function (updatedPages) {
+              .insert(newPage)
+              .returning(['title', 'body'])
+              .then(function (updatedPages) {
                 return updatedPages[0];
               });
           } else {
             return trx
               .into('infoPages')
               .where('id', args.params.pageId)
-              .update({
-                title: args.body.title,
-                body: args.body.body
-              }).returning(['title', 'body']).then(function (updatedPages) {
+              .update(args.body)
+              .returning(['title', 'body'])
+              .then(function (updatedPages) {
                 return updatedPages[0];
               });
           }
