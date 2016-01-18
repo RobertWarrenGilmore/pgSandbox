@@ -270,7 +270,9 @@ var InfoPage = React.createClass({
               </button>
             </div>
           </div>
-          <div id='demo' className='infoPage' dangerouslySetInnerHTML={processUserHtml(content.body)}/>
+          <div id='demo' className='infoPage' dangerouslySetInnerHTML={processUserHtml(content.body, {
+            sanitise: false
+          })}/>
         </div>
       );
 
