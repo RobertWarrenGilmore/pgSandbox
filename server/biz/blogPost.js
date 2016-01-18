@@ -87,7 +87,7 @@ module.exports = function (knex) {
                 message: 'The title must be at most 255 characters long.'
               }
             ],
-            body: ['required', 'maxLength:5000'],
+            body: ['required', 'maxLength:100000'],
             preview: ['maxLength:5000'],
             author: [
               'required',
@@ -324,7 +324,7 @@ module.exports = function (knex) {
               ],
               body: [
                 'notNull',
-                'maxLength:5000'
+                'maxLength:100000'
               ],
               preview: ['maxLength:5000'],
               author: [
