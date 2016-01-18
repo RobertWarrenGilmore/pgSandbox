@@ -350,7 +350,7 @@ var BlogPost = React.createClass({
   componentWillMount: function() {
     var self = this;
     this._loadAuthUser().then(function () {
-      if (self.state.authUser.admin) {
+      if (self.state.authUser && self.state.authUser.admin) {
         return self._loadBlogUsers();
       }
     }).then(function () {
