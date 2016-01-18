@@ -49,7 +49,10 @@ var b = browserify({
 b.transform(reactify);
 if (process.env.NODE_ENV === 'production') {
   b.transform({
-    global: true
+    global: true,
+    ignore: [
+      '**/node_modules/when/**' // TODO Find out why this library won't uglify properly.
+    ]
   }, uglifyify);
 }
 b.add('./client/main.jsx');
