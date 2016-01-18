@@ -8,4 +8,4 @@ before('Configure promises.', function () {
   });
 });
 
-require('./server/server');
+require('./server');

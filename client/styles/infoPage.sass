@@ -1,0 +1,25 @@
+#appContainer > div > main
+  > #infoPage:not(.message)
+    > #editor
+      > label
+        display: block
+        margin: $small-padding
+        input,
+        textarea
+          width: 100%
+          display: block
+          &.body
+            height: 20em
+        h1
+          margin: 0
+    > #demo
+      border-top: thin solid grey
+      margin-top: $medium-padding
+      padding-top: $medium-padding
+  .infoPage
+    header
+      text-align: center
+      margin-bottom: $large-padding
+      p
+        font-size: 120%
+        margin-bottom: 0

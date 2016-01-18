@@ -1,6 +1,7 @@
 var authenticatedTransaction = require('./utilities/authenticatedTransaction');
 var AuthorisationError = require('../errors/authorisationError');
 var NoSuchResourceError = require('../errors/noSuchResourceError');
+var validate = require('./utilities/validate');
 
 module.exports = function (knex) {
 
@@ -11,22 +12,60 @@ module.exports = function (knex) {
         return trx
           .from('infoPages')
           .where('id', args.params.pageId)
-          .select(['text', 'active'])
+          .select(['title', 'body'])
           .then(function (pages) {
             if (!pages.length) {
               throw new NoSuchResourceError();
             }
-            var page = pages[0];
-            if (!page.active) {
-              throw new AuthorisationError();
-            }
-            return page.text;
+            return pages[0];
           });
-      }).then(function (result) {
-        return JSON.parse(JSON.stringify(result));
+      });
+    },
+
+    update: function (args) {
+      return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
+        if (!authUser || !authUser.admin) {
+          throw new AuthorisationError('Only administrators can edit info pages.');
+        }
+        var legalIds = [
+          'home'
+        ];
+        if (legalIds.indexOf(args.params.pageId) === -1) {
+          throw new NoSuchResourceError();
+        }
+        return validate(args.body, {
+          title: [],
+          body: []
+        }).then(function () {
+          return trx
+            .from('infoPages')
+            .where('id', args.params.pageId)
+            .select();
+        }).then(function (pages) {
+          if (!pages.length) {
+            return trx
+              .into('infoPages')
+              .insert({
+                id: args.params.pageId,
+                title: args.body.title,
+                body: args.body.body
+              }).returning(['title', 'body']).then(function (updatedPages) {
+                return updatedPages[0];
+              });
+          } else {
+            return trx
+              .into('infoPages')
+              .where('id', args.params.pageId)
+              .update({
+                title: args.body.title,
+                body: args.body.body
+              }).returning(['title', 'body']).then(function (updatedPages) {
+                return updatedPages[0];
+              });
+          }
+        });
       });
     }
-
 
   };
 };

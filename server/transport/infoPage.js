@@ -11,6 +11,10 @@ module.exports = function (infoPage) {
       infoPage.read(req)
         .then(res.send.bind(res))
         .catch(handleError(res));
+    }).put(function (req, res) {
+      infoPage.update(req)
+        .then(res.send.bind(res))
+        .catch(handleError(res));
     });
 
   return router;

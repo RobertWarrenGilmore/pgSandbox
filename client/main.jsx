@@ -9,7 +9,7 @@ var createBrowserHistory = require('history/lib/createBrowserHistory');
 var auth = require('./flux/auth');
 var Promise = require('bluebird');
 var App = require('./views/app.jsx');
-var Home = require('./views/home.jsx');
+var InfoPage = require('./views/infoPage.jsx');
 var LogIn = require('./views/logIn.jsx');
 var Register = require('./views/register.jsx');
 var ForgotPassword = require('./views/forgotPassword.jsx');
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
       <Router history={createBrowserHistory()}>
         <Route component={App} path='/'>
 
-          <IndexRoute component={Home}/>
+          <IndexRoute component={InfoPage}/>
 
           <Route path='blog'>
             <IndexRoute component={BlogSearch}/>
