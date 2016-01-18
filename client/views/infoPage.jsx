@@ -295,7 +295,10 @@ var InfoPage = React.createClass({
 
     // content layout
     } else {
-      var content = this.state.content;
+      var content = this.state.content || {
+        title: '',
+        body: ''
+      };
       var editButton = null;
       if (isAdmin) {
         editButton = (
