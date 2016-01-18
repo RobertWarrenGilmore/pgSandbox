@@ -1,6 +1,6 @@
 {
   "name": "pgSandbox",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "a first attempt at a database wrapper app over postgres",
   "scripts": {
     "start": "sudo $(which node) node_modules/.bin/forever start index.js",
