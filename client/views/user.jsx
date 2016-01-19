@@ -482,9 +482,11 @@ var User = React.createClass({
               {user.givenName + ' ' + user.familyName}
             </h1>
           </header>
-          <p>
-            {user.emailAddress}
-          </p>
+          {(user.emailAddress) ? (
+            <p>
+              {user.emailAddress}
+            </p>
+          ): null}
         </div>
       );
     }

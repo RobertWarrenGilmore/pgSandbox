@@ -12,7 +12,7 @@ var Users = React.createClass({
   mixins: [TitleMixin('user search')],
   getInitialState: function() {
     return {
-      busy: false,
+      authUser: null,
       error: null,
       queryUpdateTimeout: null,
       workingQuery: this.props.location.query,
@@ -33,13 +33,46 @@ var Users = React.createClass({
     return !window.history || !window.history.pushState;
 
   },
+  _loadAuthUser: function () {
+    var credentials = auth.getCredentials();
+    if (credentials) {
+      var r = ajax({
+        method: 'GET',
+        uri: '/api/users/' + credentials.id,
+        json: true,
+        auth: credentials
+      });
+      this.setState({
+        runningRequest: r // Hold on to the Ajax promise in case we need to cancel it later.
+      });
+      var self = this;
+      return r.then(function (response) {
+        if (response.statusCode === 200) {
+          self.setState({
+            authUser: response.body
+          });
+        } else {
+          self.setState({
+            serverError: response.body
+          });
+        }
+        return null;
+      }).catch(function (error) {
+        self.setState({
+          serverError: error.message
+        });
+      });
+    } else {
+      return Promise.resolve();
+    }
+  },
   // Read the search parameters from the controls and use them to construct the working query.
   _updateWorkingQuery: function() {
     // Collect the search parameters from the controls.
     var parameters = {
       givenName: this.refs.givenName.value,
       familyName: this.refs.familyName.value,
-      emailAddress: this.refs.emailAddress.value,
+      emailAddress: this.refs.emailAddress ? this.refs.emailAddress.value : undefined,
       sortBy: this.refs.sortBy.value,
       sortOrder: this.refs.sortOrderDescending.checked ? 'descending' : 'ascending'
     };
@@ -113,7 +146,10 @@ var Users = React.createClass({
       json: true,
       qs: query
     });
-    this.setState({runningRequest: r, busy: true, error: null});
+    this.setState({
+      runningRequest: r,
+      error: null
+    });
     var self = this;
     r.then(function(response) {
       if (response.statusCode === 200) {
@@ -123,7 +159,6 @@ var Users = React.createClass({
         }
         Array.prototype.push.apply(results, response.body);
         self.setState({
-          busy: false,
           error: null,
           results: results,
           runningRequest: null,
@@ -131,24 +166,33 @@ var Users = React.createClass({
         }, self._loadMoreResults);
         return null;
       } else {
-        self.setState({busy: false, error: response.body, runningRequest: null});
+        self.setState({
+          error: response.body,
+          runningRequest: null
+        });
       }
     }).catch(function(error) {
-      self.setState({busy: false, error: error.message, runningRequest: null});
+      self.setState({
+        error: error.message,
+        runningRequest: null
+      });
     });
   },
   _loadMoreResults: function() {
-    if (this._isInNextPageZone() && !this.state.busy && !this.state.endReached) {
+    if (this._isInNextPageZone() && !this.state.runningRequest && !this.state.endReached) {
       this._doSearch(this.state.results.length);
     }
   },
   componentWillMount: function() {
     // Correct the URL query if it's invalid.
-    this._correctUrlQuery(this.props.location.query, {
-      replace: true,
-      delayed: false
+    var self = this;
+    this._loadAuthUser().then(function () {
+      self._correctUrlQuery(self.props.location.query, {
+        replace: true,
+        delayed: false
+      });
+      self._doSearch();
     });
-    this._doSearch();
   },
   componentWillReceiveProps: function(nextProps) {
     var urlQueryChanged = !_.isEqual(nextProps.location.query, this.props.location.query);
@@ -208,6 +252,7 @@ var Users = React.createClass({
   },
   render: function() {
     var caboose = null;
+    var authUser = this.state.authUser;
     if (this.state.endReached) {
       if (!this.state.results.length) {
         caboose = (
@@ -227,10 +272,12 @@ var Users = React.createClass({
     return (
       <div id='userSearch'>
         <form id='filter' onChange={this._updateWorkingQuery}>
-          <label>
-            email address
-            <input type='text' ref='emailAddress' value={this.state.workingQuery.emailAddress}/>
-          </label>
+          {(authUser && authUser.admin) ? (
+            <label>
+              email address
+              <input type='text' ref='emailAddress' value={this.state.workingQuery.emailAddress}/>
+            </label>
+          ) : null}
           <label>
             first name
             <input type='text' ref='givenName' value={this.state.workingQuery.givenName}/>
@@ -242,9 +289,11 @@ var Users = React.createClass({
           <label>
             sort by
             <select ref='sortBy' value={this.state.workingQuery.sortBy}>
-              <option value='emailAddress'>
-                email address
-              </option>
+              {(authUser && authUser.admin) ? (
+                <option value='emailAddress'>
+                  email address
+                </option>
+              ) : null}
               <option value='givenName'>
                 first name
               </option>
@@ -260,10 +309,10 @@ var Users = React.createClass({
           {this._useManualApply()
             ? (
               <div>
-                <button onClick={this._onApply} disabled={this.state.busy} className='highlighted'>
+                <button onClick={this._onApply} disabled={!!this.state.runningRequest} className='highlighted'>
                   apply
                 </button>
-                <button onClick={this._onRevert} disabled={this.state.busy}>
+                <button onClick={this._onRevert} disabled={!!this.state.runningRequest}>
                   revert
                 </button>
               </div>
@@ -272,7 +321,7 @@ var Users = React.createClass({
         </form>
         <div id='userList'>
           {_.map(this.state.results, function(user) {
-            return <Entry user={user} key={user.id}/>;
+            return <Entry user={user} authUser={authUser} key={user.id}/>;
           })}
           {caboose}
         </div>
@@ -285,14 +334,17 @@ var Entry = React.createClass({
 
   render: function() {
     var user = this.props.user;
+    var authUser = this.props.authUser;
     return (
       <Link className='user' to={'/users/' + user.id}>
         <div className='name'>
           {user.givenName} {user.familyName}
         </div>
-        <div className='emailAddress'>
-          {user.emailAddress}
-        </div>
+        {(user.emailAddress) ? (
+          <div className='emailAddress'>
+            {user.emailAddress}
+          </div>
+        ) : null}
       </Link>
     );
   }

@@ -202,7 +202,6 @@ describe('user', function () {
         assert(!(user instanceof Array), 'An array was returned instead of a single user.');
         assert.deepStrictEqual(user, {
           id: createdIds[0],
-          emailAddress: searchableUsers[0].emailAddress,
           givenName: searchableUsers[0].givenName,
           familyName: searchableUsers[0].familyName,
           active: true,
@@ -432,6 +431,16 @@ describe('user', function () {
         });
       });
 
+      it('should fail to search by email address', function () {
+        return User.read({
+          query: {
+            emailAddress: emailAddress
+          }
+        }).then(function (users) {
+          assert(false, 'The read succeeded');
+        }).catch(AuthorisationError, function () {});
+      });
+
       it('should fail to search with a malformed query', function () {
         return User.read({
           query: {
@@ -455,6 +464,39 @@ describe('user', function () {
           assert(false, 'The read succeeded.');
         }).catch(MalformedRequestError, function () {});
       });
+    });
+
+    context('as an admin', function () {
+      var adminUser = {
+        emailAddress: 'mocha.test.admin@example.com',
+        password: 'I do what I want.'
+      };
+
+      beforeEach(function () {
+        return knex.into('users').insert({
+          emailAddress: adminUser.emailAddress,
+          passwordHash: bcrypt.hashSync(adminUser.password, 8),
+          admin: true,
+          active: true
+        }).returning('id').then(function (ids) {
+          createdIds.push(ids[0]);
+        });
+      });
+
+      it('should be able to search by email address', function () {
+        return User.read({
+          query: {
+            emailAddress: searchableUsers[0].emailAddress
+          },
+          auth: adminUser
+        }).then(function (users) {
+          assert.strictEqual(users.length, 1, 'The wrong number of users was returned.');
+          for (var i in users) {
+            assert.strictEqual(users[i].emailAddress, searchableUsers[0].emailAddress, 'The wrong users were returned.');
+          }
+        });
+      });
+
     });
 
   });
