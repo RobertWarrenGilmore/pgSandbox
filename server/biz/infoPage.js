@@ -4,19 +4,29 @@ var AuthorisationError = require('../errors/authorisationError');
 var NoSuchResourceError = require('../errors/noSuchResourceError');
 var validate = require('./utilities/validate');
 
+var legalIds = [
+  'home'
+];
+
 module.exports = function (knex) {
 
   return {
 
     read: function (args) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
+        if (legalIds.indexOf(args.params.pageId) === -1) {
+          throw new NoSuchResourceError();
+        }
         return trx
           .from('infoPages')
           .where('id', args.params.pageId)
           .select(['title', 'body'])
           .then(function (pages) {
             if (!pages.length) {
-              throw new NoSuchResourceError();
+              return {
+                title: '',
+                body: ''
+              };
             }
             return pages[0];
           });
@@ -28,9 +38,6 @@ module.exports = function (knex) {
         if (!authUser || !authUser.admin) {
           throw new AuthorisationError('Only administrators can edit info pages.');
         }
-        var legalIds = [
-          'home'
-        ];
         if (legalIds.indexOf(args.params.pageId) === -1) {
           throw new NoSuchResourceError();
         }
