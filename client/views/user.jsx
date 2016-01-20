@@ -254,8 +254,8 @@ var User = React.createClass({
         familyName: this.refs.familyName.value,
         password: this.refs.password.value,
         repeatPassword: this.refs.repeatPassword.value,
-        authorisedToBlog: this.refs.authorisedToBlog.checked,
-        admin: this.refs.admin.checked
+        authorisedToBlog: this.refs.authorisedToBlog ? this.refs.authorisedToBlog.checked : undefined,
+        admin: this.refs.admin ? this.refs.admin.checked : undefined
       }
     }, function () {
       self._validateFields();
@@ -479,7 +479,7 @@ var User = React.createClass({
           </div>
           <header>
             <h1>
-              {user.givenName + ' ' + user.familyName}
+              {user.givenName} {user.familyName}
             </h1>
           </header>
           {(user.emailAddress) ? (
