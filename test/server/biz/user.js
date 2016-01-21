@@ -16,7 +16,7 @@ var ConflictingEditError = require('../../../server/errors/conflictingEditError'
 var AuthenticationError = require('../../../server/errors/authenticationError');
 var AuthorisationError = require('../../../server/errors/authorisationError');
 var NoSuchResourceError = require('../../../server/errors/noSuchResourceError');
-var validate = require('../../../server/biz/utilities/validate');
+var validate = require('../../../utilities/validate');
 var ValidationError = validate.ValidationError;
 
 function EmailerError(message) {

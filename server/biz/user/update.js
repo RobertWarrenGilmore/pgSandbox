@@ -6,9 +6,7 @@ var sendPasswordResetEmail = require('./sendPasswordResetEmail');
 var AuthenticationError = require('../../errors/authenticationError');
 var AuthorisationError = require('../../errors/authorisationError');
 var NoSuchResourceError = require('../../errors/noSuchResourceError');
-var MalformedRequestError = require('../../errors/malformedRequestError');
-var ConflictingEditError = require('../../errors/conflictingEditError');
-var validate = require('../utilities/validate');
+var validate = require('../../../utilities/validate');
 var vf = validate.funcs;
 var ValidationError = validate.ValidationError;
 
@@ -35,8 +33,6 @@ module.exports = function (knex, emailer) {
       if (user instanceof Object) {
         return JSON.parse(JSON.stringify(user));
       }
-    }).catch(ValidationError, function (err) {
-      throw new MalformedRequestError(err.message);
     });
   };
 };

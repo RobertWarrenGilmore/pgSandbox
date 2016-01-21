@@ -5,7 +5,8 @@ module.exports = function (res) {
         messages: err.messages,
         message: err.message
       });
+    } else {
+      res.status(err.errorCode || 500).send(err.message);
     }
-    res.status(err.errorCode || 500).send(err.message);
   };
 };

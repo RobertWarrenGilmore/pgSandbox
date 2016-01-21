@@ -158,7 +158,7 @@ var BlogPost = React.createClass({
         }
         self.setState({
           runningRequest: null,
-          error: response.body
+          error: response.body.message || response.body
         });
       }
       return null;
@@ -222,7 +222,7 @@ var BlogPost = React.createClass({
       } else {
         self.setState({
           runningRequest: null,
-          error: response.body
+          error: response.body.message || response.body
         });
       }
       return null;
@@ -332,7 +332,7 @@ var BlogPost = React.createClass({
         id: this.refs.id.value,
         title: this.refs.title.value,
         preview: this.refs.preview.value ? this.refs.preview.value : null,
-        body: this.refs.body.value,
+        body: this.refs.body.value || '',
         active: this.refs.active.checked,
         postedTime: this.refs.postedTime.value,
         author: author

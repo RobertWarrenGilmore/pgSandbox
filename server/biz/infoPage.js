@@ -2,7 +2,7 @@ var _ = require('lodash');
 var authenticatedTransaction = require('./utilities/authenticatedTransaction');
 var AuthorisationError = require('../errors/authorisationError');
 var NoSuchResourceError = require('../errors/noSuchResourceError');
-var validate = require('./utilities/validate');
+var validate = require('../../utilities/validate');
 var vf = validate.funcs;
 
 var legalIds = [

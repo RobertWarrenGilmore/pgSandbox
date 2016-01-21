@@ -5,7 +5,7 @@ var MalformedRequestError = require('../errors/malformedRequestError');
 var ConflictingEditError = require('../errors/conflictingEditError');
 var escapeForLike = require('./utilities/escapeForLike');
 var authenticatedTransaction = require('./utilities/authenticatedTransaction');
-var validate = require('./utilities/validate');
+var validate = require('../../utilities/validate');
 var vf = validate.funcs;
 var ValidationError = validate.ValidationError;
 

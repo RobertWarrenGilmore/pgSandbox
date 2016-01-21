@@ -3,7 +3,9 @@ var TitleMixin = require('./titleMixin');
 var BusyIndicator = require('./busyIndicator.jsx');
 var auth = require('../flux/auth');
 var ajax = require('../utilities/ajax');
-var Checkit = require('checkit');
+var validate = require('../../utilities/validate');
+var vf = validate.funcs;
+var ValidationError = validate.ValidationError;
 
 var User = React.createClass({
 
@@ -17,7 +19,7 @@ var User = React.createClass({
       user: null,
       editingUser: null,
       fieldErrors: null,
-      serverError: null,
+      error: null,
       runningRequest: null,
       exists: null
     };
@@ -43,13 +45,13 @@ var User = React.createClass({
           });
         } else {
           self.setState({
-            serverError: response.body
+            error: response.body
           });
         }
         return null;
       }).catch(function (error) {
         self.setState({
-          serverError: error.message
+          error: error.message
         });
       });
     } else {
@@ -67,7 +69,7 @@ var User = React.createClass({
     });
     this.setState({
       runningRequest: r, // Hold on to the Ajax promise in case we need to cancel it later.
-      serverError: null,
+      error: null,
       exists: null
     });
     this.setTitle('user');
@@ -88,13 +90,13 @@ var User = React.createClass({
           });
         }
         self.setState({
-          serverError: response.body
+          error: response.body
         });
       }
       return null;
     }).catch(function (error) {
       self.setState({
-        serverError: error.message
+        error: error.message
       });
     }).finally(function () {
       self.setState({
@@ -122,13 +124,13 @@ var User = React.createClass({
     });
     this.setState({
       runningRequest: r,
-      serverError: null
+      fieldErrors: null,
+      error: null
     });
     var self = this;
     return r.then(function (response) {
       if (response.statusCode === 200) {
         self.setState({
-          runningRequest: null,
           editingUser: response.body,
           user: response.body,
           exists: true
@@ -147,16 +149,24 @@ var User = React.createClass({
           });
         }
       } else {
-        self.setState({
-          runningRequest: null,
-          serverError: response.body
-        });
+        if (response.body.messages) {
+          self.setState({
+            fieldErrors: response.body.messages
+          });
+        } else {
+          self.setState({
+            error: response.body
+          });
+        }
       }
       return null;
     }).catch(function(error) {
       self.setState({
-        runningRequest: null,
-        serverError: error.message
+        error: error.message
+      });
+    }).finally(function () {
+      self.setState({
+        runningRequest: null
       });
     });
   },
@@ -164,7 +174,7 @@ var User = React.createClass({
   _revertUser: function () {
     this.setState({
       editingUser: this.state.user,
-      serverError: null,
+      error: null,
       fieldErrors: null
     });
   },
@@ -184,63 +194,55 @@ var User = React.createClass({
 
   _validateFields: function () {
     var self = this;
-    new Checkit({
+    return validate(this.state.editingUser, {
       emailAddress: [
-        {
-          rule: 'email',
-          message: 'The email address must be formatted as such.'
+        vf.emailAddress('The email address must be, well, an email address.')
+      ],
+      givenName: [
+        function (val) {
+          if (self.state.user.givenName) {
+            vf.notNull('The first name cannot be removed.')(val);
+            vf.notEmpty('The first name cannot be removed.')(val);
+          }
         },
-        {
-          rule: 'required',
-          message: 'The email address is required.'
-        }
+        vf.string('The first name must be a string.'),
+        vf.maxLength('The first name must not be longer than thirty characters.', 30)
+      ],
+      familyName: [
+        function (val) {
+          if (self.state.user.familyName) {
+            vf.notNull('The last name cannot be removed.')(val);
+            vf.notEmpty('The last name cannot be removed.')(val);
+          }
+        },
+        vf.string('The last name must be a string.'),
+        vf.maxLength('The last name must not be longer than thirty characters.', 30)
       ],
       password: [
-        {
-          rule: 'minLength:8',
-          message: 'The password must be at least eight characters long.'
-        },
-        {
-          rule: 'maxLength:30',
-          message: 'The password must be at most thirty characters long.'
-        }
+        vf.minLength('The password must be at least eight characters long.', 8),
+        vf.maxLength('The password must be at most thirty characters long.', 30)
       ],
       repeatPassword: [
-        {
-          rule: 'matchesField:password',
-          message: 'The passwords must match.'
+        function (val) {
+          if (val !== self.state.editingUser.password) {
+            throw new ValidationError('The passwords must match.');
+          }
         }
+      ],
+      admin: [
+        vf.boolean('The admin setting must be a boolean.')
+      ],
+      authorisedToBlog: [
+        vf.boolean('The blog authorisation setting must be a boolean.')
       ]
-    })
-    .maybe({
-      password: [
-        {
-          rule: 'required',
-          message: 'You must type the password in both boxes.'
-        }
-      ]
-    }, function(input) {
-      return !!input.repeatPassword;
-    })
-    .maybe({
-      repeatPassword: [
-        {
-          rule: 'required',
-          message: 'Repeat the same password to verify that you typed it correctly.'
-        }
-      ]
-    }, function(input) {
-      return !!input.password;
-    })
-    .validate(this.state.editingUser)
-    .then(function (validated) {
+    }).then(function () {
       self.setState({
         fieldErrors: null
       });
     }).catch(function (err) {
-      // Put the error in state.
+      // Put the error messages in state.
       self.setState({
-        fieldErrors: err.errors
+        fieldErrors: err.messages
       });
     });
   },
@@ -252,8 +254,8 @@ var User = React.createClass({
         emailAddress: this.refs.emailAddress.value,
         givenName: this.refs.givenName.value,
         familyName: this.refs.familyName.value,
-        password: this.refs.password.value,
-        repeatPassword: this.refs.repeatPassword.value,
+        password: this.refs.password.value || undefined,
+        repeatPassword: this.refs.repeatPassword.value || undefined,
         authorisedToBlog: this.refs.authorisedToBlog ? this.refs.authorisedToBlog.checked : undefined,
         admin: this.refs.admin ? this.refs.admin.checked : undefined
       }
@@ -302,7 +304,7 @@ var User = React.createClass({
           && self.state.fieldErrors[fieldName]) {
           return (
             <p className='error'>
-              {self.state.fieldErrors[fieldName].message}
+              {self.state.fieldErrors[fieldName].join(' ')}
             </p>
           );
         } else {
@@ -339,9 +341,9 @@ var User = React.createClass({
                   placeholder='last name'
                   disabled={!!this.state.runningRequest}
                   onChange={this._updateEditingUser}/>
-                {fieldErrorBox('givenName')}
-                {fieldErrorBox('familyName')}
               </div>
+              {fieldErrorBox('givenName')}
+              {fieldErrorBox('familyName')}
             </label>
           </header>
           <label>
@@ -401,10 +403,10 @@ var User = React.createClass({
               </label>
             </div>
           ) : null}
-          {this.state.serverError
+          {this.state.error
             ? (
               <p className='error'>
-                {this.state.serverError}
+                {this.state.error}
               </p>
             ) : null}
           {this.state.runningRequest
@@ -446,11 +448,11 @@ var User = React.createClass({
       );
 
     // error layout
-    } else if (this.state.serverError || userIsHidden || !this.state.exists) {
+    } else if (this.state.error || userIsHidden || !this.state.exists) {
       result = (
         <div id='user' className='message'>
           <p className='error'>
-            {this.state.serverError || 'This user is inactive.'}
+            {this.state.error || 'This user is inactive.'}
           </p>
         </div>
       );

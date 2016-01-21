@@ -9,7 +9,7 @@ var AuthorisationError = require('../../../server/errors/authorisationError');
 var MalformedRequestError = require('../../../server/errors/malformedRequestError');
 var ConflictingEditError = require('../../../server/errors/conflictingEditError');
 var NoSuchResourceError = require('../../../server/errors/noSuchResourceError');
-var validate = require('../../../server/biz/utilities/validate');
+var validate = require('../../../utilities/validate');
 var ValidationError = validate.ValidationError;
 
 describe('blog post', function () {
