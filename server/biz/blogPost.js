@@ -6,6 +6,8 @@ var ConflictingEditError = require('../errors/conflictingEditError');
 var escapeForLike = require('./utilities/escapeForLike');
 var authenticatedTransaction = require('./utilities/authenticatedTransaction');
 var validate = require('./utilities/validate');
+var vf = validate.funcs;
+var ValidationError = validate.ValidationError;
 
 function transformAuthor(posts) {
   return _.map(posts, function (post) {
@@ -39,21 +41,18 @@ module.exports = function (knex) {
           throw new AuthorisationError('You are not authorised to create blog posts.');
         }
 
-        return validate(args.params, {
+        return validate(args.params || {}, {
           postId: [
-            {
-              rule: 'required',
-              message: 'The id is required'
-            }, {
-              rule: 'alphaDash',
-              message: 'The id must consist of letters, numbers, dashes, and underscores'
-            }, {
-              rule: 'minLength:10',
-              message: 'The id must be at least 10 characters long'
-            }, {
-              rule: 'maxLength:255',
-              message: 'The id must be at most 255 characters long'
-            }, function (val) {
+            vf.notUndefined('The post id is required.'),
+            vf.notNull('The post id is required.'),
+            vf.string('The post id must be a string.'),
+            vf.matchesRegex(/^[A-Za-z0-9_\-]*$/),
+            vf.minLength('The id must be at least 10 characters long.', 10),
+            vf.maxLength('The id must be at most 255 characters long.', 255),
+            function (val) {
+              if (val === undefined || val === null) {
+                return;
+              }
               // Check for case-insensitive uniqueness of ID.
               return trx
                 .from('blogPosts')
@@ -65,70 +64,85 @@ module.exports = function (knex) {
                   }
                 });
             }, function (val) {
+              if (val === undefined || val === null) {
+                return;
+              }
               // Check that the ID starts with an ISO date.
               if (!val.substring(0, 10).match(/^\d\d\d\d\-\d\d\-\d\d$/)
                 || isNaN(new Date(val.substring(0, 10)).getTime())) {
-                throw new MalformedRequestError('The id must begin with a date in the format yyyy-mm-dd.');
+                throw new ValidationError('The id must begin with a date in the format yyyy-mm-dd.');
               }
             }
           ]
         }).then(function () {
           return validate(args.body, {
             title: [
-              {
-                rule: 'required',
-                message: 'The title is required.'
-              },
-              {
-                rule: 'minLength:1',
-                message: 'The title must be at least 1 character long.'
-              }, {
-                rule: 'maxLength:255',
-                message: 'The title must be at most 255 characters long.'
-              }
+              vf.notUndefined('The title is required.'),
+              vf.notNull('The title is required.'),
+              vf.string('The title must be a string.'),
+              vf.notEmpty('The title must not be empty.'),
+              vf.maxLength('The title must be at most 255 characters long', 255)
             ],
-            body: ['required', 'maxLength:100000'],
-            preview: ['maxLength:5000'],
+            body: [
+              vf.notUndefined('The body is required.'),
+              vf.notNull('The body is required.'),
+              vf.string('The body must be a string.'),
+              vf.maxLength('The body must be at most 100,000 characters long', 100000)
+            ],
+            preview: [
+              vf.string('The preview must be a string.'),
+              vf.maxLength('The preview must be at most 5,000 characters long', 5000)
+            ],
             author: [
-              'required',
-              function (author) {
-                return validate(author, {
-                  id: [
-                    'required',
-                    'natural',
-                    // Check for existence of the author.
-                    function (val) {
-                      return trx
-                        .from('users')
-                        .select(['id'])
-                        .where('id', val)
-                        .then(function (users) {
-                          if (!users || !users.length) {
-                            throw new ConflictingEditError('The given author does not exist.');
-                          }
-                        });
-                    },
-                    // Check that the author is the authenticated user or that the authenticated user is an admin.
-                    function (val) {
-                      if (val !== authUser.id && !authUser.admin) {
-                        throw new AuthorisationError('You cannot change the ownership of a post to someone else.');
-                      }
+              vf.notUndefined('The author is required.'),
+              vf.notNull('The author is required.'),
+              vf.object('The author must be an object.', {
+                id: [
+                  vf.notUndefined('The author\'s id is required.'),
+                  vf.notNull('The author\'s id is required.'),
+                  vf.naturalNumber('The author\'s id must be a natural number.'),
+                  // Check for existence of the author.
+                  function (val) {
+                    if (val === undefined || val === null) {
+                      return;
                     }
-                  ]
-                });
-              }
+                    return trx
+                      .from('users')
+                      .select(['id'])
+                      .where('id', val)
+                      .then(function (users) {
+                        if (!users || !users.length) {
+                          throw new ValidationError('The given author does not exist.');
+                        }
+                      });
+                  },
+                  // Check that the author is the authenticated user or that the authenticated user is an admin.
+                  function (val) {
+                    if (val === undefined || val === null) {
+                      return;
+                    }
+                    if (val !== authUser.id && !authUser.admin) {
+                      throw new ValidationError('You cannot set the ownership of a post to someone else.');
+                    }
+                  }
+                ]
+              })
             ],
             postedTime: [
-              {
-                rule: 'required',
-                message: 'The postedTime is required'
-              }, function (val) {
+              vf.notUndefined('The date is required.'),
+              vf.notNull('The date is required.'),
+              function (val) {
+                if (val === undefined || val === null) {
+                  return;
+                }
                 if (isNaN(new Date(val).getTime())) {
-                  throw new MalformedRequestError('postedTime must be a dateTime.');
+                  throw new ValidationError('The date must be a dateTime.');
                 }
               }
             ],
-            active: ['boolean']
+            active: [
+              vf.boolean('The post must be set active or inactive.')
+            ]
           });
         }).then(function () {
           return {
@@ -281,17 +295,15 @@ module.exports = function (knex) {
             }
             return validate(args.body, {
               id: [
-                'notNull',
-                {
-                  rule: 'alphaDash',
-                  message: 'The id must consist of letters, numbers, dashes, and underscores'
-                }, {
-                  rule: 'minLength:10',
-                  message: 'The id must be at least 10 characters long'
-                }, {
-                  rule: 'maxLength:255',
-                  message: 'The id must be at most 255 characters long'
-                }, function (val) {
+                vf.notNull('The id cannot be unset.'),
+                vf.string('The post id must be a string.'),
+                vf.matchesRegex(/^[A-Za-z0-9_\-]*$/),
+                vf.minLength('The id must be at least 10 characters long.', 10),
+                vf.maxLength('The id must be at most 255 characters long.', 255),
+                function (val) {
+                  if (val === undefined || val === null) {
+                    return;
+                  }
                   // Check for case-insensitive uniqueness of ID if it's being changed.
                   if (val.toLowerCase() !== args.params.postId.toLowerCase()) {
                     return trx
@@ -305,6 +317,9 @@ module.exports = function (knex) {
                       });
                   }
                 }, function (val) {
+                  if (val === undefined || val === null) {
+                    return;
+                  }
                   // Check that the ID starts with an ISO date.
                   if (!val.substring(0, 10).match(/^\d\d\d\d\-\d\d\-\d\d$/)
                     || isNaN(new Date(val.substring(0, 10)).getTime())) {
@@ -313,62 +328,69 @@ module.exports = function (knex) {
                 }
               ],
               title: [
-                'notNull',
-                {
-                  rule: 'minLength:1',
-                  message: 'The title must be at least 1 character long'
-                }, {
-                  rule: 'maxLength:255',
-                  message: 'The title must be at most 255 characters long'
-                }
+                vf.notNull('The title cannot be unset.'),
+                vf.string('The title must be a string.'),
+                vf.notEmpty('The title must not be empty.'),
+                vf.maxLength('The title must be at most 255 characters long', 255)
               ],
               body: [
-                'notNull',
-                'maxLength:100000'
+                vf.notNull('The body is cannot be unset.'),
+                vf.string('The body must be a string.'),
+                vf.maxLength('The body must be at most 100,000 characters long', 100000)
               ],
-              preview: ['maxLength:5000'],
+              preview: [
+                vf.string('The preview must be a string.'),
+                vf.maxLength('The preview must be at most 5,000 characters long', 5000)
+              ],
               author: [
-                'notNull',
-                function (author) {
-                  return validate(author, {
-                    id: [
-                      'required',
-                      'natural',
-                      // Check for existence of the author.
-                      function (val) {
-                        return trx
-                          .from('users')
-                          .select(['id'])
-                          .where('id', val)
-                          .then(function (users) {
-                            if (!users || !users.length) {
-                              throw noSuchAuthorError;
-                            }
-                          });
-                      },
-                      // Check that the author is the authenticated user or that the authenticated user is an admin.
-                      function (val) {
-                        if (val !== authUser.id && !authUser.admin) {
-                          throw new AuthorisationError('You cannot change the ownership of a post to someone else.');
-                        }
+                vf.notNull('The author is cannot be unset.'),
+                vf.object('The author must be an object.', {
+                  id: [
+                    vf.notUndefined('The author\'s id is required.'),
+                    vf.notNull('The author\'s id is required.'),
+                    vf.naturalNumber('The author\'s id must be a natural number.'),
+                    // Check for existence of the author.
+                    function (val) {
+                      if (val === undefined || val === null) {
+                        return;
                       }
-                    ]
-                  });
-                }
+                      return trx
+                        .from('users')
+                        .select(['id'])
+                        .where('id', val)
+                        .then(function (users) {
+                          if (!users || !users.length) {
+                            throw new ValidationError('The given author does not exist.');
+                          }
+                        });
+                    },
+                    // Check that the author is the authenticated user or that the authenticated user is an admin.
+                    function (val) {
+                      if (val === undefined || val === null) {
+                        return;
+                      }
+                      if (val !== authUser.id && !authUser.admin) {
+                        throw new ValidationError('You cannot change the ownership of a post to someone else.');
+                      }
+                    }
+                  ]
+                })
               ],
               postedTime: [
-                'notNull',
+                vf.notNull('The date cannot be unset.'),
                 function (val) {
+                  if (val === undefined || val === null) {
+                    return;
+                  }
                   if (isNaN(new Date(val).getTime())) {
-                    throw new MalformedRequestError('postedTime must be a dateTime.');
+                    throw new ValidationError('The date must be a dateTime.');
                   }
                 }
               ],
               active: [
-                'notNull',
-                'boolean'
+                vf.notNull('The post must be set active or inactive.'),
+                vf.boolean('The post must be set active or inactive.')
               ]
-
             });
           }).then(function () {
             var result = _.cloneDeep(args.body);

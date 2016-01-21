@@ -1,10 +1,11 @@
 var _ = require('lodash');
 var authenticatedTransaction = require('../utilities/authenticatedTransaction');
 var validate = require('../utilities/validate');
+var vf = validate.funcs;
+var ValidationError = validate.ValidationError;
 var escapeForLike = require('../utilities/escapeForLike');
 var transformOutput = require('./transformOutput');
 var MalformedRequestError = require('../../errors/malformedRequestError');
-var AuthorisationError = require('../../errors/authorisationError');
 var NoSuchResourceError = require('../../errors/noSuchResourceError');
 
 module.exports = function (knex) {
@@ -36,37 +37,44 @@ function fetchUserById (userId, authUser, trx) {
       if (!users.length) {
         throw new NoSuchResourceError();
       }
-      return transformOutput(users, authUser)[0];
+      return transformOutput(users, authUser, Date.now())[0];
     });
 }
 
 function searchUsers (queryParameters, authUser, trx) {
-  return validate(_.clone(queryParameters) || {}, {
+  return validate(queryParameters || {}, {
     emailAddress: [
       function (val) {
-        if ((!authUser || !authUser.admin) /*&& val !== null*/) {
-          throw new AuthorisationError('You are not authorised to search by email address.');
+        if (val !== undefined
+          && val !== null
+          && (!authUser || !authUser.admin)) {
+          throw new ValidationError('You are not authorised to search by email address.');
         }
       }
     ],
     givenName: [],
     familyName: [],
-    authorisedToBlog: ['boolean'],
+    authorisedToBlog: [
+      vf.boolean('The blog authorisation parameter must be a boolean.')
+    ],
     sortBy: [
       function (val) {
+        if (val === undefined || val === null) {
+          return;
+        }
         var legalValues = [
           'emailAddress',
           'givenName',
           'familyName'
         ];
         if (legalValues.indexOf(val) === -1) {
-          throw new MalformedRequestError('Users cannot be sorted by ' + val + '.');
+          throw new ValidationError('Users cannot be sorted by ' + val + '.');
         }
         var adminOnlyValues = [
           'emailAddress'
         ];
         if ((!authUser || !authUser.admin) && adminOnlyValues.indexOf(val) !== -1) {
-          throw new AuthorisationError('You are not authorised to sort by ' + val + '.');
+          throw new ValidationError('You are not authorised to sort by ' + val + '.');
         }
       }
     ],
@@ -76,12 +84,16 @@ function searchUsers (queryParameters, authUser, trx) {
           'ascending',
           'descending'
         ];
-        if (legalValues.indexOf(val) === -1) {
-          throw new MalformedRequestError('Users cannot be sorted in ' + val + ' order.');
+        if (val !== undefined
+          && val !== null
+          && legalValues.indexOf(val) === -1) {
+          throw new ValidationError('Users cannot be sorted in ' + val + ' order.');
         }
       }
     ],
-    offset: ['natural']
+    offset: [
+      vf.naturalNumber('The offset must be a natural number.')
+    ]
   }).then(function () {
 
     // Create a query for a search.
@@ -92,7 +104,7 @@ function searchUsers (queryParameters, authUser, trx) {
 
     if (queryParameters) {
       // Add sorting.
-      if (queryParameters && queryParameters.sortBy) {
+      if (queryParameters.sortBy) {
         var sortBy = queryParameters.sortBy;
         var sortOrder = 'asc';
         if (queryParameters.sortOrder === 'descending') {
@@ -102,7 +114,7 @@ function searchUsers (queryParameters, authUser, trx) {
       }
 
       // Add offset.
-      if (queryParameters && queryParameters.offset !== undefined) {
+      if (queryParameters.offset !== undefined) {
         query = query.offset(queryParameters.offset);
       }
 
@@ -125,7 +137,7 @@ function searchUsers (queryParameters, authUser, trx) {
     }
 
     query = query.then(function (users) {
-      return transformOutput(users, authUser);
+      return transformOutput(users, authUser, Date.now());
     });
 
     // The query is finished. Return it.

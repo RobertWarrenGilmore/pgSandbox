@@ -1,4 +1,5 @@
 var _ = require('lodash');
+var isComplete = require('./isComplete');
 
 var publicReadableAttributes = [
   'id',
@@ -25,8 +26,12 @@ var adminReadableAttributes = [
   'admin'
 ];
 
-function transformOutput (users, authUser) {
-  return _.map(users, function (user) {
+function transformOutput (users, authUser, when) {
+  var incompleteOmitted = _.filter(users, function (user) {
+    var authorisedToViewIncomplete = !!authUser && (!!authUser.admin || authUser.id === user.id);
+    return authorisedToViewIncomplete || isComplete(user, when);
+  });
+  return _.map(incompleteOmitted, function (user) {
     var readableAttributes = publicReadableAttributes;
     if (authUser) {
       if (authUser.admin) {

@@ -16,6 +16,8 @@ var ConflictingEditError = require('../../../server/errors/conflictingEditError'
 var AuthenticationError = require('../../../server/errors/authenticationError');
 var AuthorisationError = require('../../../server/errors/authorisationError');
 var NoSuchResourceError = require('../../../server/errors/noSuchResourceError');
+var validate = require('../../../server/biz/utilities/validate');
+var ValidationError = validate.ValidationError;
 
 function EmailerError(message) {
   Error.call(this);
@@ -331,7 +333,13 @@ describe('user', function () {
           }
         }).then(function (users) {
           assert(false, 'The read succeeded.');
-        }).catch(MalformedRequestError, function () {});
+        }).catch(ValidationError, function (err) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.sortBy
+            || err.messages.sortBy.length !== 1) {
+            throw err;
+          }
+        });
       });
 
       it('should be able to search by family name', function () {
@@ -438,7 +446,13 @@ describe('user', function () {
           }
         }).then(function (users) {
           assert(false, 'The read succeeded');
-        }).catch(AuthorisationError, function () {});
+        }).catch(ValidationError, function (err) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.emailAddress
+            || err.messages.emailAddress.length !== 1) {
+            throw err;
+          }
+        });
       });
 
       it('should fail to search with a malformed query', function () {
@@ -449,7 +463,13 @@ describe('user', function () {
           }
         }).then(function () {
           assert(false, 'The read succeeded.');
-        }).catch(MalformedRequestError, function () {});
+        }).catch(ValidationError, function (err) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.notARealAttribute
+            || err.messages.notARealAttribute.length !== 1) {
+            throw err;
+          }
+        });
       });
 
       it('should fail to search with a userId', function () {
@@ -639,7 +659,7 @@ describe('user', function () {
           emailAddress: badEmailAddress
         }
       }).then(function (user) {
-        assert.strictEqual(user.emailAddress, badEmailAddress, 'The email address was set.');
+        assert.notStrictEqual(user.emailAddress, badEmailAddress, 'The email address was set to "' + badEmailAddress + '".');
         assert(false, 'The update succeeded.');
       }).catch(MalformedRequestError, function () {});
     });
@@ -896,7 +916,7 @@ describe('user', function () {
             userId: createdIds[0]
           },
           body: {
-            passwordResetKey: passwordResetKey,
+            passwordResetKey: passwordResetKey.key,
             password: password,
             emailAddress: emailAddress // This attribute is not expected.
           }

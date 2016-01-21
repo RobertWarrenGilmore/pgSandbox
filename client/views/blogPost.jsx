@@ -321,7 +321,7 @@ var BlogPost = React.createClass({
 
   _updateEditingPost: function () {
     var self = this;
-    var author;
+    var author = this.state.editingPost.author;
     if (this.state.blogUsers) {
       author = _.find(this.state.blogUsers, function (user) {
         return self.refs.author.value == user.id;

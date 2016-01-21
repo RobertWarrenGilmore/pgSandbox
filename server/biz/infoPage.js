@@ -3,6 +3,7 @@ var authenticatedTransaction = require('./utilities/authenticatedTransaction');
 var AuthorisationError = require('../errors/authorisationError');
 var NoSuchResourceError = require('../errors/noSuchResourceError');
 var validate = require('./utilities/validate');
+var vf = validate.funcs;
 
 var legalIds = [
   'home'
@@ -43,10 +44,12 @@ module.exports = function (knex) {
         }
         return validate(args.body, {
           title: [
-            'notNull'
+            vf.notNull('The title cannot be null.'),
+            vf.string('The title must be a string.')
           ],
           body: [
-            'notNull'
+            vf.notNull('The body cannot be null.'),
+            vf.string('The body must be a string.')
           ]
         }).then(function () {
           return trx

@@ -9,6 +9,8 @@ var AuthorisationError = require('../../../server/errors/authorisationError');
 var MalformedRequestError = require('../../../server/errors/malformedRequestError');
 var ConflictingEditError = require('../../../server/errors/conflictingEditError');
 var NoSuchResourceError = require('../../../server/errors/noSuchResourceError');
+var validate = require('../../../server/biz/utilities/validate');
+var ValidationError = validate.ValidationError;
 
 describe('blog post', function () {
   var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
@@ -158,7 +160,7 @@ describe('blog post', function () {
       }).catch(AuthorisationError, function () {});
     });
 
-    it('should fail with a poorly formatted posted time', function () {
+    it('should fail with a poorly formatted post id', function () {
       return BlogPost.create({
         auth: {
           emailAddress: emailAddress,
@@ -180,7 +182,13 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.postId
+          || err.messages.postId.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should fail with a poorly formatted posted time', function () {
@@ -205,7 +213,13 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.postedTime
+          || err.messages.postedTime.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should reject silly attributes', function () {
@@ -231,7 +245,13 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.silly
+          || err.messages.silly.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should fail if the id is not unique', function () {
@@ -287,7 +307,13 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.postId
+          || err.messages.postId.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should fail if the body is omitted', function () {
@@ -311,7 +337,13 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.body
+          || err.messages.body.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should fail if the title is omitted', function () {
@@ -335,7 +367,13 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.title
+          || err.messages.title.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should fail if the postedTime is omitted', function () {
@@ -344,8 +382,10 @@ describe('blog post', function () {
           emailAddress: emailAddress,
           password: password
         },
+        params: {
+          postId: id
+        },
         body: {
-          id: id,
           title: title,
           body: body,
           author: {
@@ -357,7 +397,13 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.postedTime
+          || err.messages.postedTime.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should fail if the author is omitted', function () {
@@ -379,7 +425,76 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.author
+          || err.messages.author.length !== 1) {
+          throw err;
+        }
+      });
+    });
+
+    it('should fail if the author\'s id is omitted', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: id
+        },
+        body: {
+          title: title,
+          body: body,
+          postedTime: postedTime,
+          author: {}
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.author
+          || Object.keys(err.messages.author).length !== 1
+          || err.messages.author.id.length !== 1) {
+          throw err;
+        }
+      });
+    });
+
+    it('should fail if the author\'s givenName is included', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: id
+        },
+        body: {
+          title: title,
+          body: body,
+          postedTime: postedTime,
+          author: {
+            id: authorId,
+            givenName: 'George'
+          }
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id));
+      }).then(function (posts) {
+        createdIds.push(posts[0].id);
+        assert(false, 'The creation succeeded.');
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.author
+          || Object.keys(err.messages.author).length !== 1
+          || err.messages.author.givenName.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should fail if the author is not a user', function () {
@@ -404,7 +519,14 @@ describe('blog post', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id);
         assert(false, 'The creation succeeded.');
-      }).catch(AuthorisationError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.author
+          || Object.keys(err.messages.author).length !== 1
+          || err.messages.author.id.length !== 2) {
+          throw err;
+        }
+      });
     });
 
     it('should fail if the author is not the authenticated user', function () {
@@ -442,8 +564,14 @@ describe('blog post', function () {
         }).then(function (posts) {
           createdIds.push(posts[0].id);
           assert(false, 'The creation succeeded.');
-        }).catch(AuthorisationError, function () {})
-        .finally(function () {
+        }).catch(ValidationError, function (err) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.author
+            || Object.keys(err.messages.author).length !== 1
+            || err.messages.author.id.length !== 1) {
+            throw err;
+          }
+        }).finally(function () {
           return knex
             .from('users')
             .where('id', otherAuthorId)
@@ -1003,7 +1131,13 @@ describe('blog post', function () {
         }
       }).then(function (post) {
         assert(false, 'The id was removed.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.id
+          || err.messages.id.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should fail to set a conflicting id', function () {
@@ -1082,7 +1216,13 @@ describe('blog post', function () {
         }
       }).then(function (post) {
         assert(false, 'The body was removed.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.body
+          || err.messages.body.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should be able to change the title', function () {
@@ -1116,7 +1256,13 @@ describe('blog post', function () {
         }
       }).then(function (post) {
         assert(false, 'The title was removed.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.title
+          || err.messages.title.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should be able to change the preview', function () {
@@ -1203,7 +1349,13 @@ describe('blog post', function () {
         }
       }).then(function (post) {
         assert(false, 'The postedTime was removed.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.postedTime
+          || err.messages.postedTime.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should fail to set the posted time to a nonsense string', function () {
@@ -1220,7 +1372,13 @@ describe('blog post', function () {
         }
       }).then(function (post) {
         assert(false, 'The postedTime was set to ' + post.postedTime + '.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.postedTime
+          || err.messages.postedTime.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should be able to set active', function () {
@@ -1293,8 +1451,15 @@ describe('blog post', function () {
           });
         }).then(function (post) {
           assert(false, 'The author was reassigned.');
-        }).catch(AuthorisationError, function () {})
-        .finally(function () {
+        }).catch(ValidationError, function (err) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.author
+            || Object.keys(err.messages.author).length !== 1
+            || !err.messages.author.id
+            || err.messages.author.id.length !== 1) {
+            throw err;
+          }
+        }).finally(function () {
           return knex
             .from('users')
             .where('id', otherAuthorId)
@@ -1380,7 +1545,15 @@ describe('blog post', function () {
         }
       }).then(function (post) {
         assert(false, 'The author was reassigned.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.author
+          || Object.keys(err.messages.author).length !== 1
+          || !err.messages.author.id
+          || err.messages.author.id.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should fail with someone else\'s auth', function () {
