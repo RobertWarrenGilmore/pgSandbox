@@ -178,9 +178,9 @@ var BlogPost = React.createClass({
     this._cancelRequest();
     var post = {
       title: this.state.editingPost.title,
-      author: {
+      author: this.state.editingPost.author ? {
         id: this.state.editingPost.author.id
-      },
+      } : undefined,
       preview: this.state.editingPost.preview,
       body: this.state.editingPost.body,
       postedTime: this.state.editingPost.postedTime,
@@ -373,6 +373,7 @@ var BlogPost = React.createClass({
         this._exitEditMode();
       // Otherwise, redirect to this page without that location state so that a refresh won't return us to the editor.
       } else {
+        console.log('leaving');
         this.props.history.replaceState(null, nextProps.location.pathname);
       }
       this._loadPost(nextProps.params.postId);
