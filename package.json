@@ -1,6 +1,6 @@
 {
   "name": "genericNodeReactApp",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "a simple web app with auth, info pages, a blog, and admins",
   "scripts": {
     "start": "sudo $(which node) node_modules/.bin/forever start index.js",
