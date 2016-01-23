@@ -1,12 +1,12 @@
 {
   "name": "genericNodeReactApp",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "description": "a simple web app with auth, info pages, a blog, and admins",
   "scripts": {
     "start": "node start.js",
     "stop": "node node_modules/.bin/forever stop index.js",
     "deploy": "./deploy.sh",
-    "openPort": "sudo ./openPort.sh",
+    "openPorts": "sudo ./openPorts.sh",
     "dbSetup": "server/database/dbSetup.sh",
     "cert": "ssl/generateSelfSignedCertificate.sh",
     "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha",

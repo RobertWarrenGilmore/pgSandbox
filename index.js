@@ -77,11 +77,9 @@ var clientStylePromise = sassRender({
   outputStyle: (process.env.NODE_ENV === 'production') ? 'compressed' : 'expanded'
 });
 
-// Create database schema migration promise.
-var knexMigratePromise = knex.migrate.latest();
 
-console.info('Bundling scripts, bundling styles, and migrating database schema.');
-Promise.join(clientScriptPromise, clientStylePromise, knexMigratePromise,
+console.info('Bundling scripts and styles.');
+Promise.join(clientScriptPromise, clientStylePromise,
   function (clientScript, clientStyle, migrate) {
 
     // Link the three server-side layers together and serve them as the API.
@@ -125,9 +123,13 @@ Promise.join(clientScriptPromise, clientStylePromise, knexMigratePromise,
     }
   }).then(function () {
 
+    // Migrate the database schema
+    console.info('Migrating database schema.');
+    return knex.migrate.latest();
+  }).then(function () {
+
     http.createServer(app).listen(8000);
     https.createServer(sslOptions, app).listen(44300);
-
     console.info('Serving.');
 
   }).catch(function (err) {

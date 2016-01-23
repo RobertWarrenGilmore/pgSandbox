@@ -1,6 +1,7 @@
 # genericNodeReactApp
 
 [![Join the chat at https://gitter.im/RobertWarrenGilmore/pgSandbox](https://badges.gitter.im/RobertWarrenGilmore/pgSandbox.svg)](https://gitter.im/RobertWarrenGilmore/pgSandbox?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 a simple web app with auth, info pages, a blog, and admins
 
 # instructions
@@ -25,9 +26,9 @@ Use NVM to load Node and NPM into your PATH so that you can run Node and NPM com
 nvm use
 ```
 
-## to install dependencies
+## to lint the code
 ```
-npm install
+npm run lint
 ```
 
 ## to set up the database
@@ -36,9 +37,20 @@ The app needs a local Postgres database named sandbox with user sandboxUser. To 
 npm run dbSetup
 ```
 
+## to route the ports
+The app serves on ports 8000 and 44300. Those ports need to be exposed as 80 and 443. To do that:
+```
+npm run openPorts
+```
+
 ## to create an SSL key and a self-signed certificate
 ```
 npm run cert
+```
+
+## to install dependencies
+```
+npm install
 ```
 
 ## to run the tests
@@ -46,17 +58,23 @@ npm run cert
 npm test
 ```
 
-## to lint the code
-```
-npm run lint
-```
-
 ## to run the application
 This will run the application synchronously.
 ```
-sudo $(which node) index.js
+node index.js
 ```
 Alternatively, this will run the application and free the current shell.
 ```
 npm start
 ```
+This will stop the app if it's running in the background.
+```
+npm stop
+```
+
+## for quick deployment
+To deploy the app quickly,
+```
+npm run deploy
+```
+You must first have access to Node and NPM in the shell, have an SSL certificate, and have routed the ports. This script will take care of pulling down the latest version from the repository, updating the dependencies, running the tests, and starting the app in the background. If any of those steps fails, the script will revert the app to the commit it was on before, update the dependencies again, and then start the app again.
