@@ -12,7 +12,15 @@ var uglifyify = require('uglifyify');
 var sass = require('node-sass');
 var knex = require('./server/database/knex');
 var Promise = require('bluebird');
+var forever = require('forever');
+var commandLineArgs = require('command-line-args');
+var appName = require('./appInfo.json').name;
 var app = express();
+
+var cli = commandLineArgs([
+  { name: 'replace', alias: 'r', type: String }
+]);
+var options = cli.parse();
 
 app.set('x-powered-by', false);
 
@@ -103,12 +111,26 @@ Promise.join(clientScriptPromise, clientStylePromise, knexMigratePromise,
       res.status(500).send('Something broke!');
     });
 
-    http.createServer(app).listen(80);
-    https.createServer(sslOptions, app).listen(443);
+    // Stop the previous instance if the command line indicates to do so.
+    if (options.replace) {
+      return new Promise(function (resolve, reject) {
+        var emitter = forever.stop(options.replace);
+        emitter.on('error', function (stopError) {
+          reject(stopError);
+        });
+        emitter.on('stop', function () {
+          resolve();
+        });
+      });
+    }
+  }).then(function () {
+
+    http.createServer(app).listen(8000);
+    https.createServer(sslOptions, app).listen(44300);
 
     console.info('Serving.');
-  })
-  .catch(function (err) {
+
+  }).catch(function (err) {
     console.error(err.stack);
-    process.exit(err.status);
+    process.exit(err.status || 1);
   });
