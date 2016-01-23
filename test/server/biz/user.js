@@ -580,7 +580,13 @@ describe('user', function () {
         }
       }).then(function () {
         assert(false, 'The update succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.password
+          || err.messages.password.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should fail to set a too long password', function () {
@@ -597,7 +603,13 @@ describe('user', function () {
         }
       }).then(function () {
         assert(false, 'The update succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.password
+          || err.messages.password.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should fail to set a property that users do not have', function () {
@@ -614,7 +626,13 @@ describe('user', function () {
         }
       }).then(function () {
         assert(false, 'The update succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.notARealAttribute
+          || err.messages.notARealAttribute.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should be able to set an email address', function () {
@@ -661,7 +679,13 @@ describe('user', function () {
       }).then(function (user) {
         assert.notStrictEqual(user.emailAddress, badEmailAddress, 'The email address was set to "' + badEmailAddress + '".');
         assert(false, 'The update succeeded.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.emailAddress
+          || err.messages.emailAddress.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     it('should fail to set an email address without authenticating', function () {
@@ -771,7 +795,13 @@ describe('user', function () {
       }).then(function () {
         assert(!mockEmailer.called, 'The emailer was called.');
         assert(false, 'The update did not fail.');
-      }).catch(MalformedRequestError, function () {});
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.familyName
+          || err.messages.familyName.length !== 1) {
+          throw err;
+        }
+      });
     });
 
     context('as an admin', function () {
@@ -922,7 +952,13 @@ describe('user', function () {
           }
         }).then(function () {
           assert(false, 'The update succeeded.');
-        }).catch(MalformedRequestError, function () {});
+        }).catch(ValidationError, function (err) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.emailAddress
+            || err.messages.emailAddress.length !== 1) {
+            throw err;
+          }
+        });
       });
 
     });
