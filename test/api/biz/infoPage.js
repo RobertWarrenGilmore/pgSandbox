@@ -2,10 +2,10 @@ var _ = require('lodash');
 var assert = require('assert');
 var Promise = require('bluebird');
 var bcrypt = Promise.promisifyAll(require('bcrypt'));
-var knex = require('../../../server/database/knex');
-var InfoPage = require('../../../server/biz/infoPage')(knex);
-var AuthorisationError = require('../../../server/errors/authorisationError');
-var NoSuchResourceError = require('../../../server/errors/noSuchResourceError');
+var knex = require('../../../api/database/knex');
+var InfoPage = require('../../../api/biz/infoPage')(knex);
+var AuthorisationError = require('../../../api/errors/authorisationError');
+var NoSuchResourceError = require('../../../api/errors/noSuchResourceError');
 
 
 describe('infoPage', function () {

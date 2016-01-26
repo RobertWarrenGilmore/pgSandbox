@@ -1,6 +1,6 @@
 {
   "name": "genericNodeReactApp",
-  "version": "0.4.3",
+  "version": "0.5.0",
   "dependencies": {
     "abbrev": {
       "version": "1.0.7",
@@ -432,7 +432,7 @@
     },
     "chokidar": {
       "version": "1.4.2",
-      "from": "chokidar@>=1.0.1 <2.0.0",
+      "from": "chokidar@*",
       "resolved": "https://registry.npmjs.org/chokidar/-/chokidar-1.4.2.tgz"
     },
     "cipher-base": {
@@ -1426,11 +1426,6 @@
       "version": "2.0.0",
       "from": "has-ansi@>=2.0.0 <3.0.0",
       "resolved": "https://registry.npmjs.org/has-ansi/-/has-ansi-2.0.0.tgz"
-    },
-    "has-flag": {
-      "version": "1.0.0",
-      "from": "has-flag@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/has-flag/-/has-flag-1.0.0.tgz"
     },
     "has-unicode": {
       "version": "1.0.1",

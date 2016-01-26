@@ -10,9 +10,9 @@ module.exports = {
     client: 'postgresql',
     connection: {
       host: 'localhost',
-      user: 'sandboxUser',
+      user: 'adjuvet',
       password: dbPassword,
-      database: 'sandboxTest',
+      database: 'adjuvetTest',
       charset: 'utf8'
     },
     pool: {
@@ -20,7 +20,7 @@ module.exports = {
       max: 10
     },
     migrations: {
-      directory: 'server/database/migrations',
+      directory: 'api/database/migrations',
       tableName: 'knex_migrations'
     }
   },
@@ -29,9 +29,9 @@ module.exports = {
     client: 'postgresql',
     connection: {
       host: 'localhost',
-      user: 'sandboxUser',
+      user: 'adjuvet',
       password: dbPassword,
-      database: 'sandbox',
+      database: 'adjuvet',
       charset: 'utf8'
     },
     pool: {
@@ -39,7 +39,7 @@ module.exports = {
       max: 10
     },
     migrations: {
-      directory: 'server/database/migrations',
+      directory: 'api/database/migrations',
       tableName: 'knex_migrations'
     }
   },
@@ -48,9 +48,9 @@ module.exports = {
     client: 'postgresql',
     connection: {
       host: 'localhost',
-      user: 'sandboxUser',
+      user: 'adjuvet',
       password: dbPassword,
-      database: 'sandbox',
+      database: 'adjuvet',
       charset: 'utf8'
     },
     pool: {
@@ -58,7 +58,7 @@ module.exports = {
       max: 10
     },
     migrations: {
-      directory: 'server/database/migrations',
+      directory: 'api/database/migrations',
       tableName: 'knex_migrations'
     }
   }

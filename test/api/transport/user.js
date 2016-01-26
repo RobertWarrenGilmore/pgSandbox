@@ -38,7 +38,7 @@ describe('user', function () {
   var server;
 
   before('Host the user transport module on a server.', function () {
-    var userRouter = require('../../../server/transport/user')(userBiz);
+    var userRouter = require('../../../api/transport/user')(userBiz);
     var app = express();
     app.use(function authMiddleware(req, res, next) {
       var auth = parseAuth(req);

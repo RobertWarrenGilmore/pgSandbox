@@ -1,4 +1,4 @@
-var knex = require('../../../server/database/knex');
+var knex = require('../../../api/database/knex');
 var assert = require('assert');
 var sinon = require('sinon');
 var Promise = require('bluebird');
@@ -10,12 +10,12 @@ var mockEmailer = sinon.spy(function () {
     return Promise.resolve();
   }
 });
-var User = require('../../../server/biz/user')(knex, mockEmailer);
-var MalformedRequestError = require('../../../server/errors/malformedRequestError');
-var ConflictingEditError = require('../../../server/errors/conflictingEditError');
-var AuthenticationError = require('../../../server/errors/authenticationError');
-var AuthorisationError = require('../../../server/errors/authorisationError');
-var NoSuchResourceError = require('../../../server/errors/noSuchResourceError');
+var User = require('../../../api/biz/user')(knex, mockEmailer);
+var MalformedRequestError = require('../../../api/errors/malformedRequestError');
+var ConflictingEditError = require('../../../api/errors/conflictingEditError');
+var AuthenticationError = require('../../../api/errors/authenticationError');
+var AuthorisationError = require('../../../api/errors/authorisationError');
+var NoSuchResourceError = require('../../../api/errors/noSuchResourceError');
 var validate = require('../../../utilities/validate');
 var ValidationError = validate.ValidationError;
 

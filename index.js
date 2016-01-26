@@ -5,16 +5,15 @@ var express = require('express');
 var compression = require('compression');
 var https = require('https');
 var http = require('http');
-var server = require('./server');
+var api = require('./api');
 var browserify = require('browserify');
 var reactify = require('reactify');
 var uglifyify = require('uglifyify');
 var sass = require('node-sass');
-var knex = require('./server/database/knex');
+var knex = require('./api/database/knex');
 var Promise = require('bluebird');
 var forever = require('forever');
 var commandLineArgs = require('command-line-args');
-var appName = require('./appInfo.json').name;
 var app = express();
 
 var cli = commandLineArgs([
@@ -30,8 +29,8 @@ app.use(compression({
 
 console.info('Getting the SSL key.');
 var sslOptions = {
-  key: fs.readFileSync(path.join('.', 'ssl', 'key')),
-  cert: fs.readFileSync(path.join('.', 'ssl', 'cert'))
+  key: fs.readFileSync(path.join('.', 'ssl', 'privkey.pem')),
+  cert: fs.readFileSync(path.join('.', 'ssl', 'fullchain.pem'))
 };
 
 // Redirect insecure to secure.
@@ -84,7 +83,7 @@ Promise.join(clientScriptPromise, clientStylePromise,
 
     // Link the three server-side layers together and serve them as the API.
     console.info('Routing the API.');
-    app.use('/api', server);
+    app.use('/api', api);
 
     console.info('Routing the client.');
     app.get('/main.js', function (req, res) {

@@ -2,7 +2,7 @@ var nodemailer = require('nodemailer');
 var sparkPostTransport = require('nodemailer-sparkpost-transport');
 
 var Promise = require('bluebird');
-var appInfo = require('../../../appInfo.json');
+var appInfo = require('../appInfo.json');
 var sparkPostApiKey = process.env.sparkPostApiKey;
 var transporter = nodemailer.createTransport(sparkPostTransport({
   sparkPostApiKey: sparkPostApiKey

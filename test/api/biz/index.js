@@ -1,4 +1,4 @@
-var knex = require('../../../server/database/knex');
+var knex = require('../../../api/database/knex');
 
 describe('biz', function () {
 

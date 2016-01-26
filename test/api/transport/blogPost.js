@@ -39,7 +39,7 @@ describe('blog post', function () {
   var server;
 
   before('Host the blog post transport module on a server.', function () {
-    var blogRouter = require('../../../server/transport/blogPost')(blogPostBiz);
+    var blogRouter = require('../../../api/transport/blogPost')(blogPostBiz);
     var app = express();
     app.use(function authMiddleware(req, res, next) {
       var auth = parseAuth(req);

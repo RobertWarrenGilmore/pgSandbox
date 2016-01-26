@@ -2,7 +2,7 @@ var auth = require('./auth');
 var infoPage = require('./infoPage');
 var blogPost = require('./blogPost');
 var user = require('./user');
-var emailer = require('./utilities/emailer');
+var emailer = require('../../utilities/emailer');
 
 module.exports = function (knex) {
   return {
