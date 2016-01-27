@@ -4,3 +4,4 @@ coverage
 *.log
 ssl/*.pem
 client/built
+convenience.*
