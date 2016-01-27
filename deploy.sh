@@ -12,9 +12,9 @@ oldHEAD=$(git rev-parse --verify HEAD^{commit}) && (
 
   # If the upgrade fails, then revert to the previous commit.
   (
-    git -f master $oldHEAD &&
+    git checkout $oldHEAD &&
+    git branch -f master $oldHEAD &&
     git checkout master &&
-    git reset --hard HEAD &&
     npm install &&
     npm prune &&
     npm test &&
