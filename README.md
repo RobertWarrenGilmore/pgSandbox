@@ -6,7 +6,12 @@ a simple web app with auth, info pages, a blog, and admins
 
 # instructions
 
-Change the values in appInfo.json. `host` should reflect the host where the app will be served and `name` should reflect the display name of the application. Also add a line `sparkPostApiKey=thisIsYourKey`, substituting your SparkPost API key, to the file .env, creating such a file if it doesn't exist.
+Change the values in appInfo.json. `host` should reflect the host where the app will be served and `name` should reflect the display name of the application. Also add the following lines to a file named .env:
+
+- `sparkPostApiKey=thisIsYourKey`, substituting your SparkPost API key
+- `NODE_ENV=production`, or `NODE_ENV=development` if you're not in production
+- `reportEmail=your@emailaddress.com`, substituting an email address suitable for error reports
+- `dbPassword=yourPasswordHere`, substituting the password for your database. This line will be added automatically if you run `npm run dbSetup`, as described later in this readme.
 
 ## to install Node and NPM
 I recommend that you manage Node/NPM versions using NVM. Install it like so:
