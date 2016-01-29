@@ -1,38 +1,38 @@
 'use strict'
-var React = require('react')
-var ReactRouter = require('react-router')
-var Link = ReactRouter.Link
-var TitleMixin = require('./titleMixin')
-var auth = require('../flux/auth')
+import React from 'react'
+import {Link} from 'react-router'
+import setWindowTitle from '../utilities/setWindowTitle'
+import auth from '../flux/auth'
+import {bind} from 'decko'
 
-var LogIn = React.createClass({
-  mixins: [
-    TitleMixin('log in')
-  ],
-  getInitialState: function() {
-    return {
+class LogIn extends React.Component {
+  constructor() {
+    this.state = {
       credentials: auth.getCredentials(),
       busy: auth.isBusy(),
       error: null
     }
-  },
-  _authListener: function() {
+  }
+  @bind
+  _authListener() {
     this.setState({
       credentials: auth.getCredentials(),
       busy: auth.isBusy(),
       error: auth.getError()
     })
-  },
-  componentWillMount: function() {
+  }
+  componentWillMount() {
     auth.clearError()
-  },
-  componentDidMount: function() {
+  }
+  componentDidMount() {
     auth.listen(this._authListener)
-  },
-  componentWillUnmount: function() {
+    setWindowTitle('log in')
+  }
+  componentWillUnmount() {
     auth.unlisten(this._authListener)
-  },
-  componentWillUpdate: function(nextProps, nextState) {
+    setWindowTitle()
+  }
+  componentWillUpdate(nextProps, nextState) {
     if (nextState.credentials) {
       var location = this.props.location
       if (location.state && location.state.nextLocation) {
@@ -41,8 +41,8 @@ var LogIn = React.createClass({
         this.props.history.replaceState(null, '/')
       }
     }
-  },
-  render: function() {
+  }
+  render() {
     var location = this.props.location
     var nextLocation = location.state ? location.state.nextLocation : null
     return (
@@ -72,8 +72,9 @@ var LogIn = React.createClass({
         </form>
       </div>
     )
-  },
-  _onSubmit: function(event) {
+  }
+  @bind
+  _onSubmit(event) {
     event.preventDefault()
     var emailAddress = this.refs.emailAddress.value
     var password = this.refs.password.value
@@ -82,6 +83,6 @@ var LogIn = React.createClass({
       password: password
     })
   }
-})
+}
 
-module.exports = LogIn
+export default LogIn

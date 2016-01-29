@@ -2,7 +2,6 @@
 var React = require('react')
 var ReactRouter = require('react-router')
 var History = ReactRouter.History
-var TitleMixin = require('./titleMixin')
 var ajax = require('../utilities/ajax')
 
 var SetPassword = React.createClass({

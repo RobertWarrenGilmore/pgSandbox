@@ -1,14 +1,25 @@
 'use strict'
-var React = require('react')
-var TitleMixin = require('./titleMixin')
-var ajax = require('../utilities/ajax')
+import React from 'react'
+import ajax from '../utilities/ajax'
+import setWindowTitle from '../utilities/setWindowTitle'
+import {bind} from 'decko'
 
-var Register = React.createClass({
-  mixins: [TitleMixin('register')],
-  getInitialState: function() {
-    return {busy: false, success: false, error: null}
-  },
-  render: function() {
+class Register extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      runningRequest: null,
+      success: false,
+      error: null
+    }
+  }
+  componentDidMount() {
+    setWindowTitle('register')
+  }
+  componentWillUnmount() {
+    setWindowTitle()
+  }
+  render() {
     if (this.state.success) {
       return (
         <div className='message'>
@@ -42,15 +53,14 @@ var Register = React.createClass({
         </div>
       )
     }
-  },
-  _onSubmit: function(event) {
+  }
+  @bind
+  _onSubmit(event) {
     event.preventDefault()
     var emailAddress = this.refs.emailAddress.value
     var givenName = this.refs.givenName.value
     var familyName = this.refs.familyName.value
-    this.setState({busy: true, success: false, error: null})
-    var self = this
-    return ajax({
+    let r = ajax({
       method: 'POST',
       uri: '/api/users',
       json: true,
@@ -59,16 +69,35 @@ var Register = React.createClass({
         givenName: givenName,
         familyName: familyName
       }
-    }).then(function(response) {
+    })
+    this.setState({
+      runningRequest: r,
+      success: false,
+      error: null
+    })
+    return r.then((response) => {
       if (response.statusCode === 201) {
-        self.setState({busy: false, success: true, error: null})
+        this.setState({
+          success: true,
+          error: null
+        })
       } else {
-        self.setState({busy: false, success: false, error: response.body})
+        this.setState({
+          success: false,
+          error: response.body
+        })
       }
-    }).catch(function(error) {
-      self.setState({busy: false, success: false, error: error.message})
+    }).catch((error) => {
+      this.setState({
+        success: false,
+        error: error.message
+      })
+    }).finally(() => {
+      this.setState({
+        runningRequest: null
+      })
     })
   }
-})
+}
 
-module.exports = Register
+export default Register

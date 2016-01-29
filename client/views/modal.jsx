@@ -1,19 +1,12 @@
 'use strict'
-var React = require('react')
-var PropTypes = React.PropTypes
+import React from 'react'
 
-var Modal = React.createClass({
+const Modal = (props) => (
+  <div className='modalWrapper'>
+    <div className='modal'>
+      {this.props.children}
+    </div>
+  </div>
+)
 
-  render: function() {
-    return (
-      <div className='modalWrapper'>
-        <div className='modal'>
-          {this.props.children}
-        </div>
-      </div>
-    )
-  }
-
-})
-
-module.exports = Modal
+export default Modal

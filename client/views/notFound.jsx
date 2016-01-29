@@ -1,12 +1,18 @@
 'use strict'
-var React = require('react')
-var TitleMixin = require('./titleMixin')
+import React from 'react'
+import setWindowTitle from '../utilities/setWindowTitle'
 
-var NotFound = React.createClass({
-  mixins: [
-    TitleMixin('page not found')
-  ],
-  render: function() {
+class NotFound extends React.Component {
+  constructor(props) {
+    super(props)
+  }
+  componentDidMount() {
+    setWindowTitle('page not found')
+  }
+  componentWillUnmount() {
+    setWindowTitle()
+  }
+  render() {
     return (
       <div className='message'>
         <h1>
@@ -18,6 +24,6 @@ var NotFound = React.createClass({
       </div>
     )
   }
-})
+}
 
-module.exports = NotFound
+export default NotFound
