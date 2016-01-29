@@ -161,16 +161,26 @@ module.exports = function (knex) {
           return trx
             .into('blogPosts')
             .insert(newPost)
-            .returning([
-              'id',
-              'title',
-              'body',
-              'preview',
-              'author',
-              'postedTime',
-              'active'
+            .returning('id')
+        }).then(function (ids) {
+          return trx
+            .from('blogPosts')
+            .leftJoin('users', 'users.id', 'blogPosts.author')
+            .where('blogPosts.id', 'ilike', escapeForLike(ids[0]))
+            .select([
+              'blogPosts.id',
+              'blogPosts.title',
+              'blogPosts.postedTime',
+              'blogPosts.body',
+              'blogPosts.preview',
+              'blogPosts.active',
+              'users.id as authorId',
+              'users.givenName as authorGivenName',
+              'users.familyName as authorFamilyName',
+              'users.active as authorActive'
             ])
-        }).then(function (rows) {
+        }).then(transformAuthor)
+        .then(function (rows) {
 
           // Respond with the newly created post.
           return rows[0]
@@ -280,7 +290,6 @@ module.exports = function (knex) {
         }
 
         var notUniqueIdError = new ConflictingEditError('That id already belongs to another post.')
-        var noSuchAuthorError = new ConflictingEditError('The given author does not exist.')
 
         return knex
           .from('blogPosts')
