@@ -6,7 +6,6 @@ import auth from '../flux/auth'
 import processUserHtml from '../utilities/processUserHtml'
 import setWindowTitle from '../utilities/setWindowTitle'
 import sanitiseHtml from 'sanitize-html'
-import {bind} from 'decko'
 
 class InfoPage extends React.Component {
 
@@ -19,9 +18,16 @@ class InfoPage extends React.Component {
       error: null,
       authUser: null
     }
+    this._loadAuthUser = this._loadAuthUser.bind(this)
+    this._loadContent = this._loadContent.bind(this)
+    this._saveContent = this._saveContent.bind(this)
+    this._revertContent = this._revertContent.bind(this)
+    this._enterEditMode = this._enterEditMode.bind(this)
+    this._exitEditMode = this._exitEditMode.bind(this)
+    this._updateEditingContent = this._updateEditingContent.bind(this)
+    this._cancelRequest = this._cancelRequest.bind(this)
   }
 
-  @bind
   _loadAuthUser() {
     const credentials = auth.getCredentials()
     if (credentials) {
@@ -55,7 +61,6 @@ class InfoPage extends React.Component {
     }
   }
 
-  @bind
   _loadContent(pageId) {
     this._cancelRequest()
     if (pageId === '/') {
@@ -78,7 +83,7 @@ class InfoPage extends React.Component {
           runningRequest: null,
           content: response.body
         })
-        this.setTitle(sanitiseHtml(response.body.title, {allowedTags: []}))
+        setWindowTitle(sanitiseHtml(response.body.title, {allowedTags: []}))
       } else {
         this.setState({
           runningRequest: null,
@@ -94,10 +99,9 @@ class InfoPage extends React.Component {
     })
   }
 
-  @bind
   _saveContent() {
     this._cancelRequest()
-    const pageId = this.props.location.pathname
+    let pageId = this.props.location.pathname
     if (pageId === '/') {
       pageId = '/home'
     }
@@ -120,7 +124,7 @@ class InfoPage extends React.Component {
           editingContent: response.body,
           content: response.body
         })
-        this.setTitle(sanitiseHtml(response.body.title, {allowedTags: []}))
+        setWindowTitle(sanitiseHtml(response.body.title, {allowedTags: []}))
       } else {
         this.setState({
           runningRequest: null,
@@ -136,7 +140,6 @@ class InfoPage extends React.Component {
     })
   }
 
-  @bind
   _revertContent() {
     this.setState({
       editingContent: this.state.content,
@@ -144,7 +147,6 @@ class InfoPage extends React.Component {
     })
   }
 
-  @bind
   _enterEditMode() {
     this.setState({
       error: null,
@@ -155,14 +157,12 @@ class InfoPage extends React.Component {
     })
   }
 
-  @bind
   _exitEditMode() {
     this.setState({
       editingContent: null
     })
   }
 
-  @bind
   _updateEditingContent() {
     this.setState({
       editingContent: {
@@ -172,7 +172,6 @@ class InfoPage extends React.Component {
     })
   }
 
-  @bind
   _cancelRequest() {
     // Cancel any Ajax that's currently running.
     if (this.state.runningRequest) {

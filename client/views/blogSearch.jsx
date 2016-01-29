@@ -8,7 +8,6 @@ import appScroll from '../utilities/appScroll'
 import ajax from '../utilities/ajax'
 import auth from '../flux/auth'
 import processUserHtml from '../utilities/processUserHtml'
-import {bind} from 'decko'
 
 class BlogSearch extends React.Component {
   constructor(props) {
@@ -19,6 +18,12 @@ class BlogSearch extends React.Component {
       endReached: false,
       authUser: null
     }
+    this._loadAuthUser = this._loadAuthUser.bind(this)
+    this._correctUrlQuery = this._correctUrlQuery.bind(this)
+    this._doSearch = this._doSearch.bind(this)
+    this._loadMoreResults = this._loadMoreResults.bind(this)
+    this._isInNextPageZone = this._isInNextPageZone.bind(this)
+    this._onScroll = this._onScroll.bind(this)
   }
 
   /*
@@ -31,7 +36,6 @@ class BlogSearch extends React.Component {
    *   something important does change about the user, the API will give us
    *   appropriate errors when we try to edit the post.
    */
-   @bind
   _loadAuthUser() {
     const credentials = auth.getCredentials()
     if (credentials) {
@@ -65,7 +69,6 @@ class BlogSearch extends React.Component {
   }
 
   // Redirect the URL to the provided query.
-  @bind
   _correctUrlQuery(query, options) {
     const replace = options && !!options.replace
     let validQuery = {}
@@ -86,7 +89,6 @@ class BlogSearch extends React.Component {
     }
   }
   // Initiate a search from the URL query.
-  @bind
   _doSearch(offset) {
     if (this.state.runningRequest) {
       this.state.runningRequest.cancel()
@@ -125,7 +127,6 @@ class BlogSearch extends React.Component {
       this.setState({error: error.message, runningRequest: null})
     })
   }
-  @bind
   _loadMoreResults() {
     if (this._isInNextPageZone() && !this.state.runningRequest && !this.state.endReached) {
       this._doSearch(this.state.results.length)
@@ -157,7 +158,6 @@ class BlogSearch extends React.Component {
     appScroll.removeListener(this._onScroll)
     setWindowTitle()
   }
-  @bind
   _isInNextPageZone() {
     let element = this.refs.caboose
     if (element) {
@@ -166,7 +166,6 @@ class BlogSearch extends React.Component {
       return false
     }
   }
-  @bind
   _onScroll(event) {
     return this._loadMoreResults()
   }

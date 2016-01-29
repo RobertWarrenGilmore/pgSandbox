@@ -1,11 +1,11 @@
 'use strict'
-var request = require('request')
-var Promise = require('bluebird')
-var _ = require('lodash')
+import request from 'request'
+import Promise from 'bluebird'
+import _ from 'lodash'
 
-module.exports = function ajax(options) {
+export default function (options) {
   return new Promise(function (resolve, reject, onCancel) {
-    var optionsClone = _.cloneDeep(options)
+    const optionsClone = _.cloneDeep(options)
     if (optionsClone.auth && optionsClone.auth.emailAddress) {
       optionsClone.auth.username = optionsClone.auth.emailAddress
       delete optionsClone.auth.emailAddress
@@ -16,7 +16,7 @@ module.exports = function ajax(options) {
       }
       optionsClone.uri = window.location.origin + optionsClone.uri
     }
-    var r = request(optionsClone, function (error, response, body) {
+    let r = request(optionsClone, function (error, response, body) {
       if (error) {
         console.error(error)
         error.message = 'The server could not be reached.'

@@ -1,14 +1,14 @@
 'use strict'
-var marked = require('marked')
-var sanitiseHtml = require('sanitize-html')
+import marked from 'marked'
+import sanitiseHtml from 'sanitize-html'
 
-module.exports = function processUserHtml(content, options) {
+export default function (content, options) {
   options = options || {}
-  var markdown = (options.markdown === undefined) ? true : !!options.markdown
-  var sanitise = (options.sanitise === undefined) ? true : !!options.sanitise
-  var inline = (options.inline === undefined) ? false : !!options.inline
+  const markdown = (options.markdown === undefined) ? true : !!options.markdown
+  const sanitise = (options.sanitise === undefined) ? true : !!options.sanitise
+  const inline = (options.inline === undefined) ? false : !!options.inline
 
-  var result = '' + content
+  let result = '' + content
   if (markdown) {
     result = marked(result, {
       breaks: false,

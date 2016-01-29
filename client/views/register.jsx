@@ -2,7 +2,6 @@
 import React from 'react'
 import ajax from '../utilities/ajax'
 import setWindowTitle from '../utilities/setWindowTitle'
-import {bind} from 'decko'
 
 class Register extends React.Component {
   constructor(props) {
@@ -12,6 +11,7 @@ class Register extends React.Component {
       success: false,
       error: null
     }
+    this._onSubmit = this._onSubmit.bind(this)
   }
   componentDidMount() {
     setWindowTitle('register')
@@ -38,28 +38,27 @@ class Register extends React.Component {
             Create an account.
           </p>
           <form onSubmit={this._onSubmit}>
-            <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={this.state.busy} required/>
-            <input type='text' ref='givenName' name='givenName' placeholder='first name (optional)' disabled={this.state.busy}/>
-            <input type='text' ref='familyName' name='familyName' placeholder='last name (optional)' disabled={this.state.busy}/>
+            <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={!!this.state.runningRequest} required/>
+            <input type='text' ref='givenName' name='givenName' placeholder='first name (optional)' disabled={!!this.state.runningRequest}/>
+            <input type='text' ref='familyName' name='familyName' placeholder='last name (optional)' disabled={!!this.state.runningRequest}/>
             {this.state.error
               ? <p className='error'>
                   {this.state.error}
                 </p>
               : null}
             <div className='actions'>
-              <button disabled={this.state.busy} className='highlighted'>register</button>
+              <button disabled={!!this.state.runningRequest} className='highlighted'>register</button>
             </div>
           </form>
         </div>
       )
     }
   }
-  @bind
   _onSubmit(event) {
     event.preventDefault()
-    var emailAddress = this.refs.emailAddress.value
-    var givenName = this.refs.givenName.value
-    var familyName = this.refs.familyName.value
+    const emailAddress = this.refs.emailAddress.value
+    const givenName = this.refs.givenName.value
+    const familyName = this.refs.familyName.value
     let r = ajax({
       method: 'POST',
       uri: '/api/users',

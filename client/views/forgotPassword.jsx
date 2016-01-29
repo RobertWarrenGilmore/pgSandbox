@@ -2,7 +2,6 @@
 import React from 'react'
 import setWindowTitle from '../utilities/setWindowTitle'
 import ajax from '../utilities/ajax'
-import {bind} from 'decko'
 
 class ForgotPassword extends React.Component{
   constructor(props) {
@@ -12,6 +11,7 @@ class ForgotPassword extends React.Component{
       success: false,
       error: null
     }
+    this._onSubmit = this._onSubmit.bind(this)
   }
   componentDidMount() {
     setWindowTitle('forgot password')
@@ -52,7 +52,6 @@ class ForgotPassword extends React.Component{
       )
     }
   }
-  @bind
   _onSubmit(event) {
     event.preventDefault()
     let emailAddress = this.refs.emailAddress.value

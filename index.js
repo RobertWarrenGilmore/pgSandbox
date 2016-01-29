@@ -53,7 +53,17 @@ app.use(function (req, res, next) {
 var b = browserify({
   debug: (process.env.NODE_ENV !== 'production')
 })
-b.transform('babelify', {presets: ['es2015', 'react']})
+b.transform('babelify', {
+  presets: [
+    'es2015',
+    'stage-0',
+    'react'
+  ],
+  plugins: [
+    'transform-decorators'
+  ],
+  sourceMaps: true
+})
 if (process.env.NODE_ENV === 'production') {
   b.transform({
     global: true,

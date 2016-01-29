@@ -3,17 +3,19 @@ import React from 'react'
 import {Link} from 'react-router'
 import setWindowTitle from '../utilities/setWindowTitle'
 import auth from '../flux/auth'
-import {bind} from 'decko'
 
 class LogIn extends React.Component {
-  constructor() {
+  constructor(props) {
+    super(props)
     this.state = {
       credentials: auth.getCredentials(),
       busy: auth.isBusy(),
       error: null
     }
+    this._authListener = this._authListener.bind(this)
+    this._onSubmit = this._onSubmit.bind(this)
   }
-  @bind
+
   _authListener() {
     this.setState({
       credentials: auth.getCredentials(),
@@ -34,7 +36,7 @@ class LogIn extends React.Component {
   }
   componentWillUpdate(nextProps, nextState) {
     if (nextState.credentials) {
-      var location = this.props.location
+      const location = this.props.location
       if (location.state && location.state.nextLocation) {
         this.props.history.replaceState(null, location.state.nextLocation.pathname, location.state.nextLocation.query)
       } else {
@@ -43,8 +45,8 @@ class LogIn extends React.Component {
     }
   }
   render() {
-    var location = this.props.location
-    var nextLocation = location.state ? location.state.nextLocation : null
+    const location = this.props.location
+    const nextLocation = location.state ? location.state.nextLocation : null
     return (
       <div id='logIn'>
         <h1>
@@ -73,11 +75,10 @@ class LogIn extends React.Component {
       </div>
     )
   }
-  @bind
   _onSubmit(event) {
     event.preventDefault()
-    var emailAddress = this.refs.emailAddress.value
-    var password = this.refs.password.value
+    const emailAddress = this.refs.emailAddress.value
+    const password = this.refs.password.value
     auth.logIn({
       emailAddress: emailAddress,
       password: password

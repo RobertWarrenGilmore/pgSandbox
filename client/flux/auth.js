@@ -1,15 +1,15 @@
 'use strict'
-var _ = require('lodash')
-var Emitter = require('./emitter')
-var ajax = require('../utilities/ajax')
-var Promise = require('bluebird')
+import _ from 'lodash'
+import Emitter from './emitter'
+import ajax from '../utilities/ajax'
+import Promise from 'bluebird'
 
-var emitter = new Emitter()
-var busy = false
-var credentials = null
-var error = null
+const emitter = new Emitter()
+let busy = false
+let credentials = null
+let error = null
 
-var methods = {
+const methods = {
   listen: function (listener) {
     emitter.listen(listener)
   },
@@ -61,7 +61,7 @@ var methods = {
   resume: function () {
     error = null
     if (localStorage.auth) {
-      var auth = JSON.parse(localStorage.auth)
+      let auth = JSON.parse(localStorage.auth)
       return methods.logIn(auth)
     } else {
       return Promise.resolve()
@@ -75,4 +75,4 @@ var methods = {
   }
 }
 
-module.exports = methods
+export default methods
