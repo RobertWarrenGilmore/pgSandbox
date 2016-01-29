@@ -21,9 +21,9 @@ class App extends React.Component {
     this._onNavClick = this._onNavClick.bind(this)
   }
   _loadAuthUser() {
-    var credentials = this.state.authCredentials
+    const credentials = this.state.authCredentials
     if (credentials) {
-      var r = ajax({
+      let r = ajax({
         method: 'GET',
         uri: '/api/users/' + credentials.id,
         json: true,
@@ -33,10 +33,9 @@ class App extends React.Component {
         authUser: null,
         runningRequest: r // Hold on to the Ajax promise in case we need to cancel it later.
       })
-      var self = this
-      return r.then(function (response) {
+      return r.then((response) => {
         if (response.statusCode === 200) {
-          self.setState({
+          this.setState({
             authUser: response.body
           })
         }
@@ -49,11 +48,10 @@ class App extends React.Component {
     }
   }
   _authListener() {
-    let self = this
     this.setState({
       authCredentials: auth.getCredentials()
-    }, function () {
-      self._loadAuthUser()
+    }, () => {
+      this._loadAuthUser()
     })
   }
   componentWillMount() {
@@ -68,10 +66,10 @@ class App extends React.Component {
     setWindowTitle()
   }
   render() {
-    var headerNavClasses = classnames({
+    let headerNavClasses = classnames({
       hamburgerExpanded: this.state.hamburgerExpanded
     })
-    var result = (
+    let result = (
       <div>
         <header>
           <Link to='/'>
@@ -114,7 +112,7 @@ class App extends React.Component {
             <div id='authIndicator'>
               <Link to={'/users/' + this.state.authUser.id}>
                 <span className='icon-user'/>
-                &nbsp
+                &nbsp;
                 {this.state.authUser.givenName} {this.state.authUser.familyName}
               </Link>
             </div>

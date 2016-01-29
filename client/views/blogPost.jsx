@@ -1,24 +1,21 @@
 'use strict'
-var _ = require('lodash')
-var React = require('react')
-var BusyIndicator = require('./busyIndicator.jsx')
-var ReactRouter = require('react-router')
-var Link = ReactRouter.Link
-var TitleMixin = require('./titleMixin')
-var ajax = require('../utilities/ajax')
-var sanitiseHtml = require('sanitize-html')
-var auth = require('../flux/auth')
-var Modal = require('./modal.jsx')
-var Promise = require('bluebird')
-var appInfo = require('../../appInfo.json')
-var processUserHtml = require('../utilities/processUserHtml')
+import _ from 'lodash'
+import React from 'react'
+import BusyIndicator from './busyIndicator.jsx'
+import {Link} from 'react-router'
+import setWindowTitle from '../utilities/setWindowTitle'
+import ajax from '../utilities/ajax'
+import sanitiseHtml from 'sanitize-html'
+import auth from '../flux/auth'
+import Modal from './modal.jsx'
+import Promise from 'bluebird'
+import appInfo from '../../appInfo.json'
+import processUserHtml from '../utilities/processUserHtml'
 
-var BlogPost = React.createClass({
-
-  mixins: [TitleMixin('blog')],
-
-  getInitialState: function() {
-    return {
+class BlogPost extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
       runningRequest: null,
       editingPost: null,
       post: null,
@@ -28,7 +25,19 @@ var BlogPost = React.createClass({
       confirmingDelete: false,
       authUser: null
     }
-  },
+    this._loadAuthUser = this._loadAuthUser.bind(this)
+    this._loadBlogUsers = this._loadBlogUsers.bind(this)
+    this._loadPost = this._loadPost.bind(this)
+    this._savePost = this._savePost.bind(this)
+    this._revertPost = this._revertPost.bind(this)
+    this._askDeletePost = this._askDeletePost.bind(this)
+    this._stopDeletePost = this._stopDeletePost.bind(this)
+    this._deletePost = this._deletePost.bind(this)
+    this._enterEditMode = this._enterEditMode.bind(this)
+    this._exitEditMode = this._exitEditMode.bind(this)
+    this._updateEditingPost = this._updateEditingPost.bind(this)
+    this._cancelRequest = this._cancelRequest.bind(this)
+  }
 
   /*
    * Load the full details of the authenticated user and store them in
@@ -40,10 +49,10 @@ var BlogPost = React.createClass({
    *   something important does change about the user, the API will give us
    *   appropriate errors when we try to edit the post.
    */
-  _loadAuthUser: function () {
-    var credentials = auth.getCredentials()
+  _loadAuthUser() {
+    const credentials = auth.getCredentials()
     if (credentials) {
-      var r = ajax({
+      let r = ajax({
         method: 'GET',
         uri: '/api/users/' + credentials.id,
         json: true,
@@ -52,31 +61,30 @@ var BlogPost = React.createClass({
       this.setState({
         runningRequest: r // Hold on to the Ajax promise in case we need to cancel it later.
       })
-      var self = this
-      return r.then(function (response) {
+      return r.then((response) => {
         if (response.statusCode === 200) {
-          self.setState({
+          this.setState({
             authUser: response.body
           })
         } else {
-          self.setState({
+          this.setState({
             error: response.body
           })
         }
         return null
-      }).catch(function (error) {
-        self.setState({
+      }).catch((error) => {
+        this.setState({
           error: error.message
         })
       })
     } else {
       return Promise.resolve()
     }
-  },
+  }
 
-  _loadBlogUsers: function () {
+  _loadBlogUsers() {
     this._cancelRequest()
-    var r = ajax({
+    let r = ajax({
       method: 'GET',
       uri: '/api/users',
       json: true,
@@ -86,44 +94,43 @@ var BlogPost = React.createClass({
       runningRequest: r,
       error: null
     })
-    var self = this
-    return r.then(function (response) {
+    return r.then((response) => {
       if (response.statusCode === 200) {
-        var blogUsers = _.map(response.body, function (user) {
-          return _.pick(user, [
+        let blogUsers = response.body.map((user) =>
+          _.pick(user, [
             'id',
             'givenName',
             'familyName'
           ])
-        })
-        self.setState({
+        )
+        this.setState({
           blogUsers: blogUsers
         })
       } else {
-        self.setState({
+        this.setState({
           error: response.body
         })
       }
       return null
-    }).catch(function (error) {
-      self.setState({
+    }).catch((error) => {
+      this.setState({
         error: error.message
       })
-    }).finally(function () {
-      self.setState({
+    }).finally(() => {
+      this.setState({
         runningRequest: null
       })
     })
-  },
+  }
 
   /*
    * Load the post indicated by the URL parameter.
    * This method is meant to be run every time the URL changes and every time we
    *   leave edit mode.
    */
-  _loadPost: function (postId) {
+  _loadPost(postId) {
     this._cancelRequest()
-    var r = ajax({
+    let r = ajax({
       method: 'GET',
       uri: '/api/blog/' + postId,
       json: true,
@@ -134,51 +141,50 @@ var BlogPost = React.createClass({
       error: null,
       exists: null
     })
-    this.setTitle('blog')
-    var self = this
-    return r.then(function (response) {
+    setWindowTitle('blog')
+    return r.then((response) => {
       if (response.statusCode === 200) {
-        self.setState({
+        this.setState({
           runningRequest: null,
           post: response.body,
           exists: true
         })
-        var parsedTitle = processUserHtml(response.body.title, {
+        let parsedTitle = processUserHtml(response.body.title, {
           inline: true
         }).__html
-        var fullySanitisedTitle = sanitiseHtml(
+        let fullySanitisedTitle = sanitiseHtml(
           parsedTitle,
           {allowedTags: []}
         )
-        self.setTitle(fullySanitisedTitle)
+        setWindowTitle(fullySanitisedTitle)
       } else {
         if (response.statusCode === 404) {
-          self.setState({
+          this.setState({
             exists: false
           })
         }
-        self.setState({
+        this.setState({
           runningRequest: null,
           error: response.body.message || response.body
         })
       }
       return null
-    }).catch(function (error) {
-      self.setState({
+    }).catch((error) => {
+      this.setState({
         runningRequest: null,
         error: error.message
       })
     })
-  },
+  }
 
   /*
    * Save the post being edited. If the post exists already, this means PUT
    *   otherwise POST.
    */
-  _savePost: function() {
+  _savePost() {
     this._cancelRequest()
-    var post = {
-      id: this.state.editingPost.id,
+    let post = {
+      id: this.state.exists ? this.state.editingPost.id : undefined,
       title: this.state.editingPost.title,
       author: this.state.editingPost.author ? {
         id: this.state.editingPost.author.id
@@ -188,7 +194,7 @@ var BlogPost = React.createClass({
       postedTime: this.state.editingPost.postedTime,
       active: this.state.editingPost.active
     }
-    var r = ajax ({
+    let r = ajax ({
       method: this.state.exists ? 'PUT' : 'POST',
       uri: '/api/blog/' + (this.state.exists ? this.props.params.postId : this.state.editingPost.id),
       body: post,
@@ -199,65 +205,64 @@ var BlogPost = React.createClass({
       runningRequest: r,
       error: null
     })
-    var self = this
-    return r.then(function (response) {
+    return r.then((response) => {
       if (response.statusCode === 200 || response.statusCode === 201) {
-        self.setState({
+        this.setState({
           runningRequest: null,
           editingPost: response.body,
           post: response.body,
           exists: true
         })
-        var parsedTitle = processUserHtml(response.body.title, {
+        let parsedTitle = processUserHtml(response.body.title, {
           inline: true
         }).__html
-        var fullySanitisedTitle = sanitiseHtml(
+        let fullySanitisedTitle = sanitiseHtml(
           parsedTitle,
           {allowedTags: []}
         )
-        self.setTitle(fullySanitisedTitle)
-        if (self.state.editingPost.id !== self.props.params.postId) {
-          self.props.history.replaceState({
+        setWindowTitle(fullySanitisedTitle)
+        if (this.state.editingPost.id !== this.props.params.postId) {
+          this.props.history.replaceState({
             editing: true
-          }, '/blog/' + self.state.editingPost.id)
+          }, '/blog/' + this.state.editingPost.id)
         }
       } else {
-        self.setState({
+        this.setState({
           runningRequest: null,
           error: response.body.message || response.body
         })
       }
       return null
-    }).catch(function(error) {
-      self.setState({
+    }).catch((error) => {
+      this.setState({
         runningRequest: null,
         error: error.message
       })
     })
-  },
+  }
 
-  _revertPost: function () {
+  _revertPost() {
     this.setState({
       editingPost: this.state.post,
       error: null
     })
-  },
+  }
 
-  _askDeletePost: function () {
+  _askDeletePost() {
     this.setState({
       confirmingDelete: true
     })
-  },
+  }
 
-  _stopDeletePost: function () {
+  _stopDeletePost() {
     this.setState({
       confirmingDelete: false
     })
-  },
+  }
 
-  _deletePost: function () {
+  _deletePost() {
     this._cancelRequest()
-    var r = ajax ({
+    let r = ajax ({
       method: 'DELETE',
       uri: '/api/blog/' + this.props.params.postId,
       auth: auth.getCredentials()
@@ -266,37 +271,36 @@ var BlogPost = React.createClass({
       runningRequest: r,
       error: null
     })
-    var self = this
-    return r.then(function (response) {
+    return r.then((response) => {
       if (response.statusCode === 200) {
-        self.setState({
+        this.setState({
           runningRequest: null,
           editingPost: null,
           confirmingDelete: false,
           post: null,
           exists: false
         })
-        self.setTitle('blog')
+        setWindowTitle('blog')
       } else {
-        self.setState({
+        this.setState({
           runningRequest: null,
           confirmingDelete: false,
           error: response.body
         })
       }
       return null
-    }).catch(function(error) {
-      self.setState({
+    }).catch((error) => {
+      this.setState({
         runningRequest: null,
         confirmingDelete: false,
         error: error.message
       })
-      self.setTitle('blog')
+      setWindowTitle('blog')
     })
-  },
+  }
 
-  _enterEditMode: function () {
-    var editingPost = this.state.post || {
+  _enterEditMode() {
+    let editingPost = this.state.post || {
       id: this.props.params.postId,
       title: '',
       postedTime: new Date().toISOString(),
@@ -313,20 +317,19 @@ var BlogPost = React.createClass({
       error: null,
       editingPost: editingPost
     })
-  },
+  }
 
-  _exitEditMode: function () {
+  _exitEditMode() {
     this.setState({
       editingPost: null
     })
-  },
+  }
 
-  _updateEditingPost: function () {
-    var self = this
-    var author = this.state.editingPost.author
+  _updateEditingPost() {
+    let author = this.state.editingPost.author
     if (this.state.blogUsers) {
-      author = _.find(this.state.blogUsers, function (user) {
-        return self.refs.author.value == user.id
+      author = _.find(this.state.blogUsers, (user) => {
+        return this.refs.author.value == user.id
       })
     }
     this.setState({
@@ -340,34 +343,37 @@ var BlogPost = React.createClass({
         author: author
       }
     })
-  },
+  }
 
-  _cancelRequest: function () {
+  _cancelRequest() {
     // Cancel any Ajax that's currently running.
     if (this.state.runningRequest) {
       this.state.runningRequest.cancel()
     }
-  },
+  }
 
-  componentWillMount: function() {
-    var self = this
-    this._loadAuthUser().then(function () {
-      if (self.state.authUser && self.state.authUser.admin) {
-        return self._loadBlogUsers()
+  componentWillMount() {
+    this._loadAuthUser().then(() => {
+      if (this.state.authUser && this.state.authUser.admin) {
+        return this._loadBlogUsers()
       }
-    }).then(function () {
-      return self._loadPost(self.props.params.postId)
+    }).then(() => {
+      return this._loadPost(this.props.params.postId)
     })
     // Enter edit mode if we arrived on this page with a truthy .editing in the location state.
-    .then(function () {
-      if (self.props.location.state && self.props.location.state.editing) {
-        self._enterEditMode()
+    .then(() => {
+      if (this.props.location.state && this.props.location.state.editing) {
+        this._enterEditMode()
       }
     })
-  },
+  }
 
-  componentWillReceiveProps: function(nextProps) {
-    var postIdChanged = nextProps.params.postId !== this.props.params.postId
+  componentDidMount() {
+    setWindowTitle('blog')
+  }
+
+  componentWillReceiveProps(nextProps) {
+    let postIdChanged = nextProps.params.postId !== this.props.params.postId
     if (postIdChanged) {
       // TODO Confirm leave without saving changes if in edit mode and unsaved.
       // Exit edit mode if the new location state doesn't include a truthy .editing.
@@ -379,27 +385,28 @@ var BlogPost = React.createClass({
       }
       this._loadPost(nextProps.params.postId)
     }
-  },
+  }
 
-  componentWillUnmount: function() {
+  componentWillUnmount() {
     this._cancelRequest()
-  },
+    setWindowTitle()
+  }
 
-  render: function() {
-    var result = null
-    var postIsHidden = this.state.post && (this.state.authUser === null || this.state.post.author.id !== this.state.authUser.id) && !this.state.post.active
-    var authorisedToBlog = this.state.authUser && this.state.authUser.authorisedToBlog
-    var isAdmin = this.state.authUser && this.state.authUser.admin
+  render() {
+    let result = null
+    const postIsHidden = this.state.post && (this.state.authUser === null || this.state.post.author.id !== this.state.authUser.id) && !this.state.post.active
+    const authorisedToBlog = this.state.authUser && this.state.authUser.authorisedToBlog
+    const isAdmin = this.state.authUser && this.state.authUser.admin
 
     // editor layout
     if (this.state.editingPost) {
-      var post = this.state.editingPost
-      var preview = post.preview
+      const post = this.state.editingPost
+      let preview = post.preview
       // If no preview was provided, use the first paragraph of the body.
       if (!preview) {
         preview = post.body.split(/(\r?\n){2,}/)[0].trim()
       }
-      var deletionModal = (
+      let deletionModal = (
         <Modal>
           <p>
             Are you sure that you want to delete the post?
@@ -410,14 +417,14 @@ var BlogPost = React.createClass({
               disabled={!!this.state.runningRequest}
               onClick={this._deletePost}>
               <span className='icon-bin'/>
-              &nbsp
+              &nbsp;
               delete
             </button>
             <button
               disabled={!!this.state.runningRequest}
               onClick={this._stopDeletePost}>
               <span className='icon-cancel-circle'/>
-              &nbsp
+              &nbsp;
               cancel
             </button>
           </div>
@@ -432,7 +439,7 @@ var BlogPost = React.createClass({
               disabled={!!this.state.runningRequest}
               onClick={this._exitEditMode}>
               <span className='icon-pencil'/>
-              &nbsp
+              &nbsp;
               stop editing
             </button>
           </div>
@@ -482,13 +489,11 @@ var BlogPost = React.createClass({
                   value={post.author.id}
                   disabled={!!this.state.runningRequest}
                   onChange={this._updateEditingPost}>
-                  {_.map(this.state.blogUsers, function (user) {
-                    return (
-                      <option value={user.id}>
-                        {user.givenName} {user.familyName}
-                      </option>
-                    )
-                  })}
+                  {this.state.blogUsers.map((user) => (
+                    <option value={user.id}>
+                      {user.givenName} {user.familyName}
+                    </option>
+                  ))}
                 </select>
               </label>
             ) : null}
@@ -541,7 +546,7 @@ var BlogPost = React.createClass({
                 onClick={this._savePost}
                 className='highlighted'>
                 <span className='icon-floppy-disk'/>
-                &nbsp
+                &nbsp;
                 save
               </button>
               {
@@ -551,7 +556,7 @@ var BlogPost = React.createClass({
                     disabled={!!this.state.runningRequest}
                     onClick={this._revertPost}>
                     <span className='icon-undo2'/>
-                    &nbsp
+                    &nbsp;
                     revert
                   </button>,
                   <button
@@ -559,7 +564,7 @@ var BlogPost = React.createClass({
                     disabled={!!this.state.runningRequest}
                     onClick={this._askDeletePost}>
                     <span className='icon-bin'/>
-                    &nbsp
+                    &nbsp;
                     delete
                   </button>
                 ] : null
@@ -572,7 +577,7 @@ var BlogPost = React.createClass({
                 inline: true
               })}/>
               <p className='byLine'>
-                by&nbsp
+                by&nbsp;
                 <Link to={'/users/' + post.author.id}>
                   {post.author.givenName} {post.author.familyName}
                 </Link>
@@ -608,7 +613,7 @@ var BlogPost = React.createClass({
 
     // error layout
     } else if (this.state.error || (postIsHidden && !isAdmin) || !this.state.exists) {
-      var editButton = null
+      let editButton = null
       if ((authorisedToBlog || isAdmin) && this.state.exists === false) {
         editButton = (
           <button
@@ -616,7 +621,7 @@ var BlogPost = React.createClass({
             disabled={!!this.state.runningRequest}
             onClick={this._enterEditMode}>
             <span className='icon-plus'/>
-            &nbsp
+            &nbsp;
             create a post here
           </button>
         )
@@ -633,9 +638,9 @@ var BlogPost = React.createClass({
 
     // post layout
     } else {
-      var post = this.state.post
-      var editButton = null
-      var postIsOwn = this.state.authUser && post.author.id === this.state.authUser.id
+      const post = this.state.post
+      let editButton = null
+      const postIsOwn = this.state.authUser && post.author.id === this.state.authUser.id
       if ((authorisedToBlog && postIsOwn) || isAdmin) {
         editButton = (
           <button
@@ -643,7 +648,7 @@ var BlogPost = React.createClass({
             disabled={!!this.state.runningRequest}
             onClick={this._enterEditMode}>
             <span className='icon-pencil'/>
-            &nbsp
+            &nbsp;
             edit
           </button>
         )
@@ -658,7 +663,7 @@ var BlogPost = React.createClass({
               inline: true
             })}/>
             <p className='byLine'>
-              by&nbsp
+              by&nbsp;
               <Link to={'/users/' + post.author.id}>
                 {post.author.givenName} {post.author.familyName}
               </Link>
@@ -676,6 +681,6 @@ var BlogPost = React.createClass({
     return result
   }
 
-})
+}
 
-module.exports = BlogPost
+export default BlogPost

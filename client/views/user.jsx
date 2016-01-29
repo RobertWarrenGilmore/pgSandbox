@@ -320,7 +320,7 @@ var User = React.createClass({
               disabled={!!this.state.runningRequest}
               onClick={this._exitEditMode}>
               <span className='icon-pencil'/>
-              &nbsp
+              &nbsp;
               stop editing
             </button>
           </div>
@@ -424,7 +424,7 @@ var User = React.createClass({
               onClick={this._saveUser}
               className='highlighted'>
               <span className='icon-floppy-disk'/>
-              &nbsp
+              &nbsp;
               save
             </button>
             <button
@@ -432,7 +432,7 @@ var User = React.createClass({
               disabled={!!this.state.runningRequest}
               onClick={this._revertUser}>
               <span className='icon-undo2'/>
-              &nbsp
+              &nbsp;
               revert
             </button>
           </div>
@@ -470,7 +470,7 @@ var User = React.createClass({
             disabled={!!this.state.runningRequest}
             onClick={this._enterEditMode}>
             <span className='icon-pencil'/>
-            &nbsp
+            &nbsp;
             edit
           </button>
         )
