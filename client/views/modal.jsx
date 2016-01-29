@@ -1,5 +1,5 @@
 'use strict'
-import React from 'react'
+const React = require('react')
 
 const Modal = (props) => (
   <div className='modalWrapper'>
@@ -9,4 +9,4 @@ const Modal = (props) => (
   </div>
 )
 
-export default Modal
+module.exports = Modal

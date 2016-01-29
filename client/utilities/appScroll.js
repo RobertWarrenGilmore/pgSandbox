@@ -2,16 +2,17 @@
 function getElements() {
   return [document, document.getElementById('appContainer').children[0]]
 }
-export default {
+
+module.exports = {
   addListener: function (callback) {
     let elements = getElements()
-    for (var i in elements) {
+    for (const i in elements) {
       elements[i].addEventListener('scroll', callback)
     }
   },
   removeListener: function (callback) {
-    var elements = getElements()
-    for (var i in elements) {
+    const elements = getElements()
+    for (const i in elements) {
       elements[i].removeEventListener('scroll', callback)
     }
   }

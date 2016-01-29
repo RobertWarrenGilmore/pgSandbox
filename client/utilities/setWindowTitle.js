@@ -1,7 +1,7 @@
 'use strict'
-import {name as appName} from '../../appInfo.json'
+const appName = require('../../appInfo.json').name
 
-export default function (title) {
+module.exports = function setWindowTitle (title) {
   document.title = appName
   if (title && title.length) {
     document.title += ' - ' + title

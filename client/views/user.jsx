@@ -1,10 +1,10 @@
 'use strict'
-import React from 'react'
-import BusyIndicator from './busyIndicator.jsx'
-import auth from '../flux/auth'
-import ajax from '../utilities/ajax'
-import validate from '../../utilities/validate'
-import setWindowTitle from '../utilities/setWindowTitle'
+const React = require('react')
+const BusyIndicator = require('./busyIndicator.jsx')
+const auth = require('../flux/auth')
+const ajax = require('../utilities/ajax')
+const validate = require('../../utilities/validate')
+const setWindowTitle = require('../utilities/setWindowTitle')
 const vf = validate.funcs
 const ValidationError = validate.ValidationError
 
@@ -502,4 +502,4 @@ class User extends React.Component {
   }
 }
 
-export default User
+module.exports = User

@@ -1,8 +1,8 @@
 'use strict'
-import _ from 'lodash'
-import Emitter from './emitter'
-import ajax from '../utilities/ajax'
-import Promise from 'bluebird'
+const _ = require('lodash')
+const Emitter = require('./emitter')
+const ajax = require('../utilities/ajax')
+const Promise = require('bluebird')
 
 const emitter = new Emitter()
 let busy = false
@@ -75,4 +75,4 @@ const methods = {
   }
 }
 
-export default methods
+module.exports = methods

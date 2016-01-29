@@ -1,11 +1,11 @@
 'use strict'
-import React from 'react'
-import BusyIndicator from './busyIndicator.jsx'
-import ajax from '../utilities/ajax'
-import auth from '../flux/auth'
-import processUserHtml from '../utilities/processUserHtml'
-import setWindowTitle from '../utilities/setWindowTitle'
-import sanitiseHtml from 'sanitize-html'
+const React = require('react')
+const BusyIndicator = require('./busyIndicator.jsx')
+const ajax = require('../utilities/ajax')
+const auth = require('../flux/auth')
+const processUserHtml = require('../utilities/processUserHtml')
+const setWindowTitle = require('../utilities/setWindowTitle')
+const sanitiseHtml = require('sanitize-html')
 
 class InfoPage extends React.Component {
 
@@ -335,4 +335,4 @@ class InfoPage extends React.Component {
 
 }
 
-export default InfoPage
+module.exports = InfoPage

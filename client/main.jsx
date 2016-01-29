@@ -1,22 +1,22 @@
 'use strict'
-import 'babel-polyfill'
-import React from 'react'
-import ReactDom from 'react-dom'
-import {Router, Route, IndexRoute, Redirect} from 'react-router'
-import createBrowserHistory from 'history/lib/createBrowserHistory'
-import auth from './flux/auth'
-import Promise from 'bluebird'
-import App from './views/app.jsx'
-import InfoPage from './views/infoPage.jsx'
-import LogIn from './views/logIn.jsx'
-import Register from './views/register.jsx'
-import ForgotPassword from './views/forgotPassword.jsx'
-import SetPassword from './views/setPassword.jsx'
-import Users from './views/users.jsx'
-import User from './views/user.jsx'
-import BlogPost from './views/blogPost.jsx'
-import BlogSearch from './views/blogSearch.jsx'
-import NotFound from './views/notFound.jsx'
+require('babel-polyfill')
+const React = require('react')
+const ReactDom = require('react-dom')
+const {Router, Route, IndexRoute, Redirect} = require('react-router')
+const createBrowserHistory = require('history/lib/createBrowserHistory')
+const auth = require('./flux/auth')
+const Promise = require('bluebird')
+const App = require('./views/app.jsx')
+const InfoPage = require('./views/infoPage.jsx')
+const LogIn = require('./views/logIn.jsx')
+const Register = require('./views/register.jsx')
+const ForgotPassword = require('./views/forgotPassword.jsx')
+const SetPassword = require('./views/setPassword.jsx')
+const Users = require('./views/users.jsx')
+const User = require('./views/user.jsx')
+const BlogPost = require('./views/blogPost.jsx')
+const BlogSearch = require('./views/blogSearch.jsx')
+const NotFound = require('./views/notFound.jsx')
 
 Promise.config({
   cancellation: true

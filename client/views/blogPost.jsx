@@ -1,16 +1,16 @@
 'use strict'
-import _ from 'lodash'
-import React from 'react'
-import BusyIndicator from './busyIndicator.jsx'
-import {Link} from 'react-router'
-import setWindowTitle from '../utilities/setWindowTitle'
-import ajax from '../utilities/ajax'
-import sanitiseHtml from 'sanitize-html'
-import auth from '../flux/auth'
-import Modal from './modal.jsx'
-import Promise from 'bluebird'
-import appInfo from '../../appInfo.json'
-import processUserHtml from '../utilities/processUserHtml'
+const _ = require('lodash')
+const React = require('react')
+const BusyIndicator = require('./busyIndicator.jsx')
+const {Link} = require('react-router')
+const setWindowTitle = require('../utilities/setWindowTitle')
+const ajax = require('../utilities/ajax')
+const sanitiseHtml = require('sanitize-html')
+const auth = require('../flux/auth')
+const Modal = require('./modal.jsx')
+const Promise = require('bluebird')
+const appInfo = require('../../appInfo.json')
+const processUserHtml = require('../utilities/processUserHtml')
 
 class BlogPost extends React.Component {
   constructor(props) {
@@ -683,4 +683,4 @@ class BlogPost extends React.Component {
 
 }
 
-export default BlogPost
+module.exports = BlogPost

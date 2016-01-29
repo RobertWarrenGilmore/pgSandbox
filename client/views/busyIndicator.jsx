@@ -1,5 +1,5 @@
 'use strict'
-import React from 'react'
+const React = require('react')
 
 const BusyIndicator = (props) => (
   <div className='busyIndicator'>
@@ -7,4 +7,4 @@ const BusyIndicator = (props) => (
   </div>
 )
 
-export default BusyIndicator
+module.exports = BusyIndicator

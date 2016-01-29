@@ -1,9 +1,9 @@
 'use strict'
-import request from 'request'
-import Promise from 'bluebird'
-import _ from 'lodash'
+const request = require('request')
+const Promise = require('bluebird')
+const _ = require('lodash')
 
-export default function (options) {
+module.exports = function (options) {
   return new Promise(function (resolve, reject, onCancel) {
     const optionsClone = _.cloneDeep(options)
     if (optionsClone.auth && optionsClone.auth.emailAddress) {

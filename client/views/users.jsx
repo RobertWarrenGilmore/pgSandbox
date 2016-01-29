@@ -1,12 +1,12 @@
 'use strict'
-import _ from 'lodash'
-import React from 'react'
-import {Link} from 'react-router'
-import BusyIndicator from './busyIndicator.jsx'
-import appScroll from '../utilities/appScroll'
-import ajax from '../utilities/ajax'
-import auth from '../flux/auth'
-import setWindowTitle from '../utilities/setWindowTitle'
+const _ = require('lodash')
+const React = require('react')
+const {Link} = require('react-router')
+const BusyIndicator = require('./busyIndicator.jsx')
+const appScroll = require('../utilities/appScroll')
+const ajax = require('../utilities/ajax')
+const auth = require('../flux/auth')
+const setWindowTitle = require('../utilities/setWindowTitle')
 
 class Users extends React.Component {
   constructor(props) {
@@ -32,7 +32,7 @@ class Users extends React.Component {
   }
   // Are we redirecting after input or waiting until the user manually clicks "apply"?
   _useManualApply() {
-    // Borrowed from rackt/history/modules/DOMUtils.supportsHistory
+    // Borrowed = require(rackt/history/modules/DOMUtils.supportsHistory
     const ua = navigator.userAgent
     if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) {
       return true
@@ -75,9 +75,9 @@ class Users extends React.Component {
       return Promise.resolve()
     }
   }
-  // Read the search parameters from the controls and use them to construct the working query.
+  // Read the search parameters = require(the controls and use them to construct the working query.
   _updateWorkingQuery() {
-    // Collect the search parameters from the controls.
+    // Collect the search parameters = require(the controls.
     let parameters = {
       givenName: this.refs.givenName.value,
       familyName: this.refs.familyName.value,
@@ -128,7 +128,7 @@ class Users extends React.Component {
     if (this.state.queryUpdateTimeout) {
       clearTimeout(this.state.queryUpdateTimeout)
     }
-    // If the valid query differs from the supplied query, redirect to it.
+    // If the valid query differs = require(the supplied query, redirect to it.
     if (delayed) {
       // Delay the query update to one second after the most recent edit.
       let queryUpdateTimeout = setTimeout(doRedirect, 500)
@@ -137,7 +137,7 @@ class Users extends React.Component {
       doRedirect()
     }
   }
-  // Initiate a search from the URL query.
+  // Initiate a search = require(the URL query.
   _doSearch(offset) {
     if (this.state.runningRequest) {
       this.state.runningRequest.cancel()
@@ -354,4 +354,4 @@ const Entry = (props) => {
   )
 }
 
-export default Users
+module.exports = Users

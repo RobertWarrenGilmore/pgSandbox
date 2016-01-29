@@ -1,8 +1,8 @@
 'use strict'
-import React from 'react'
-import {Link} from 'react-router'
-import setWindowTitle from '../utilities/setWindowTitle'
-import auth from '../flux/auth'
+const React = require('react')
+const {Link} = require('react-router')
+const setWindowTitle = require('../utilities/setWindowTitle')
+const auth = require('../flux/auth')
 
 class LogIn extends React.Component {
   constructor(props) {
@@ -86,4 +86,4 @@ class LogIn extends React.Component {
   }
 }
 
-export default LogIn
+module.exports = LogIn

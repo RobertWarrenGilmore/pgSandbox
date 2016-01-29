@@ -1,6 +1,6 @@
 'use strict'
 
-export default class {
+module.exports = class Emitter {
   constructor() {
     this.listeners = []
   }

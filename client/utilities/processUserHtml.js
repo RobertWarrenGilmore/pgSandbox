@@ -1,8 +1,8 @@
 'use strict'
-import marked from 'marked'
-import sanitiseHtml from 'sanitize-html'
+const marked = require('marked')
+const sanitiseHtml = require('sanitize-html')
 
-export default function (content, options) {
+module.exports = function (content, options) {
   options = options || {}
   const markdown = (options.markdown === undefined) ? true : !!options.markdown
   const sanitise = (options.sanitise === undefined) ? true : !!options.sanitise

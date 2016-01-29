@@ -1,13 +1,13 @@
 'use strict'
-import _ from 'lodash'
-import React from 'react'
-import {Link} from 'react-router'
-import BusyIndicator from './busyIndicator.jsx'
-import setWindowTitle from '../utilities/setWindowTitle'
-import appScroll from '../utilities/appScroll'
-import ajax from '../utilities/ajax'
-import auth from '../flux/auth'
-import processUserHtml from '../utilities/processUserHtml'
+const _ = require('lodash')
+const React = require('react')
+const {Link} = require('react-router')
+const BusyIndicator = require('./busyIndicator.jsx')
+const setWindowTitle = require('../utilities/setWindowTitle')
+const appScroll = require('../utilities/appScroll')
+const ajax = require('../utilities/ajax')
+const auth = require('../flux/auth')
+const processUserHtml = require('../utilities/processUserHtml')
 
 class BlogSearch extends React.Component {
   constructor(props) {
@@ -83,12 +83,12 @@ class BlogSearch extends React.Component {
     let navigate = this.props.history[replace
         ? 'replaceState'
         : 'pushState']
-    // If the valid query differs from the supplied query, redirect to it.
+    // If the valid query differs = require(the supplied query, redirect to it.
     if (!_.isEqual(query, validQuery)) {
       navigate(null, this.props.location.pathname, validQuery)
     }
   }
-  // Initiate a search from the URL query.
+  // Initiate a search = require(the URL query.
   _doSearch(offset) {
     if (this.state.runningRequest) {
       this.state.runningRequest.cancel()
@@ -259,4 +259,4 @@ const Entry = (props) => {
   )
 }
 
-export default BlogSearch
+module.exports = BlogSearch

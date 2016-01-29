@@ -1,11 +1,11 @@
 'use strict'
-import appInfo from '../../appInfo.json'
-import React from 'react'
-import {Link, IndexLink} from 'react-router'
-import setWindowTitle from '../utilities/setWindowTitle'
-import classnames from 'classnames'
-import auth from '../flux/auth'
-import ajax from '../utilities/ajax'
+const appInfo = require('../../appInfo.json')
+const React = require('react')
+const {Link, IndexLink} = require('react-router')
+const setWindowTitle = require('../utilities/setWindowTitle')
+const classnames = require('classnames')
+const auth = require('../flux/auth')
+const ajax = require('../utilities/ajax')
 
 class App extends React.Component {
   constructor(props) {
@@ -138,4 +138,4 @@ class App extends React.Component {
   }
 }
 
-export default App
+module.exports = App

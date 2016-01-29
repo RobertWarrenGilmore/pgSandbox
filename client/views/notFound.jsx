@@ -1,6 +1,6 @@
 'use strict'
-import React from 'react'
-import setWindowTitle from '../utilities/setWindowTitle'
+const React = require('react')
+const setWindowTitle = require('../utilities/setWindowTitle')
 
 class NotFound extends React.Component {
   constructor(props) {
@@ -26,4 +26,4 @@ class NotFound extends React.Component {
   }
 }
 
-export default NotFound
+module.exports = NotFound

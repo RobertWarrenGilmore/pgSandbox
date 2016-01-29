@@ -1,7 +1,7 @@
 'use strict'
-import React from 'react'
-import ajax from '../utilities/ajax'
-import setWindowTitle from '../utilities/setWindowTitle'
+const React = require('react')
+const ajax = require('../utilities/ajax')
+const setWindowTitle = require('../utilities/setWindowTitle')
 
 class SetPassword extends React.Component{
   constructor(props) {
@@ -127,4 +127,4 @@ class SetPassword extends React.Component{
   }
 }
 
-export default SetPassword
+module.exports = SetPassword
