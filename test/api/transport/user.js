@@ -1,3 +1,4 @@
+'use strict';
 var Promise = require('bluebird');
 var assert = require('assert');
 var ajax = require('../../../client/utilities/ajax');

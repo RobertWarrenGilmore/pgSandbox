@@ -1,3 +1,4 @@
+'use strict';
 var _ = require('lodash');
 var authenticatedTransaction = require('./utilities/authenticatedTransaction');
 var AuthorisationError = require('../errors/authorisationError');

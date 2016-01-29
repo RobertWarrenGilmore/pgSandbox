@@ -1,3 +1,4 @@
+'use strict';
 var authRouter = require('./auth');
 var infoPageRouter = require('./infoPage');
 var blogPostRouter = require('./blogPost');

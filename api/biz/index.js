@@ -1,3 +1,4 @@
+'use strict';
 var auth = require('./auth');
 var infoPage = require('./infoPage');
 var blogPost = require('./blogPost');

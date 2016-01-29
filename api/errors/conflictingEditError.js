@@ -1,3 +1,4 @@
+'use strict';
 function ConflictingEditError(message) {
   Error.call(this);
   this.name = this.constructor.name;

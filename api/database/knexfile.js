@@ -1,3 +1,4 @@
+'use strict';
 /**
  * This file provides database configuration parameters for Knex.
  */

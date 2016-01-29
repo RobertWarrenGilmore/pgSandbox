@@ -1,3 +1,4 @@
+'use strict';
 var React = require('react');
 var TitleMixin = require('./titleMixin');
 var ajax = require('../utilities/ajax');

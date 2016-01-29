@@ -1,3 +1,4 @@
+'use strict';
 var _ = require('lodash');
 var AuthorisationError = require('../errors/authorisationError');
 var NoSuchResourceError = require('../errors/noSuchResourceError');

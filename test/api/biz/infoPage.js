@@ -1,3 +1,4 @@
+'use strict';
 var _ = require('lodash');
 var assert = require('assert');
 var Promise = require('bluebird');

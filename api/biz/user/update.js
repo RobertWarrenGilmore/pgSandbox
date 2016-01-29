@@ -1,3 +1,4 @@
+'use strict';
 var authenticatedTransaction = require('../utilities/authenticatedTransaction');
 var escapeForLike = require('../utilities/escapeForLike');
 var crypto = require('./crypto');

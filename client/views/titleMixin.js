@@ -1,3 +1,4 @@
+'use strict';
 var appInfo = require('../../appInfo.json');
 
 var TitleMixin = function (initialTitle) {

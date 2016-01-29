@@ -1,3 +1,4 @@
+'use strict';
 var nodemailer = require('nodemailer');
 var sparkPostTransport = require('nodemailer-sparkpost-transport');
 

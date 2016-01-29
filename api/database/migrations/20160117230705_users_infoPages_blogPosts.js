@@ -1,3 +1,4 @@
+'use strict';
 /**
  * Add Users, info pages, and blog posts.
  */

@@ -1,3 +1,4 @@
+'use strict';
 function getElements() {
   return [document, document.getElementById('appContainer').children[0]];
 }

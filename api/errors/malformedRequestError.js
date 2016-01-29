@@ -1,3 +1,4 @@
+'use strict';
 function MalformedRequestError(message) {
   Error.call(this);
   this.name = this.constructor.name;

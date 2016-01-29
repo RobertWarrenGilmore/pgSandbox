@@ -28,7 +28,9 @@
     "url": "https://github.com/RobertWarrenGilmore/pgSandbox/issues"
   },
   "devDependencies": {
+    "babel-eslint": "^4.1.6",
     "eslint": "^1.5.1",
+    "eslint-plugin-babel": "^3.0.0",
     "eslint-plugin-react": "^2.6.4",
     "istanbul": "^0.3.22",
     "mocha": "^2.3.3",

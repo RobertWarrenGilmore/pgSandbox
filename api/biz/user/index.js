@@ -1,3 +1,4 @@
+'use strict';
 var create = require('./create');
 var read = require('./read');
 var update = require('./update');

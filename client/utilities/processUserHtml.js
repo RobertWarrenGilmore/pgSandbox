@@ -1,3 +1,4 @@
+'use strict';
 var marked = require('marked');
 var sanitiseHtml = require('sanitize-html');
 

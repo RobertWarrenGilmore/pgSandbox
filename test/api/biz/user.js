@@ -1,3 +1,4 @@
+'use strict';
 var knex = require('../../../api/database/knex');
 var assert = require('assert');
 var sinon = require('sinon');

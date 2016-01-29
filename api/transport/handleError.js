@@ -1,3 +1,4 @@
+'use strict';
 module.exports = function (res) {
   return function handleError(err) {
     if (err.messages) {

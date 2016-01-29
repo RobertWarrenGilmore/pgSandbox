@@ -1,6 +1,8 @@
 {
+  "parser": "babel-eslint",
   "plugins": [
-    "react"
+    "react",
+    "babel"
   ],
   "ecmaFeatures": {
     "jsx": true
@@ -15,7 +17,7 @@
     "no-trailing-spaces": 1,
     "comma-dangle": 1,
     "brace-style": [1, "1tbs"],
-    "strict": [0, "function"],
+    "strict": [2, "global"],
     "no-underscore-dangle": 0,
     "no-undef": 1,
     "no-shadow": 1,

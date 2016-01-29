@@ -1,3 +1,4 @@
+'use strict';
 var React = require('react');
 var BusyIndicator = require('./busyIndicator.jsx');
 var ajax = require('../utilities/ajax');

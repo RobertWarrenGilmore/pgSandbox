@@ -1,3 +1,4 @@
+'use strict';
 function AuthenticationError(message) {
   Error.call(this);
   this.name = this.constructor.name;

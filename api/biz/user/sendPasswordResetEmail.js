@@ -1,3 +1,4 @@
+'use strict';
 var appHost = require('../../../appInfo.json').host;
 
 function uri(id) {
