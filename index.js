@@ -7,7 +7,6 @@ var https = require('https');
 var http = require('http');
 var api = require('./api');
 var browserify = require('browserify');
-var reactify = require('reactify');
 var uglifyify = require('uglifyify');
 var sass = require('node-sass');
 var knex = require('./api/database/knex');
@@ -53,7 +52,7 @@ app.use(function (req, res, next) {
 var b = browserify({
   debug: (process.env.NODE_ENV !== 'production')
 });
-b.transform(reactify);
+b.transform('babelify', {presets: ['es2015', 'react']});
 if (process.env.NODE_ENV === 'production') {
   b.transform({
     global: true,

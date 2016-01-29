@@ -35,6 +35,9 @@
     "sinon": "^1.17.1"
   },
   "dependencies": {
+    "babel-preset-es2015": "^6.3.13",
+    "babel-preset-react": "^6.3.13",
+    "babelify": "^7.2.0",
     "basic-auth": "^1.0.3",
     "bcrypt": "^0.8.5",
     "bluebird": "^3.0.1",
@@ -57,7 +60,6 @@
     "react": "^0.14.0",
     "react-dom": "^0.14.0",
     "react-router": "^1.0.0-rc3",
-    "reactify": "^1.1.1",
     "request": "^2.65.0",
     "sanitize-html": "^1.11.2",
     "uglifyify": "^3.0.1"
