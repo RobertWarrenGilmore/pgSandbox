@@ -1,25 +1,26 @@
 'use strict';
-var React = require('react');
-var ReactDom = require('react-dom');
-var ReactRouter = require('react-router');
-var Router = ReactRouter.Router;
-var Route = ReactRouter.Route;
-var IndexRoute = ReactRouter.IndexRoute;
-var Redirect = ReactRouter.Redirect;
-var createBrowserHistory = require('history/lib/createBrowserHistory');
-var auth = require('./flux/auth');
-var Promise = require('bluebird');
-var App = require('./views/app.jsx');
-var InfoPage = require('./views/infoPage.jsx');
-var LogIn = require('./views/logIn.jsx');
-var Register = require('./views/register.jsx');
-var ForgotPassword = require('./views/forgotPassword.jsx');
-var SetPassword = require('./views/setPassword.jsx');
-var Users = require('./views/users.jsx');
-var User = require('./views/user.jsx');
-var BlogPost = require('./views/blogPost.jsx');
-var BlogSearch = require('./views/blogSearch.jsx');
-var NotFound = require('./views/notFound.jsx');
+import 'babel-polyfill';
+const React = require('react');
+const ReactDom = require('react-dom');
+const ReactRouter = require('react-router');
+const Router = ReactRouter.Router;
+const Route = ReactRouter.Route;
+const IndexRoute = ReactRouter.IndexRoute;
+const Redirect = ReactRouter.Redirect;
+const createBrowserHistory = require('history/lib/createBrowserHistory');
+const auth = require('./flux/auth');
+const Promise = require('bluebird');
+import App from './views/app.jsx';
+const InfoPage = require('./views/infoPage.jsx');
+const LogIn = require('./views/logIn.jsx');
+const Register = require('./views/register.jsx');
+const ForgotPassword = require('./views/forgotPassword.jsx');
+const SetPassword = require('./views/setPassword.jsx');
+const Users = require('./views/users.jsx');
+const User = require('./views/user.jsx');
+const BlogPost = require('./views/blogPost.jsx');
+const BlogSearch = require('./views/blogSearch.jsx');
+const NotFound = require('./views/notFound.jsx');
 
 Promise.config({
   cancellation: true
@@ -45,7 +46,7 @@ function logOut(nextState, replaceState) {
 
 document.addEventListener('DOMContentLoaded', function() {
   auth.resume().then(function () {
-    var router = (
+    const router = (
       <Router history={createBrowserHistory()}>
         <Route component={App} path='/'>
 
@@ -79,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </Route>
       </Router>
     );
-    var element = document.getElementById('appContainer');
+    const element = document.getElementById('appContainer');
     ReactDom.render(router, element);
   });
 });

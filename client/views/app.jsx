@@ -1,24 +1,26 @@
 'use strict';
-var appInfo = require('../../appInfo.json');
-var React = require('react');
-var ReactRouter = require('react-router');
-var Link = ReactRouter.Link;
-var IndexLink = ReactRouter.IndexLink;
-var TitleMixin = require('./titleMixin');
-var classnames = require('classnames');
-var auth = require('../flux/auth');
-var ajax = require('../utilities/ajax');
+import appInfo from '../../appInfo.json';
+import React from 'react';
+import {Link, IndexLink} from 'react-router';
+import setWindowTitle from '../utilities/setWindowTitle';
+import classnames from 'classnames';
+import auth from '../flux/auth';
+import ajax from '../utilities/ajax';
 
-var App = React.createClass({
-  mixins: [TitleMixin()],
-  getInitialState: function() {
-    return {
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
       authCredentials: auth.getCredentials(),
       authUser: null,
       hamburgerExpanded: false
     };
-  },
-  _loadAuthUser: function () {
+    this._loadAuthUser = this._loadAuthUser.bind(this);
+    this._authListener = this._authListener.bind(this);
+    this._onHamburgerClick = this._onHamburgerClick.bind(this);
+    this._onNavClick = this._onNavClick.bind(this);
+  }
+  _loadAuthUser() {
     var credentials = this.state.authCredentials;
     if (credentials) {
       var r = ajax({
@@ -45,23 +47,27 @@ var App = React.createClass({
         authUser: null
       });
     }
-  },
-  _authListener: function() {
-    var self = this;
+  }
+  _authListener() {
+    let self = this;
     this.setState({
       authCredentials: auth.getCredentials()
     }, function () {
       self._loadAuthUser();
     });
-  },
-  componentWillMount: function() {
+  }
+  componentWillMount() {
     auth.listen(this._authListener);
     this._loadAuthUser();
-  },
-  componentWillUnmount: function() {
+  }
+  componentDidMount() {
+    setWindowTitle();
+  }
+  componentWillUnmount() {
     auth.unlisten(this._authListener);
-  },
-  render: function() {
+    setWindowTitle();
+  }
+  render() {
     var headerNavClasses = classnames({
       hamburgerExpanded: this.state.hamburgerExpanded
     });
@@ -120,17 +126,17 @@ var App = React.createClass({
       </div>
     );
     return result;
-  },
-  _onHamburgerClick: function() {
+  }
+  _onHamburgerClick() {
     this.setState({
       hamburgerExpanded: !this.state.hamburgerExpanded
     });
-  },
-  _onNavClick: function() {
+  }
+  _onNavClick() {
     this.setState({
       hamburgerExpanded: false
     });
   }
-});
+}
 
-module.exports = App;
+export default App;
