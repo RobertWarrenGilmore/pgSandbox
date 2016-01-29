@@ -1,47 +1,47 @@
-'use strict';
-var authenticatedTransaction = require('../utilities/authenticatedTransaction');
-var escapeForLike = require('../utilities/escapeForLike');
-var crypto = require('./crypto');
-var transformOutput = require('./transformOutput');
-var sendPasswordResetEmail = require('./sendPasswordResetEmail');
-var AuthenticationError = require('../../errors/authenticationError');
-var AuthorisationError = require('../../errors/authorisationError');
-var NoSuchResourceError = require('../../errors/noSuchResourceError');
-var validate = require('../../../utilities/validate');
-var vf = validate.funcs;
-var ValidationError = validate.ValidationError;
+'use strict'
+var authenticatedTransaction = require('../utilities/authenticatedTransaction')
+var escapeForLike = require('../utilities/escapeForLike')
+var crypto = require('./crypto')
+var transformOutput = require('./transformOutput')
+var sendPasswordResetEmail = require('./sendPasswordResetEmail')
+var AuthenticationError = require('../../errors/authenticationError')
+var AuthorisationError = require('../../errors/authorisationError')
+var NoSuchResourceError = require('../../errors/noSuchResourceError')
+var validate = require('../../../utilities/validate')
+var vf = validate.funcs
+var ValidationError = validate.ValidationError
 
 module.exports = function (knex, emailer) {
   return function update (args) {
     return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
       // normal, authenticated user update
       if (authUser) {
-        return authenticatedUpdate(authUser, trx, args.params.userId, args.body);
+        return authenticatedUpdate(authUser, trx, args.params.userId, args.body)
 
       // setting password using a password reset key
       } else if (args.body.password) {
-        return anonymousPasswordUpdate(trx, args.params.userId, args.body);
+        return anonymousPasswordUpdate(trx, args.params.userId, args.body)
 
       // generating a new password reset key
       } else if (args.body.passwordResetKey === null) {
-        return anonymousPasswordResetKeyUpdate(emailer, trx, args.body);
+        return anonymousPasswordResetKeyUpdate(emailer, trx, args.body)
 
       // Those are the only options. Otherwise, throw.
       } else {
-        throw new AuthenticationError();
+        throw new AuthenticationError()
       }
     }).then(function (user) {
       if (user instanceof Object) {
-        return JSON.parse(JSON.stringify(user));
+        return JSON.parse(JSON.stringify(user))
       }
-    });
-  };
-};
+    })
+  }
+}
 
 function authenticatedUpdate(authUser, trx, id, newUser) {
   // Reject unauthorised updates.
   if (authUser.id != id && !authUser.admin) {
-    throw new AuthorisationError();
+    throw new AuthorisationError()
   }
 
   // Get the existing user.
@@ -51,9 +51,9 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
     .select()
     .then(function (users) {
       if (!users.length) {
-        throw new NoSuchResourceError();
+        throw new NoSuchResourceError()
       }
-      var oldUser = users[0];
+      var oldUser = users[0]
       return validate(newUser, {
         emailAddress: [
           vf.notNull('The email address cannot be removed.'),
@@ -67,9 +67,9 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
                 .where('emailAddress', 'ilike', escapeForLike(val))
                 .then(function (existingUsers) {
                   if (existingUsers && existingUsers.length && existingUsers[0].id != id) {
-                    throw new ValidationError('That email address is already in use by another user.');
+                    throw new ValidationError('That email address is already in use by another user.')
                   }
-                });
+                })
           }
         ],
         password: [
@@ -81,8 +81,8 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
         givenName: [
           function (val) {
             if (oldUser.givenName) {
-              vf.notNull('The first name cannot be removed.')(val);
-              vf.notEmpty('The first name cannot be removed.')(val);
+              vf.notNull('The first name cannot be removed.')(val)
+              vf.notEmpty('The first name cannot be removed.')(val)
             }
           },
           vf.string('The first name must be a string.'),
@@ -91,8 +91,8 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
         familyName: [
           function (val) {
             if (oldUser.familyName) {
-              vf.notNull('The last name cannot be removed.')(val);
-              vf.notEmpty('The last name cannot be removed.')(val);
+              vf.notNull('The last name cannot be removed.')(val)
+              vf.notEmpty('The last name cannot be removed.')(val)
             }
           },
           vf.string('The last name must be a string.'),
@@ -105,46 +105,46 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
         authorisedToBlog: [
           function (val) {
             if (authUser.admin) {
-              vf.notNull('The user must be set either able or unable to blog.');
-              vf.boolean('The user must be set either able or unable to blog.');
+              vf.notNull('The user must be set either able or unable to blog.')
+              vf.boolean('The user must be set either able or unable to blog.')
             } else if (val !== undefined) {
-              throw new ValidationError('You are not authorised to change a user\'s blog privileges.');
+              throw new ValidationError('You are not authorised to change a user\'s blog privileges.')
             }
           }
         ],
         admin: [
           function (val) {
             if (authUser.admin) {
-              vf.notNull('The user must be set either admin or not.');
-              vf.boolean('The user must be set either admin or not.');
+              vf.notNull('The user must be set either admin or not.')
+              vf.boolean('The user must be set either admin or not.')
             } else if (val !== undefined) {
-              throw new ValidationError('You are not authorised to change a user\'s admin privileges.');
+              throw new ValidationError('You are not authorised to change a user\'s admin privileges.')
             }
           }
         ]
-      }).thenReturn(oldUser);
+      }).thenReturn(oldUser)
     }).then(function (oldUser) {
 
       // Handle the password specially, by hashing it.
       if (newUser.password) {
-        newUser.passwordHash = crypto.hashPassword(newUser.password);
-        newUser.passwordResetKeyHash = null;
+        newUser.passwordHash = crypto.hashPassword(newUser.password)
+        newUser.passwordResetKeyHash = null
       }
-      delete newUser.password;
+      delete newUser.password
 
       // Do the update.
       return trx
         .from('users')
         .where('id', id)
-        .update(newUser);
+        .update(newUser)
     }).then(function () {
       return trx
         .from('users')
         .where('id', id)
-        .select();
+        .select()
     }).then(function (rows) {
-      return transformOutput(rows, authUser, Date.now())[0];
-    });
+      return transformOutput(rows, authUser, Date.now())[0]
+    })
 }
 
 function anonymousPasswordUpdate(trx, id, newUser) {
@@ -156,9 +156,9 @@ function anonymousPasswordUpdate(trx, id, newUser) {
     .select()
     .then(function (users) {
       if (!users.length) {
-        throw new NoSuchResourceError();
+        throw new NoSuchResourceError()
       }
-      var oldUser = users[0];
+      var oldUser = users[0]
 
       // Reject attributes other than passwordResetKey and password.
       return validate(newUser, {
@@ -173,12 +173,12 @@ function anonymousPasswordUpdate(trx, id, newUser) {
           vf.string('The password reset key must be a string.'),
           vf.matchesRegex('The password reset key must be thirty alphanumeric characters.', /^[A-Za-z0-9]{30}$/)
         ]
-      }).thenReturn(oldUser);
+      }).thenReturn(oldUser)
     }).then(function (oldUser) {
 
       // Verify the provided password reset key against the hash in the existing user.
       if (!newUser.passwordResetKey || !oldUser.passwordResetKeyHash || !crypto.verifyPasswordResetKey(newUser.passwordResetKey, oldUser.passwordResetKeyHash)) {
-        throw new AuthenticationError();
+        throw new AuthenticationError()
       }
 
       // Do the update.
@@ -188,21 +188,21 @@ function anonymousPasswordUpdate(trx, id, newUser) {
         .update({
           passwordHash: crypto.hashPassword(newUser.password),
           passwordResetKeyHash: null
-        });
+        })
     }).then(function () {
       return trx
         .from('users')
         .where('id', id)
-        .select();
+        .select()
     }).then(function () {
-      return null;
-    });
+      return null
+    })
 }
 
 function anonymousPasswordResetKeyUpdate(emailer, trx, body) {
 
   // Generate a key.
-  var key = crypto.generatePasswordResetKey();
+  var key = crypto.generatePasswordResetKey()
 
   // Get the existing user.
   return trx
@@ -211,9 +211,9 @@ function anonymousPasswordResetKeyUpdate(emailer, trx, body) {
     .select()
     .then(function (users) {
       if (!users.length) {
-        throw new NoSuchResourceError();
+        throw new NoSuchResourceError()
       }
-      var oldUser = users[0];
+      var oldUser = users[0]
 
       return validate(body, {
         passwordResetKey: [
@@ -224,7 +224,7 @@ function anonymousPasswordResetKeyUpdate(emailer, trx, body) {
           vf.notUndefined('You must provide a user\'s email address to perform a password reset.'),
           vf.emailAddress('The email address must be, well, an email address.')
         ]
-      }).thenReturn(oldUser);
+      }).thenReturn(oldUser)
     }).then(function () {
 
       // Set the key hash.
@@ -235,24 +235,24 @@ function anonymousPasswordResetKeyUpdate(emailer, trx, body) {
           passwordResetKeyHash: key.hash
         }).returning(['id', 'emailAddress']).then(function (rows) {
           if (rows.length === 0) {
-            throw new NoSuchResourceError();
+            throw new NoSuchResourceError()
           }
           return {
             id: rows[0].id,
             key: key.key
-          };
-        });
+          }
+        })
 
     // Send the password reset email. Note that the transaction can still fail at this point.
     }).tap(function (result) {
-      return sendPasswordResetEmail(emailer, body.emailAddress, result.id, result.key);
+      return sendPasswordResetEmail(emailer, body.emailAddress, result.id, result.key)
 
     }).then(function (result) {
       return trx
         .from('users')
         .where('id', result.id)
-        .select();
+        .select()
     }).then(function () {
-      return null;
-    });
+      return null
+    })
 }

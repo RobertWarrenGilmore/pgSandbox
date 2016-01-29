@@ -1,6 +1,6 @@
-'use strict';
-var React = require('react');
-var TitleMixin = require('./titleMixin');
+'use strict'
+var React = require('react')
+var TitleMixin = require('./titleMixin')
 
 var NotFound = React.createClass({
   mixins: [
@@ -16,8 +16,8 @@ var NotFound = React.createClass({
           That page wasn't found.
         </p>
       </div>
-    );
+    )
   }
-});
+})
 
-module.exports = NotFound;
+module.exports = NotFound

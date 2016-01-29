@@ -1,12 +1,12 @@
-'use strict';
-var React = require('react');
-var TitleMixin = require('./titleMixin');
-var BusyIndicator = require('./busyIndicator.jsx');
-var auth = require('../flux/auth');
-var ajax = require('../utilities/ajax');
-var validate = require('../../utilities/validate');
-var vf = validate.funcs;
-var ValidationError = validate.ValidationError;
+'use strict'
+var React = require('react')
+var TitleMixin = require('./titleMixin')
+var BusyIndicator = require('./busyIndicator.jsx')
+var auth = require('../flux/auth')
+var ajax = require('../utilities/ajax')
+var validate = require('../../utilities/validate')
+var vf = validate.funcs
+var ValidationError = validate.ValidationError
 
 var User = React.createClass({
 
@@ -23,91 +23,91 @@ var User = React.createClass({
       error: null,
       runningRequest: null,
       exists: null
-    };
+    }
   },
 
   _loadAuthUser: function () {
-    var credentials = auth.getCredentials();
+    var credentials = auth.getCredentials()
     if (credentials) {
       var r = ajax({
         method: 'GET',
         uri: '/api/users/' + credentials.id,
         json: true,
         auth: credentials
-      });
+      })
       this.setState({
         runningRequest: r // Hold on to the Ajax promise in case we need to cancel it later.
-      });
-      var self = this;
+      })
+      var self = this
       return r.then(function (response) {
         if (response.statusCode === 200) {
           self.setState({
             authUser: response.body
-          });
+          })
         } else {
           self.setState({
             error: response.body
-          });
+          })
         }
-        return null;
+        return null
       }).catch(function (error) {
         self.setState({
           error: error.message
-        });
-      });
+        })
+      })
     } else {
-      return Promise.resolve();
+      return Promise.resolve()
     }
   },
 
   _loadUser: function (userId) {
-    this._cancelRequest();
+    this._cancelRequest()
     var r = ajax({
       method: 'GET',
       uri: '/api/users/' + userId,
       json: true,
       auth: auth.getCredentials()
-    });
+    })
     this.setState({
       runningRequest: r, // Hold on to the Ajax promise in case we need to cancel it later.
       error: null,
       exists: null
-    });
-    this.setTitle('user');
-    var self = this;
+    })
+    this.setTitle('user')
+    var self = this
     return r.then(function (response) {
       if (response.statusCode === 200) {
         self.setState({
           user: response.body,
           exists: true
-        });
+        })
         if (response.body.title) {
-          self.setTitle(response.body.givenName + ' ' + response.body.familyName);
+          self.setTitle(response.body.givenName + ' ' + response.body.familyName)
         }
       } else {
         if (response.statusCode === 404) {
           self.setState({
             exists: false
-          });
+          })
         }
         self.setState({
           error: response.body
-        });
+        })
       }
-      return null;
+      return null
     }).catch(function (error) {
       self.setState({
         error: error.message
-      });
+      })
     }).finally(function () {
       self.setState({
         runningRequest: null
-      });
-    });
+      })
+    })
   },
 
   _saveUser: function() {
-    this._cancelRequest();
+    this._cancelRequest()
     var user = {
       emailAddress: this.state.editingUser.emailAddress,
       givenName: this.state.editingUser.givenName,
@@ -115,61 +115,61 @@ var User = React.createClass({
       password: this.state.editingUser.password,
       authorisedToBlog: this.state.editingUser.authorisedToBlog,
       admin: this.state.editingUser.admin
-    };
+    }
     var r = ajax ({
       method: 'PUT',
       uri: '/api/users/' + this.props.params.userId,
       body: user,
       json: true,
       auth: auth.getCredentials()
-    });
+    })
     this.setState({
       runningRequest: r,
       fieldErrors: null,
       error: null
-    });
-    var self = this;
+    })
+    var self = this
     return r.then(function (response) {
       if (response.statusCode === 200) {
         self.setState({
           editingUser: response.body,
           user: response.body,
           exists: true
-        });
-        self.setTitle(response.body.givenName + ' ' + response.body.familyName);
-        var userIsSelf = self.state.authUser && response.body.id === self.state.authUser.id;
+        })
+        self.setTitle(response.body.givenName + ' ' + response.body.familyName)
+        var userIsSelf = self.state.authUser && response.body.id === self.state.authUser.id
         if (userIsSelf) {
-          var oldPassword = auth.getCredentials().password;
-          var newPassword = user.password || oldPassword;
+          var oldPassword = auth.getCredentials().password
+          var newPassword = user.password || oldPassword
           auth.logIn({
             emailAddress: user.emailAddress,
             password: newPassword
-          });
+          })
           self.setState({
             authUser: response.body
-          });
+          })
         }
       } else {
         if (response.body.messages) {
           self.setState({
             fieldErrors: response.body.messages
-          });
+          })
         } else {
           self.setState({
             error: response.body
-          });
+          })
         }
       }
-      return null;
+      return null
     }).catch(function(error) {
       self.setState({
         error: error.message
-      });
+      })
     }).finally(function () {
       self.setState({
         runningRequest: null
-      });
-    });
+      })
+    })
   },
 
   _revertUser: function () {
@@ -177,24 +177,24 @@ var User = React.createClass({
       editingUser: this.state.user,
       error: null,
       fieldErrors: null
-    });
+    })
   },
 
   _enterEditMode: function () {
     this.setState({
       error: null,
       editingUser: this.state.user
-    });
+    })
   },
 
   _exitEditMode: function () {
     this.setState({
       editingUser: null
-    });
+    })
   },
 
   _validateFields: function () {
-    var self = this;
+    var self = this
     return validate(this.state.editingUser, {
       emailAddress: [
         vf.emailAddress('The email address must be, well, an email address.')
@@ -202,8 +202,8 @@ var User = React.createClass({
       givenName: [
         function (val) {
           if (self.state.user.givenName) {
-            vf.notNull('The first name cannot be removed.')(val);
-            vf.notEmpty('The first name cannot be removed.')(val);
+            vf.notNull('The first name cannot be removed.')(val)
+            vf.notEmpty('The first name cannot be removed.')(val)
           }
         },
         vf.string('The first name must be a string.'),
@@ -212,8 +212,8 @@ var User = React.createClass({
       familyName: [
         function (val) {
           if (self.state.user.familyName) {
-            vf.notNull('The last name cannot be removed.')(val);
-            vf.notEmpty('The last name cannot be removed.')(val);
+            vf.notNull('The last name cannot be removed.')(val)
+            vf.notEmpty('The last name cannot be removed.')(val)
           }
         },
         vf.string('The last name must be a string.'),
@@ -226,7 +226,7 @@ var User = React.createClass({
       repeatPassword: [
         function (val) {
           if (val !== self.state.editingUser.password) {
-            throw new ValidationError('The passwords must match.');
+            throw new ValidationError('The passwords must match.')
           }
         }
       ],
@@ -239,17 +239,17 @@ var User = React.createClass({
     }).then(function () {
       self.setState({
         fieldErrors: null
-      });
+      })
     }).catch(function (err) {
       // Put the error messages in state.
       self.setState({
         fieldErrors: err.messages
-      });
-    });
+      })
+    })
   },
 
   _updateEditingUser: function () {
-    var self = this;
+    var self = this
     this.setState({
       editingUser: {
         emailAddress: this.refs.emailAddress.value,
@@ -261,45 +261,45 @@ var User = React.createClass({
         admin: this.refs.admin ? this.refs.admin.checked : undefined
       }
     }, function () {
-      self._validateFields();
-    });
+      self._validateFields()
+    })
   },
 
   _cancelRequest: function () {
     // Cancel any Ajax that's currently running.
     if (this.state.runningRequest) {
-      this.state.runningRequest.cancel();
+      this.state.runningRequest.cancel()
     }
   },
 
   componentWillMount: function() {
-    var self = this;
+    var self = this
     this._loadAuthUser().then(function () {
-      return self._loadUser(self.props.params.userId);
-    });
+      return self._loadUser(self.props.params.userId)
+    })
   },
 
   componentWillReceiveProps: function(nextProps) {
-    var userIdChanged = nextProps.params.userId !== this.props.params.userId;
+    var userIdChanged = nextProps.params.userId !== this.props.params.userId
     if (userIdChanged) {
       // TODO Confirm leave without saving changes if in edit mode and unsaved.
-      this._exitEditMode();
-      this._loadUser(nextProps.params.userId);
+      this._exitEditMode()
+      this._loadUser(nextProps.params.userId)
     }
   },
 
   componentWillUnmount: function() {
-    this._cancelRequest();
+    this._cancelRequest()
   },
 
   render: function() {
-    var result;
-    var userIsHidden = this.state.user && (this.state.authUser === null || this.state.user.id !== this.state.authUser.id) && !this.state.user.active;
+    var result
+    var userIsHidden = this.state.user && (this.state.authUser === null || this.state.user.id !== this.state.authUser.id) && !this.state.user.active
 
     // editor layout
     if (this.state.editingUser) {
-      var user = this.state.editingUser;
-      var self = this;
+      var user = this.state.editingUser
+      var self = this
       function fieldErrorBox(fieldName) {
         if (self.state.fieldErrors
           && self.state.fieldErrors[fieldName]) {
@@ -307,9 +307,9 @@ var User = React.createClass({
             <p className='error'>
               {self.state.fieldErrors[fieldName].join(' ')}
             </p>
-          );
+          )
         } else {
-          return null;
+          return null
         }
       }
       result = (
@@ -320,7 +320,7 @@ var User = React.createClass({
               disabled={!!this.state.runningRequest}
               onClick={this._exitEditMode}>
               <span className='icon-pencil'/>
-              &nbsp;
+              &nbsp
               stop editing
             </button>
           </div>
@@ -424,7 +424,7 @@ var User = React.createClass({
               onClick={this._saveUser}
               className='highlighted'>
               <span className='icon-floppy-disk'/>
-              &nbsp;
+              &nbsp
               save
             </button>
             <button
@@ -432,12 +432,12 @@ var User = React.createClass({
               disabled={!!this.state.runningRequest}
               onClick={this._revertUser}>
               <span className='icon-undo2'/>
-              &nbsp;
+              &nbsp
               revert
             </button>
           </div>
         </div>
-      );
+      )
 
     // busy layout
     } else if (this.state.runningRequest) {
@@ -446,7 +446,7 @@ var User = React.createClass({
           <BusyIndicator/>
           loading
         </div>
-      );
+      )
 
     // error layout
     } else if (this.state.error || userIsHidden || !this.state.exists) {
@@ -456,13 +456,13 @@ var User = React.createClass({
             {this.state.error || 'This user is inactive.'}
           </p>
         </div>
-      );
+      )
 
     // user layout
     } else {
-      var user = this.state.user;
-      var editButton = null;
-      var canEdit = this.state.authUser && (user.id === this.state.authUser.id || !!this.state.authUser.admin);
+      var user = this.state.user
+      var editButton = null
+      var canEdit = this.state.authUser && (user.id === this.state.authUser.id || !!this.state.authUser.admin)
       if (canEdit) {
         editButton = (
           <button
@@ -470,10 +470,10 @@ var User = React.createClass({
             disabled={!!this.state.runningRequest}
             onClick={this._enterEditMode}>
             <span className='icon-pencil'/>
-            &nbsp;
+            &nbsp
             edit
           </button>
-        );
+        )
       }
       result = (
         <div id='user'>
@@ -491,11 +491,11 @@ var User = React.createClass({
             </p>
           ): null}
         </div>
-      );
+      )
     }
 
-    return result;
+    return result
   }
-});
+})
 
-module.exports = User;
+module.exports = User

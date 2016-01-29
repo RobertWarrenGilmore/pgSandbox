@@ -1,9 +1,9 @@
-'use strict';
-var auth = require('./auth');
-var infoPage = require('./infoPage');
-var blogPost = require('./blogPost');
-var user = require('./user');
-var emailer = require('../../utilities/emailer');
+'use strict'
+var auth = require('./auth')
+var infoPage = require('./infoPage')
+var blogPost = require('./blogPost')
+var user = require('./user')
+var emailer = require('../../utilities/emailer')
 
 module.exports = function (knex) {
   return {
@@ -12,5 +12,5 @@ module.exports = function (knex) {
     infoPage: infoPage(knex),
     blogPost: blogPost(knex),
     user: user(knex, emailer)
-  };
-};
+  }
+}

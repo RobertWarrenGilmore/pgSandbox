@@ -1,6 +1,6 @@
-'use strict';
-var _ = require('lodash');
-var isComplete = require('./isComplete');
+'use strict'
+var _ = require('lodash')
+var isComplete = require('./isComplete')
 
 var publicReadableAttributes = [
   'id',
@@ -8,7 +8,7 @@ var publicReadableAttributes = [
   'familyName',
   'active',
   'authorisedToBlog'
-];
+]
 var selfReadableAttributes = [
   'id',
   'givenName',
@@ -16,7 +16,7 @@ var selfReadableAttributes = [
   'active',
   'authorisedToBlog',
   'emailAddress'
-];
+]
 var adminReadableAttributes = [
   'id',
   'givenName',
@@ -25,24 +25,24 @@ var adminReadableAttributes = [
   'authorisedToBlog',
   'emailAddress',
   'admin'
-];
+]
 
 function transformOutput (users, authUser, when) {
   var incompleteOmitted = _.filter(users, function (user) {
-    var authorisedToViewIncomplete = !!authUser && (!!authUser.admin || authUser.id === user.id);
-    return authorisedToViewIncomplete || isComplete(user, when);
-  });
+    var authorisedToViewIncomplete = !!authUser && (!!authUser.admin || authUser.id === user.id)
+    return authorisedToViewIncomplete || isComplete(user, when)
+  })
   return _.map(incompleteOmitted, function (user) {
-    var readableAttributes = publicReadableAttributes;
+    var readableAttributes = publicReadableAttributes
     if (authUser) {
       if (authUser.admin) {
-        readableAttributes = adminReadableAttributes;
+        readableAttributes = adminReadableAttributes
       } else if (authUser.id === user.id) {
-        readableAttributes = selfReadableAttributes;
+        readableAttributes = selfReadableAttributes
       }
     }
-    return _.pick(user, readableAttributes);
-  });
+    return _.pick(user, readableAttributes)
+  })
 }
 
-module.exports = transformOutput;
+module.exports = transformOutput

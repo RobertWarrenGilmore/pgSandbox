@@ -1,76 +1,76 @@
-'use strict';
-import appInfo from '../../appInfo.json';
-import React from 'react';
-import {Link, IndexLink} from 'react-router';
-import setWindowTitle from '../utilities/setWindowTitle';
-import classnames from 'classnames';
-import auth from '../flux/auth';
-import ajax from '../utilities/ajax';
+'use strict'
+import appInfo from '../../appInfo.json'
+import React from 'react'
+import {Link, IndexLink} from 'react-router'
+import setWindowTitle from '../utilities/setWindowTitle'
+import classnames from 'classnames'
+import auth from '../flux/auth'
+import ajax from '../utilities/ajax'
 
 class App extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       authCredentials: auth.getCredentials(),
       authUser: null,
       hamburgerExpanded: false
-    };
-    this._loadAuthUser = this._loadAuthUser.bind(this);
-    this._authListener = this._authListener.bind(this);
-    this._onHamburgerClick = this._onHamburgerClick.bind(this);
-    this._onNavClick = this._onNavClick.bind(this);
+    }
+    this._loadAuthUser = this._loadAuthUser.bind(this)
+    this._authListener = this._authListener.bind(this)
+    this._onHamburgerClick = this._onHamburgerClick.bind(this)
+    this._onNavClick = this._onNavClick.bind(this)
   }
   _loadAuthUser() {
-    var credentials = this.state.authCredentials;
+    var credentials = this.state.authCredentials
     if (credentials) {
       var r = ajax({
         method: 'GET',
         uri: '/api/users/' + credentials.id,
         json: true,
         auth: credentials
-      });
+      })
       this.setState({
         authUser: null,
         runningRequest: r // Hold on to the Ajax promise in case we need to cancel it later.
-      });
-      var self = this;
+      })
+      var self = this
       return r.then(function (response) {
         if (response.statusCode === 200) {
           self.setState({
             authUser: response.body
-          });
+          })
         }
-        return null;
-      }).catch();
+        return null
+      }).catch()
     } else {
       this.setState({
         authUser: null
-      });
+      })
     }
   }
   _authListener() {
-    let self = this;
+    let self = this
     this.setState({
       authCredentials: auth.getCredentials()
     }, function () {
-      self._loadAuthUser();
-    });
+      self._loadAuthUser()
+    })
   }
   componentWillMount() {
-    auth.listen(this._authListener);
-    this._loadAuthUser();
+    auth.listen(this._authListener)
+    this._loadAuthUser()
   }
   componentDidMount() {
-    setWindowTitle();
+    setWindowTitle()
   }
   componentWillUnmount() {
-    auth.unlisten(this._authListener);
-    setWindowTitle();
+    auth.unlisten(this._authListener)
+    setWindowTitle()
   }
   render() {
     var headerNavClasses = classnames({
       hamburgerExpanded: this.state.hamburgerExpanded
-    });
+    })
     var result = (
       <div>
         <header>
@@ -114,7 +114,7 @@ class App extends React.Component {
             <div id='authIndicator'>
               <Link to={'/users/' + this.state.authUser.id}>
                 <span className='icon-user'/>
-                &nbsp;
+                &nbsp
                 {this.state.authUser.givenName} {this.state.authUser.familyName}
               </Link>
             </div>
@@ -124,19 +124,19 @@ class App extends React.Component {
         <footer>
         </footer>
       </div>
-    );
-    return result;
+    )
+    return result
   }
   _onHamburgerClick() {
     this.setState({
       hamburgerExpanded: !this.state.hamburgerExpanded
-    });
+    })
   }
   _onNavClick() {
     this.setState({
       hamburgerExpanded: false
-    });
+    })
   }
 }
 
-export default App;
+export default App

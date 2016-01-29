@@ -1,19 +1,19 @@
-'use strict';
-var marked = require('marked');
-var sanitiseHtml = require('sanitize-html');
+'use strict'
+var marked = require('marked')
+var sanitiseHtml = require('sanitize-html')
 
 module.exports = function processUserHtml(content, options) {
-  options = options || {};
-  var markdown = (options.markdown === undefined) ? true : !!options.markdown;
-  var sanitise = (options.sanitise === undefined) ? true : !!options.sanitise;
-  var inline = (options.inline === undefined) ? false : !!options.inline;
+  options = options || {}
+  var markdown = (options.markdown === undefined) ? true : !!options.markdown
+  var sanitise = (options.sanitise === undefined) ? true : !!options.sanitise
+  var inline = (options.inline === undefined) ? false : !!options.inline
 
-  var result = '' + content;
+  var result = '' + content
   if (markdown) {
     result = marked(result, {
       breaks: false,
       smartyPants: true
-    });
+    })
   }
   if (sanitise) {
     // Notably absent are the script, style, and iframe tags.
@@ -30,10 +30,10 @@ module.exports = function processUserHtml(content, options) {
         a: ['href', 'title'],
         img: ['src', 'title']
       }
-    });
+    })
   }
   result = {
     __html: result
-  };
-  return result;
-};
+  }
+  return result
+}

@@ -1,9 +1,9 @@
-'use strict';
-import {name as appName} from '../../appInfo.json';
+'use strict'
+import {name as appName} from '../../appInfo.json'
 
 export default function (title) {
-  document.title = appName;
+  document.title = appName
   if (title && title.length) {
-    document.title += ' - ' + title;
+    document.title += ' - ' + title
   }
 }

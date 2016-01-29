@@ -1,5 +1,5 @@
-'use strict';
-var React = require('react');
+'use strict'
+var React = require('react')
 
 var BusyIndicator = React.createClass({
 
@@ -8,9 +8,9 @@ var BusyIndicator = React.createClass({
       <div className='busyIndicator'>
         <span className='icon-spinner2'/>
       </div>
-    );
+    )
   }
 
-});
+})
 
-module.exports = BusyIndicator;
+module.exports = BusyIndicator

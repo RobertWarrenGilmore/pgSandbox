@@ -1,9 +1,9 @@
-'use strict';
+'use strict'
 /**
  * This file provides database configuration parameters for Knex.
  */
 
-var dbPassword = process.env.dbPassword;
+var dbPassword = process.env.dbPassword
 
 module.exports = {
 
@@ -64,4 +64,4 @@ module.exports = {
     }
   }
 
-};
+}

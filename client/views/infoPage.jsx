@@ -1,11 +1,11 @@
-'use strict';
-var React = require('react');
-var BusyIndicator = require('./busyIndicator.jsx');
-var ajax = require('../utilities/ajax');
-var auth = require('../flux/auth');
-var processUserHtml = require('../utilities/processUserHtml');
-var TitleMixin = require('./titleMixin');
-var sanitiseHtml = require('sanitize-html');
+'use strict'
+var React = require('react')
+var BusyIndicator = require('./busyIndicator.jsx')
+var ajax = require('../utilities/ajax')
+var auth = require('../flux/auth')
+var processUserHtml = require('../utilities/processUserHtml')
+var TitleMixin = require('./titleMixin')
+var sanitiseHtml = require('sanitize-html')
 
 var InfoPage = React.createClass({
 
@@ -18,129 +18,129 @@ var InfoPage = React.createClass({
       editingContent: null,
       error: null,
       authUser: null
-    };
+    }
   },
 
   _loadAuthUser: function () {
-    var credentials = auth.getCredentials();
+    var credentials = auth.getCredentials()
     if (credentials) {
       var r = ajax({
         method: 'GET',
         uri: '/api/users/' + credentials.id,
         json: true,
         auth: credentials
-      });
+      })
       this.setState({
         runningRequest: r // Hold on to the Ajax promise in case we need to cancel it later.
-      });
-      var self = this;
+      })
+      var self = this
       return r.then(function (response) {
         if (response.statusCode === 200) {
           self.setState({
             authUser: response.body
-          });
+          })
         } else {
           self.setState({
             error: response.body
-          });
+          })
         }
-        return null;
+        return null
       }).catch(function (error) {
         self.setState({
           error: error.message
-        });
-      });
+        })
+      })
     } else {
-      return Promise.resolve();
+      return Promise.resolve()
     }
   },
 
   _loadContent: function (pageId) {
-    this._cancelRequest();
+    this._cancelRequest()
     if (pageId === '/') {
-      pageId = '/home';
+      pageId = '/home'
     }
     var r = ajax({
       method: 'GET',
       uri: '/api/infoPages' + pageId,
       json: true,
       auth: auth.getCredentials()
-    });
+    })
     this.setState({
       runningRequest: r, // Hold on to the Ajax promise in case we need to cancel it later.
       error: null
-    });
-    this.setTitle();
-    var self = this;
+    })
+    this.setTitle()
+    var self = this
     return r.then(function (response) {
       if (response.statusCode === 200) {
         self.setState({
           runningRequest: null,
           content: response.body
-        });
-        self.setTitle(sanitiseHtml(response.body.title, {allowedTags: []}));
+        })
+        self.setTitle(sanitiseHtml(response.body.title, {allowedTags: []}))
       } else {
         self.setState({
           runningRequest: null,
           error: response.body
-        });
+        })
       }
-      return null;
+      return null
     }).catch(function (error) {
       self.setState({
         runningRequest: null,
         error: error.message
-      });
-    });
+      })
+    })
   },
 
   _saveContent: function() {
-    this._cancelRequest();
-    var pageId = this.props.location.pathname;
+    this._cancelRequest()
+    var pageId = this.props.location.pathname
     if (pageId === '/') {
-      pageId = '/home';
+      pageId = '/home'
     }
-    var page = this.state.editingContent;
+    var page = this.state.editingContent
     var r = ajax ({
       method: 'PUT',
       uri: '/api/infoPages' + pageId,
       body: page,
       json: true,
       auth: auth.getCredentials()
-    });
+    })
     this.setState({
       runningRequest: r,
       error: null
-    });
-    var self = this;
+    })
+    var self = this
     return r.then(function (response) {
       if (response.statusCode === 200 || response.statusCode === 201) {
         self.setState({
           runningRequest: null,
           editingContent: response.body,
           content: response.body
-        });
-        self.setTitle(sanitiseHtml(response.body.title, {allowedTags: []}));
+        })
+        self.setTitle(sanitiseHtml(response.body.title, {allowedTags: []}))
       } else {
         self.setState({
           runningRequest: null,
           error: response.body
-        });
+        })
       }
-      return null;
+      return null
     }).catch(function(error) {
       self.setState({
         runningRequest: null,
         error: error.message
-      });
-    });
+      })
+    })
   },
 
   _revertContent: function () {
     this.setState({
       editingContent: this.state.content,
       error: null
-    });
+    })
   },
 
   _enterEditMode: function () {
@@ -150,13 +150,13 @@ var InfoPage = React.createClass({
         title: '',
         body: ''
       }
-    });
+    })
   },
 
   _exitEditMode: function () {
     this.setState({
       editingContent: null
-    });
+    })
   },
 
   _updateEditingContent: function () {
@@ -165,43 +165,43 @@ var InfoPage = React.createClass({
         title: this.refs.title.value,
         body: this.refs.body.value
       }
-    });
+    })
   },
 
   _cancelRequest: function () {
     // Cancel any Ajax that's currently running.
     if (this.state.runningRequest) {
-      this.state.runningRequest.cancel();
+      this.state.runningRequest.cancel()
     }
   },
 
   componentWillMount: function() {
-    var self = this;
+    var self = this
     this._loadAuthUser().then(function () {
-      return self._loadContent(self.props.location.pathname);
-    });
+      return self._loadContent(self.props.location.pathname)
+    })
   },
 
   componentWillReceiveProps: function(nextProps) {
-    var pageIdChanged = nextProps.params.location.pathname !== this.props.location.pathname;
+    var pageIdChanged = nextProps.params.location.pathname !== this.props.location.pathname
     if (pageIdChanged) {
       // TODO Confirm leave without saving changes if in edit mode and unsaved.
-      this._exitEditMode();
-      this._loadContent(nextProps.params.location.pathname);
+      this._exitEditMode()
+      this._loadContent(nextProps.params.location.pathname)
     }
   },
 
   componentWillUnmount: function() {
-    this._cancelRequest();
+    this._cancelRequest()
   },
 
   render: function() {
-    var result = null;
-    var isAdmin = this.state.authUser && this.state.authUser.admin;
+    var result = null
+    var isAdmin = this.state.authUser && this.state.authUser.admin
 
     // editor layout
     if (this.state.editingContent) {
-      var content = this.state.editingContent;
+      var content = this.state.editingContent
       result = (
         <div id='infoPage'>
           <div className='actions'>
@@ -210,7 +210,7 @@ var InfoPage = React.createClass({
               disabled={!!this.state.runningRequest}
               onClick={this._exitEditMode}>
               <span className='icon-pencil'/>
-              &nbsp;
+              &nbsp
               stop editing
             </button>
           </div>
@@ -258,7 +258,7 @@ var InfoPage = React.createClass({
                 onClick={this._saveContent}
                 className='highlighted'>
                 <span className='icon-floppy-disk'/>
-                &nbsp;
+                &nbsp
                 save
               </button>
               <button
@@ -266,7 +266,7 @@ var InfoPage = React.createClass({
                 disabled={!!this.state.runningRequest}
                 onClick={this._revertContent}>
                 <span className='icon-undo2'/>
-                &nbsp;
+                &nbsp
                 revert
               </button>
             </div>
@@ -275,7 +275,7 @@ var InfoPage = React.createClass({
             sanitise: false
           })}/>
         </div>
-      );
+      )
 
     // busy layout
     } else if (this.state.runningRequest) {
@@ -284,7 +284,7 @@ var InfoPage = React.createClass({
           <BusyIndicator/>
           loading
         </div>
-      );
+      )
 
     // error layout
     } else if (this.state.error) {
@@ -294,15 +294,15 @@ var InfoPage = React.createClass({
             {this.state.error}
           </p>
         </div>
-      );
+      )
 
     // content layout
     } else {
       var content = this.state.content || {
         title: '',
         body: ''
-      };
-      var editButton = null;
+      }
+      var editButton = null
       if (isAdmin) {
         editButton = (
           <button
@@ -310,10 +310,10 @@ var InfoPage = React.createClass({
             disabled={!!this.state.runningRequest}
             onClick={this._enterEditMode}>
             <span className='icon-pencil'/>
-            &nbsp;
+            &nbsp
             edit
           </button>
-        );
+        )
       }
       result = (
         <div id='infoPage'>
@@ -324,12 +324,12 @@ var InfoPage = React.createClass({
             sanitise: false
           })}/>
         </div>
-      );
+      )
     }
 
-    return result;
+    return result
   }
 
-});
+})
 
-module.exports = InfoPage;
+module.exports = InfoPage

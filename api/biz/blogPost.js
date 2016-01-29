@@ -1,14 +1,14 @@
-'use strict';
-var _ = require('lodash');
-var AuthorisationError = require('../errors/authorisationError');
-var NoSuchResourceError = require('../errors/noSuchResourceError');
-var MalformedRequestError = require('../errors/malformedRequestError');
-var ConflictingEditError = require('../errors/conflictingEditError');
-var escapeForLike = require('./utilities/escapeForLike');
-var authenticatedTransaction = require('./utilities/authenticatedTransaction');
-var validate = require('../../utilities/validate');
-var vf = validate.funcs;
-var ValidationError = validate.ValidationError;
+'use strict'
+var _ = require('lodash')
+var AuthorisationError = require('../errors/authorisationError')
+var NoSuchResourceError = require('../errors/noSuchResourceError')
+var MalformedRequestError = require('../errors/malformedRequestError')
+var ConflictingEditError = require('../errors/conflictingEditError')
+var escapeForLike = require('./utilities/escapeForLike')
+var authenticatedTransaction = require('./utilities/authenticatedTransaction')
+var validate = require('../../utilities/validate')
+var vf = validate.funcs
+var ValidationError = validate.ValidationError
 
 function transformAuthor(posts) {
   return _.map(posts, function (post) {
@@ -25,8 +25,8 @@ function transformAuthor(posts) {
         familyName: post.authorFamilyName,
         active: post.authorActive
       }
-    };
-  });
+    }
+  })
 }
 
 module.exports = function (knex) {
@@ -36,10 +36,10 @@ module.exports = function (knex) {
     create: function (args) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
         if (!authUser) {
-          throw new AuthorisationError('Blog posts cannot be created anonymously.');
+          throw new AuthorisationError('Blog posts cannot be created anonymously.')
         }
         if (!authUser.authorisedToBlog && !authUser.admin) {
-          throw new AuthorisationError('You are not authorised to create blog posts.');
+          throw new AuthorisationError('You are not authorised to create blog posts.')
         }
 
         return validate(args.params || {}, {
@@ -52,7 +52,7 @@ module.exports = function (knex) {
             vf.maxLength('The id must be at most 255 characters long.', 255),
             function (val) {
               if (val === undefined || val === null) {
-                return;
+                return
               }
               // Check for case-insensitive uniqueness of ID.
               return trx
@@ -61,17 +61,17 @@ module.exports = function (knex) {
                 .where('id', 'ilike', escapeForLike(val))
                 .then(function (existingPosts) {
                   if (existingPosts && existingPosts.length) {
-                    throw new ConflictingEditError('That id already belongs to another post.');
+                    throw new ConflictingEditError('That id already belongs to another post.')
                   }
-                });
+                })
             }, function (val) {
               if (val === undefined || val === null) {
-                return;
+                return
               }
               // Check that the ID starts with an ISO date.
               if (!val.substring(0, 10).match(/^\d\d\d\d\-\d\d\-\d\d$/)
                 || isNaN(new Date(val.substring(0, 10)).getTime())) {
-                throw new ValidationError('The id must begin with a date in the format yyyy-mm-dd.');
+                throw new ValidationError('The id must begin with a date in the format yyyy-mm-dd.')
               }
             }
           ]
@@ -105,7 +105,7 @@ module.exports = function (knex) {
                   // Check for existence of the author.
                   function (val) {
                     if (val === undefined || val === null) {
-                      return;
+                      return
                     }
                     return trx
                       .from('users')
@@ -113,17 +113,17 @@ module.exports = function (knex) {
                       .where('id', val)
                       .then(function (users) {
                         if (!users || !users.length) {
-                          throw new ValidationError('The given author does not exist.');
+                          throw new ValidationError('The given author does not exist.')
                         }
-                      });
+                      })
                   },
                   // Check that the author is the authenticated user or that the authenticated user is an admin.
                   function (val) {
                     if (val === undefined || val === null) {
-                      return;
+                      return
                     }
                     if (val !== authUser.id && !authUser.admin) {
-                      throw new ValidationError('You cannot set the ownership of a post to someone else.');
+                      throw new ValidationError('You cannot set the ownership of a post to someone else.')
                     }
                   }
                 ]
@@ -134,17 +134,17 @@ module.exports = function (knex) {
               vf.notNull('The date is required.'),
               function (val) {
                 if (val === undefined || val === null) {
-                  return;
+                  return
                 }
                 if (isNaN(new Date(val).getTime())) {
-                  throw new ValidationError('The date must be a dateTime.');
+                  throw new ValidationError('The date must be a dateTime.')
                 }
               }
             ],
             active: [
               vf.boolean('The post must be set active or inactive.')
             ]
-          });
+          })
         }).then(function () {
           return {
             id: args.params.postId,
@@ -153,7 +153,7 @@ module.exports = function (knex) {
             preview: args.body.preview,
             postedTime: new Date(args.body.postedTime),
             author: args.body.author.id
-          };
+          }
 
         }).then(function (newPost) {
 
@@ -169,21 +169,21 @@ module.exports = function (knex) {
               'author',
               'postedTime',
               'active'
-            ]);
+            ])
         }).then(function (rows) {
 
           // Respond with the newly created post.
-          return rows[0];
-        });
+          return rows[0]
+        })
 
-      });
+      })
     },
 
     read: function (args) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
 
         if (args.params && Object.keys(args.params).length && args.query && Object.keys(args.query).length) {
-          throw new MalformedRequestError('A read against a specific blog post cannot filter by any other parameters.');
+          throw new MalformedRequestError('A read against a specific blog post cannot filter by any other parameters.')
         }
 
         var query = trx
@@ -200,14 +200,14 @@ module.exports = function (knex) {
             'users.givenName as authorGivenName',
             'users.familyName as authorFamilyName',
             'users.active as authorActive'
-          ]);
+          ])
 
         function hideContents(post) {
           return {
             id: post.id,
             active: post.active,
             author: post.author
-          };
+          }
         }
 
         if (args.params && args.params.postId) {
@@ -218,69 +218,69 @@ module.exports = function (knex) {
             .then(transformAuthor)
             .then(function (posts) {
               if (!posts.length) {
-                throw new NoSuchResourceError();
+                throw new NoSuchResourceError()
               }
-              var post = posts[0];
+              var post = posts[0]
 
               // Remove the contents of inactive posts that don't belong to the authenticated user.
               if (!post.active &&
                 (!authUser || (authUser.id !== post.author.id && !authUser.admin))) {
-                post = hideContents(post);
+                post = hideContents(post)
               }
-              return post;
-            });
+              return post
+            })
 
         } else {
 
           // Add sorting.
-          query = query.orderBy('postedTime', 'desc');
+          query = query.orderBy('postedTime', 'desc')
 
           // Add offset.
-          query = query.limit(20);
+          query = query.limit(20)
           if (args.query && args.query.offset) {
-            query = query.offset(args.query.offset);
+            query = query.offset(args.query.offset)
           }
 
           // Add search parameters.
-          var searchParams = _.omit(args.query, ['offset']) || {};
+          var searchParams = _.omit(args.query, ['offset']) || {}
           return validate(searchParams, {
             // No filter is accepted yet.
           }).then(function () {
             // TODO Interpret tag, postedTime, and author filters here.
-            query = query.where(searchParams);
+            query = query.where(searchParams)
 
             // The query is finished.
-            return query;
+            return query
           }).then(transformAuthor)
           .then(function (posts) {
 
             // Remove the contents of inactive posts that don't belong to the authenticated user.
             return _.map(posts, function (post) {
-              var authorisedToViewInactive = !!authUser && (authUser.id === post.author.id || !!authUser.admin);
+              var authorisedToViewInactive = !!authUser && (authUser.id === post.author.id || !!authUser.admin)
               if (authorisedToViewInactive || post.active) {
-                return post;
+                return post
               } else {
-                return hideContents(post);
+                return hideContents(post)
               }
-            });
-          });
+            })
+          })
         }
       }).then(function (result) {
-        return JSON.parse(JSON.stringify(result));
-      });
+        return JSON.parse(JSON.stringify(result))
+      })
     },
 
     update: function (args) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
         if (!authUser) {
-          throw new AuthorisationError('Blog posts cannot be updated anonymously.');
+          throw new AuthorisationError('Blog posts cannot be updated anonymously.')
         }
         if (!authUser.authorisedToBlog && !authUser.admin) {
-          throw new AuthorisationError('You are not authorised to update blog posts.');
+          throw new AuthorisationError('You are not authorised to update blog posts.')
         }
 
-        var notUniqueIdError = new ConflictingEditError('That id already belongs to another post.');
-        var noSuchAuthorError = new ConflictingEditError('The given author does not exist.');
+        var notUniqueIdError = new ConflictingEditError('That id already belongs to another post.')
+        var noSuchAuthorError = new ConflictingEditError('The given author does not exist.')
 
         return knex
           .from('blogPosts')
@@ -288,11 +288,11 @@ module.exports = function (knex) {
           .select()
           .then(function (posts) {
             if (!posts.length) {
-              throw new NoSuchResourceError();
+              throw new NoSuchResourceError()
             }
-            var post = posts[0];
+            var post = posts[0]
             if (authUser.id !== post.author && !authUser.admin) {
-              throw new AuthorisationError('You are not authorised to update this blog post.');
+              throw new AuthorisationError('You are not authorised to update this blog post.')
             }
             return validate(args.body, {
               id: [
@@ -303,7 +303,7 @@ module.exports = function (knex) {
                 vf.maxLength('The id must be at most 255 characters long.', 255),
                 function (val) {
                   if (val === undefined || val === null) {
-                    return;
+                    return
                   }
                   // Check for case-insensitive uniqueness of ID if it's being changed.
                   if (val.toLowerCase() !== args.params.postId.toLowerCase()) {
@@ -313,18 +313,18 @@ module.exports = function (knex) {
                       .where('id', 'ilike', escapeForLike(val))
                       .then(function (existingPosts) {
                         if (existingPosts && existingPosts.length) {
-                          throw notUniqueIdError;
+                          throw notUniqueIdError
                         }
-                      });
+                      })
                   }
                 }, function (val) {
                   if (val === undefined || val === null) {
-                    return;
+                    return
                   }
                   // Check that the ID starts with an ISO date.
                   if (!val.substring(0, 10).match(/^\d\d\d\d\-\d\d\-\d\d$/)
                     || isNaN(new Date(val.substring(0, 10)).getTime())) {
-                    throw new MalformedRequestError('The id must begin with a date in the format yyyy-mm-dd.');
+                    throw new MalformedRequestError('The id must begin with a date in the format yyyy-mm-dd.')
                   }
                 }
               ],
@@ -353,7 +353,7 @@ module.exports = function (knex) {
                     // Check for existence of the author.
                     function (val) {
                       if (val === undefined || val === null) {
-                        return;
+                        return
                       }
                       return trx
                         .from('users')
@@ -361,17 +361,17 @@ module.exports = function (knex) {
                         .where('id', val)
                         .then(function (users) {
                           if (!users || !users.length) {
-                            throw new ValidationError('The given author does not exist.');
+                            throw new ValidationError('The given author does not exist.')
                           }
-                        });
+                        })
                     },
                     // Check that the author is the authenticated user or that the authenticated user is an admin.
                     function (val) {
                       if (val === undefined || val === null) {
-                        return;
+                        return
                       }
                       if (val !== authUser.id && !authUser.admin) {
-                        throw new ValidationError('You cannot change the ownership of a post to someone else.');
+                        throw new ValidationError('You cannot change the ownership of a post to someone else.')
                       }
                     }
                   ]
@@ -381,10 +381,10 @@ module.exports = function (knex) {
                 vf.notNull('The date cannot be unset.'),
                 function (val) {
                   if (val === undefined || val === null) {
-                    return;
+                    return
                   }
                   if (isNaN(new Date(val).getTime())) {
-                    throw new ValidationError('The date must be a dateTime.');
+                    throw new ValidationError('The date must be a dateTime.')
                   }
                 }
               ],
@@ -392,16 +392,16 @@ module.exports = function (knex) {
                 vf.notNull('The post must be set active or inactive.'),
                 vf.boolean('The post must be set active or inactive.')
               ]
-            });
+            })
           }).then(function () {
-            var result = _.cloneDeep(args.body);
+            var result = _.cloneDeep(args.body)
             if (result.postedTime) {
-              result.postedTime = new Date(result.postedTime);
+              result.postedTime = new Date(result.postedTime)
             }
             if (result.author && result.author.id) {
-              result.author = result.author.id;
+              result.author = result.author.id
             }
-            return result;
+            return result
 
           }).then(function (newPost) {
             // Do the insertion.
@@ -409,7 +409,7 @@ module.exports = function (knex) {
               .into('blogPosts')
               .where('id', 'ilike', escapeForLike(args.params.postId))
               .update(newPost)
-              .returning('id');
+              .returning('id')
           }).then(function (ids) {
             return trx
               .from('blogPosts')
@@ -426,22 +426,22 @@ module.exports = function (knex) {
                 'users.givenName as authorGivenName',
                 'users.familyName as authorFamilyName',
                 'users.active as authorActive'
-              ]);
+              ])
           }).then(transformAuthor)
           .then(function (posts) {
             // Respond with the updated post.
-            return posts[0];
-          });
-      });
+            return posts[0]
+          })
+      })
     },
 
     delete: function (args) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
         if (!authUser) {
-          throw new AuthorisationError('Blog posts cannot be deleted anonymously.');
+          throw new AuthorisationError('Blog posts cannot be deleted anonymously.')
         }
         if (!authUser.authorisedToBlog && !authUser.admin) {
-          throw new AuthorisationError('You are not authorised to delete blog posts.');
+          throw new AuthorisationError('You are not authorised to delete blog posts.')
         }
         return knex
           .from('blogPosts')
@@ -449,22 +449,22 @@ module.exports = function (knex) {
           .select()
           .then(function (posts) {
             if (!posts.length) {
-              throw new NoSuchResourceError();
+              throw new NoSuchResourceError()
             }
-            var post = posts[0];
+            var post = posts[0]
             if (authUser.id !== post.author) {
-              throw new AuthorisationError('You are not authorised to delete this blog post.');
+              throw new AuthorisationError('You are not authorised to delete this blog post.')
             }
             return knex
               .from('blogPosts')
               .where('id', 'ilike', escapeForLike(args.params.postId))
               .del()
               .then(function () {
-                return null;
-              });
-          });
-      });
+                return null
+              })
+          })
+      })
     }
 
-  };
-};
+  }
+}

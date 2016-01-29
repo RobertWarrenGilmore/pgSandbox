@@ -1,7 +1,7 @@
-'use strict';
-var authenticatedTransaction = require('./utilities/authenticatedTransaction');
-var AuthenticationError = require('../errors/authenticationError');
-var Promise = require('bluebird');
+'use strict'
+var authenticatedTransaction = require('./utilities/authenticatedTransaction')
+var AuthenticationError = require('../errors/authenticationError')
+var Promise = require('bluebird')
 
 module.exports = function (knex) {
 
@@ -9,13 +9,13 @@ module.exports = function (knex) {
     read: function (args) {
       return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
         if (!authUser) {
-          return Promise.reject(new AuthenticationError());
+          return Promise.reject(new AuthenticationError())
         } else {
           return Promise.resolve({
             id: authUser.id
-          });
+          })
         }
-      });
+      })
     }
-  };
-};
+  }
+}

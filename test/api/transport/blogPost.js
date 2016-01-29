@@ -1,33 +1,33 @@
-'use strict';
-var Promise = require('bluebird');
-var assert = require('assert');
-var ajax = require('../../../client/utilities/ajax');
-var sinon = require('sinon');
-var http = require('http');
-var express = require('express');
-var parseAuth = require('basic-auth');
-var bodyParser = require('body-parser');
+'use strict'
+var Promise = require('bluebird')
+var assert = require('assert')
+var ajax = require('../../../client/utilities/ajax')
+var sinon = require('sinon')
+var http = require('http')
+var express = require('express')
+var parseAuth = require('basic-auth')
+var bodyParser = require('body-parser')
 
 describe('blog post', function () {
 
-  var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
-  var password = 'taco tuesday';
+  var emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
+  var password = 'taco tuesday'
 
   var requestAuth = {
     emailAddress: emailAddress,
     password: password
-  };
-  var requestBody;
-  var responseBody;
+  }
+  var requestBody
+  var responseBody
 
-  var bizQueue = [];
+  var bizQueue = []
 
   function bizPromiseReturner() {
-    var result = bizQueue.pop();
+    var result = bizQueue.pop()
     if (result instanceof Error) {
-      return Promise.reject(result);
+      return Promise.reject(result)
     } else {
-      return Promise.resolve(result);
+      return Promise.resolve(result)
     }
   }
   var blogPostBiz = {
@@ -35,49 +35,49 @@ describe('blog post', function () {
     read: sinon.spy(bizPromiseReturner),
     update: sinon.spy(bizPromiseReturner),
     delete: sinon.spy(bizPromiseReturner)
-  };
+  }
 
-  var server;
+  var server
 
   before('Host the blog post transport module on a server.', function () {
-    var blogRouter = require('../../../api/transport/blogPost')(blogPostBiz);
-    var app = express();
+    var blogRouter = require('../../../api/transport/blogPost')(blogPostBiz)
+    var app = express()
     app.use(function authMiddleware(req, res, next) {
-      var auth = parseAuth(req);
+      var auth = parseAuth(req)
       if (auth) {
         req.auth = {
           emailAddress: auth.name,
           password: auth.pass
-        };
+        }
       }
-      next();
-    });
+      next()
+    })
     app.use(bodyParser.json({
       type: 'application/json'
-    }));
-    app.use('/api/blog', blogRouter);
-    server = http.createServer(app);
-    server.listen(3000);
-  });
+    }))
+    app.use('/api/blog', blogRouter)
+    server = http.createServer(app)
+    server.listen(3000)
+  })
 
   after('Close the server.', function () {
-    server.close();
-  });
+    server.close()
+  })
 
   beforeEach('Reset the blogPostBiz stubs.', function () {
-    blogPostBiz.create.reset();
-    blogPostBiz.read.reset();
-    blogPostBiz.update.reset();
-    bizQueue.length = 0;
+    blogPostBiz.create.reset()
+    blogPostBiz.read.reset()
+    blogPostBiz.update.reset()
+    bizQueue.length = 0
 
     requestBody = {
       foo: 'bar'
-    };
+    }
     responseBody = {
       hello: 'world'
-    };
-    bizQueue.unshift(responseBody);
-  });
+    }
+    bizQueue.unshift(responseBody)
+  })
 
   describe('/blog', function () {
 
@@ -87,7 +87,7 @@ describe('blog post', function () {
         params: sinon.match({}),
         query: sinon.match({}),
         body: sinon.match(requestBody)
-      });
+      })
       return ajax({
         method: 'GET',
         uri: 'http://localhost:3000/api/blog',
@@ -98,10 +98,10 @@ describe('blog post', function () {
         json: true,
         body: requestBody
       }).then(function (response) {
-        assert(blogPostBiz.read.withArgs(requestMatcher).calledOnce, 'Create was not called properly.');
-        assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.');
-      });
-    });
+        assert(blogPostBiz.read.withArgs(requestMatcher).calledOnce, 'Create was not called properly.')
+        assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.')
+      })
+    })
 
     it('should forward defined errors', function () {
       var requestMatcher = sinon.match({
@@ -109,11 +109,11 @@ describe('blog post', function () {
         params: sinon.match({}),
         query: sinon.match({}),
         body: sinon.match(requestBody)
-      });
-      bizQueue.pop();
-      var error = new Error();
-      error.errorCode = 599;
-      bizQueue.unshift(error);
+      })
+      bizQueue.pop()
+      var error = new Error()
+      error.errorCode = 599
+      bizQueue.unshift(error)
       return ajax({
         method: 'GET',
         uri: 'http://localhost:3000/api/blog',
@@ -124,10 +124,10 @@ describe('blog post', function () {
         json: true,
         body: requestBody
       }).then(function (response) {
-        assert(blogPostBiz.read.withArgs(requestMatcher).calledOnce, 'Read was not called properly.');
-        assert.equal(response.statusCode, error.errorCode, 'The router returned the wrong thing.');
-      });
-    });
+        assert(blogPostBiz.read.withArgs(requestMatcher).calledOnce, 'Read was not called properly.')
+        assert.equal(response.statusCode, error.errorCode, 'The router returned the wrong thing.')
+      })
+    })
 
     it('should forward generic errors', function () {
       var requestMatcher = sinon.match({
@@ -135,10 +135,10 @@ describe('blog post', function () {
         params: sinon.match({}),
         query: sinon.match({}),
         body: sinon.match(requestBody)
-      });
-      bizQueue.pop();
-      var error = new Error();
-      bizQueue.unshift(error);
+      })
+      bizQueue.pop()
+      var error = new Error()
+      bizQueue.unshift(error)
       return ajax({
         method: 'GET',
         uri: 'http://localhost:3000/api/blog',
@@ -149,10 +149,10 @@ describe('blog post', function () {
         json: true,
         body: requestBody
       }).then(function (response) {
-        assert(blogPostBiz.read.withArgs(requestMatcher).calledOnce, 'Read was not called properly.');
-        assert.equal(response.statusCode, 500, 'The router returned the wrong thing.');
-      });
-    });
+        assert(blogPostBiz.read.withArgs(requestMatcher).calledOnce, 'Read was not called properly.')
+        assert.equal(response.statusCode, 500, 'The router returned the wrong thing.')
+      })
+    })
 
     describe('/:postId', function () {
 
@@ -162,7 +162,7 @@ describe('blog post', function () {
           params: sinon.match({}),
           query: sinon.match({}),
           body: sinon.match(requestBody)
-        });
+        })
         return ajax({
           method: 'POST',
           uri: 'http://localhost:3000/api/blog/123',
@@ -173,10 +173,10 @@ describe('blog post', function () {
           json: true,
           body: requestBody
         }).then(function (response) {
-          assert(blogPostBiz.create.withArgs(requestMatcher).calledOnce, 'Create was not called properly.');
-          assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.');
-        });
-      });
+          assert(blogPostBiz.create.withArgs(requestMatcher).calledOnce, 'Create was not called properly.')
+          assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.')
+        })
+      })
 
       it('should read on GET', function () {
         var requestMatcher = sinon.match({
@@ -184,7 +184,7 @@ describe('blog post', function () {
           params: sinon.match({}),
           query: sinon.match({}),
           body: sinon.match(requestBody)
-        });
+        })
         return ajax({
           method: 'GET',
           uri: 'http://localhost:3000/api/blog/123',
@@ -195,10 +195,10 @@ describe('blog post', function () {
           json: true,
           body: requestBody
         }).then(function (response) {
-          assert(blogPostBiz.read.withArgs(requestMatcher).calledOnce, 'Create was not called properly.');
-          assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.');
-        });
-      });
+          assert(blogPostBiz.read.withArgs(requestMatcher).calledOnce, 'Create was not called properly.')
+          assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.')
+        })
+      })
 
       it('should update on PUT', function () {
         var requestMatcher = sinon.match({
@@ -206,7 +206,7 @@ describe('blog post', function () {
           params: sinon.match({}),
           query: sinon.match({}),
           body: sinon.match(requestBody)
-        });
+        })
         return ajax({
           method: 'PUT',
           uri: 'http://localhost:3000/api/blog/123',
@@ -217,10 +217,10 @@ describe('blog post', function () {
           json: true,
           body: requestBody
         }).then(function (response) {
-          assert(blogPostBiz.update.withArgs(requestMatcher).calledOnce, 'Create was not called properly.');
-          assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.');
-        });
-      });
+          assert(blogPostBiz.update.withArgs(requestMatcher).calledOnce, 'Create was not called properly.')
+          assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.')
+        })
+      })
 
       it('should delete on DELETE', function () {
         var requestMatcher = sinon.match({
@@ -228,7 +228,7 @@ describe('blog post', function () {
           params: sinon.match({}),
           query: sinon.match({}),
           body: sinon.match(requestBody)
-        });
+        })
         return ajax({
           method: 'DELETE',
           uri: 'http://localhost:3000/api/blog/123',
@@ -239,13 +239,13 @@ describe('blog post', function () {
           json: true,
           body: requestBody
         }).then(function (response) {
-          assert(blogPostBiz.delete.withArgs(requestMatcher).calledOnce, 'Delete was not called properly.');
-          assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.');
-        });
-      });
+          assert(blogPostBiz.delete.withArgs(requestMatcher).calledOnce, 'Delete was not called properly.')
+          assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.')
+        })
+      })
 
-    });
+    })
 
-  });
+  })
 
-});
+})

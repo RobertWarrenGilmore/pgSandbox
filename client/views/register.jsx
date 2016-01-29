@@ -1,12 +1,12 @@
-'use strict';
-var React = require('react');
-var TitleMixin = require('./titleMixin');
-var ajax = require('../utilities/ajax');
+'use strict'
+var React = require('react')
+var TitleMixin = require('./titleMixin')
+var ajax = require('../utilities/ajax')
 
 var Register = React.createClass({
   mixins: [TitleMixin('register')],
   getInitialState: function() {
-    return {busy: false, success: false, error: null};
+    return {busy: false, success: false, error: null}
   },
   render: function() {
     if (this.state.success) {
@@ -16,7 +16,7 @@ var Register = React.createClass({
             Congratulations! You registered. You'll recieve a confirmation email soon.
           </p>
         </div>
-      );
+      )
     } else {
       return (
         <div id='register'>
@@ -40,16 +40,16 @@ var Register = React.createClass({
             </div>
           </form>
         </div>
-      );
+      )
     }
   },
   _onSubmit: function(event) {
-    event.preventDefault();
-    var emailAddress = this.refs.emailAddress.value;
-    var givenName = this.refs.givenName.value;
-    var familyName = this.refs.familyName.value;
-    this.setState({busy: true, success: false, error: null});
-    var self = this;
+    event.preventDefault()
+    var emailAddress = this.refs.emailAddress.value
+    var givenName = this.refs.givenName.value
+    var familyName = this.refs.familyName.value
+    this.setState({busy: true, success: false, error: null})
+    var self = this
     return ajax({
       method: 'POST',
       uri: '/api/users',
@@ -61,14 +61,14 @@ var Register = React.createClass({
       }
     }).then(function(response) {
       if (response.statusCode === 201) {
-        self.setState({busy: false, success: true, error: null});
+        self.setState({busy: false, success: true, error: null})
       } else {
-        self.setState({busy: false, success: false, error: response.body});
+        self.setState({busy: false, success: false, error: response.body})
       }
     }).catch(function(error) {
-      self.setState({busy: false, success: false, error: error.message});
-    });
+      self.setState({busy: false, success: false, error: error.message})
+    })
   }
-});
+})
 
-module.exports = Register;
+module.exports = Register

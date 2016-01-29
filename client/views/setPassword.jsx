@@ -1,25 +1,25 @@
-'use strict';
-var React = require('react');
-var ReactRouter = require('react-router');
-var History = ReactRouter.History;
-var TitleMixin = require('./titleMixin');
-var ajax = require('../utilities/ajax');
+'use strict'
+var React = require('react')
+var ReactRouter = require('react-router')
+var History = ReactRouter.History
+var TitleMixin = require('./titleMixin')
+var ajax = require('../utilities/ajax')
 
 var SetPassword = React.createClass({
   mixins: [
     History, TitleMixin('set password')
   ],
   getInitialState: function() {
-    return {busy: false, success: false, error: null};
+    return {busy: false, success: false, error: null}
   },
   componentWillUpdate: function(nextProps, nextState) {
     if (nextState.success) {
-      this.history.pushState(null, '/login');
+      this.history.pushState(null, '/login')
     }
   },
   render: function() {
-    var passwordResetKey = this.props.location.query.key;
-    var userId = this.props.params.userId;
+    var passwordResetKey = this.props.location.query.key
+    var userId = this.props.params.userId
     if (!userId || !passwordResetKey) {
       return (
         <div className='message'>
@@ -27,7 +27,7 @@ var SetPassword = React.createClass({
             The URL was malformed.
           </p>
         </div>
-      );
+      )
     } else {
       return (
         <div id='setPassword'>
@@ -52,19 +52,19 @@ var SetPassword = React.createClass({
             </div>
           </form>
         </div>
-      );
+      )
     }
   },
   _onSubmit: function(event) {
-    event.preventDefault();
-    var userId = this.props.params.userId;
-    var passwordResetKey = this.props.location.query.key;
-    var password = this.refs.password.value;
-    var verifyPassword = this.refs.verifyPassword.value;
-    this.setState({busy: true, success: false, error: null});
-    var self = this;
+    event.preventDefault()
+    var userId = this.props.params.userId
+    var passwordResetKey = this.props.location.query.key
+    var password = this.refs.password.value
+    var verifyPassword = this.refs.verifyPassword.value
+    this.setState({busy: true, success: false, error: null})
+    var self = this
     if (password !== verifyPassword) {
-      self.setState({busy: false, success: false, error: 'The passwords must match.'});
+      self.setState({busy: false, success: false, error: 'The passwords must match.'})
     } else {
       return ajax({
         method: 'PUT',
@@ -76,15 +76,15 @@ var SetPassword = React.createClass({
         }
       }).then(function(response) {
         if (response.statusCode === 200) {
-          self.setState({busy: false, success: true, error: null});
+          self.setState({busy: false, success: true, error: null})
         } else {
-          self.setState({busy: false, success: false, error: response.body});
+          self.setState({busy: false, success: false, error: response.body})
         }
       }).catch(function(error) {
-        self.setState({busy: false, success: false, error: error.message});
-      });
+        self.setState({busy: false, success: false, error: error.message})
+      })
     }
   }
-});
+})
 
-module.exports = SetPassword;
+module.exports = SetPassword

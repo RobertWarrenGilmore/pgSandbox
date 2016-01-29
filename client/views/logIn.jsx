@@ -1,9 +1,9 @@
-'use strict';
-var React = require('react');
-var ReactRouter = require('react-router');
-var Link = ReactRouter.Link;
-var TitleMixin = require('./titleMixin');
-var auth = require('../flux/auth');
+'use strict'
+var React = require('react')
+var ReactRouter = require('react-router')
+var Link = ReactRouter.Link
+var TitleMixin = require('./titleMixin')
+var auth = require('../flux/auth')
 
 var LogIn = React.createClass({
   mixins: [
@@ -14,37 +14,37 @@ var LogIn = React.createClass({
       credentials: auth.getCredentials(),
       busy: auth.isBusy(),
       error: null
-    };
+    }
   },
   _authListener: function() {
     this.setState({
       credentials: auth.getCredentials(),
       busy: auth.isBusy(),
       error: auth.getError()
-    });
+    })
   },
   componentWillMount: function() {
-    auth.clearError();
+    auth.clearError()
   },
   componentDidMount: function() {
-    auth.listen(this._authListener);
+    auth.listen(this._authListener)
   },
   componentWillUnmount: function() {
-    auth.unlisten(this._authListener);
+    auth.unlisten(this._authListener)
   },
   componentWillUpdate: function(nextProps, nextState) {
     if (nextState.credentials) {
-      var location = this.props.location;
+      var location = this.props.location
       if (location.state && location.state.nextLocation) {
-        this.props.history.replaceState(null, location.state.nextLocation.pathname, location.state.nextLocation.query);
+        this.props.history.replaceState(null, location.state.nextLocation.pathname, location.state.nextLocation.query)
       } else {
-        this.props.history.replaceState(null, '/');
+        this.props.history.replaceState(null, '/')
       }
     }
   },
   render: function() {
-    var location = this.props.location;
-    var nextLocation = location.state ? location.state.nextLocation : null;
+    var location = this.props.location
+    var nextLocation = location.state ? location.state.nextLocation : null
     return (
       <div id='logIn'>
         <h1>
@@ -71,17 +71,17 @@ var LogIn = React.createClass({
           </div>
         </form>
       </div>
-    );
+    )
   },
   _onSubmit: function(event) {
-    event.preventDefault();
-    var emailAddress = this.refs.emailAddress.value;
-    var password = this.refs.password.value;
+    event.preventDefault()
+    var emailAddress = this.refs.emailAddress.value
+    var password = this.refs.password.value
     auth.logIn({
       emailAddress: emailAddress,
       password: password
-    });
+    })
   }
-});
+})
 
-module.exports = LogIn;
+module.exports = LogIn

@@ -1,38 +1,38 @@
-'use strict';
-var _ = require('lodash');
-var Emitter = require('./emitter');
-var ajax = require('../utilities/ajax');
-var Promise = require('bluebird');
+'use strict'
+var _ = require('lodash')
+var Emitter = require('./emitter')
+var ajax = require('../utilities/ajax')
+var Promise = require('bluebird')
 
-var emitter = new Emitter();
-var busy = false;
-var credentials = null;
-var error = null;
+var emitter = new Emitter()
+var busy = false
+var credentials = null
+var error = null
 
 var methods = {
   listen: function (listener) {
-    emitter.listen(listener);
+    emitter.listen(listener)
   },
   unlisten: function (listener) {
-    emitter.unlisten(listener);
+    emitter.unlisten(listener)
   },
   getCredentials: function () {
-    return _.cloneDeep(credentials);
+    return _.cloneDeep(credentials)
   },
   isBusy: function () {
-    return busy;
+    return busy
   },
   getError: function () {
-    return error;
+    return error
   },
   clearError: function () {
-    error = null;
-    emitter.emit();
+    error = null
+    emitter.emit()
   },
   logIn: function (auth) {
-    busy = true;
-    error = null;
-    emitter.emit();
+    busy = true
+    error = null
+    emitter.emit()
     return ajax({
       method: 'GET',
       uri: '/api/auth',
@@ -44,35 +44,35 @@ var methods = {
           id: response.body.id,
           emailAddress: auth.emailAddress,
           password: auth.password
-        };
-        localStorage.auth = JSON.stringify(credentials);
+        }
+        localStorage.auth = JSON.stringify(credentials)
       } else {
-        error = response.body;
-        credentials = null;
-        delete localStorage.auth;
+        error = response.body
+        credentials = null
+        delete localStorage.auth
       }
-      busy = false;
-      emitter.emit();
+      busy = false
+      emitter.emit()
     }).catch(function (err) {
-      error = err.message;
-      emitter.emit();
-    });
+      error = err.message
+      emitter.emit()
+    })
   },
   resume: function () {
-    error = null;
+    error = null
     if (localStorage.auth) {
-      var auth = JSON.parse(localStorage.auth);
-      return methods.logIn(auth);
+      var auth = JSON.parse(localStorage.auth)
+      return methods.logIn(auth)
     } else {
-      return Promise.resolve();
+      return Promise.resolve()
     }
   },
   logOut: function () {
-    error = null;
-    credentials = null;
-    delete localStorage.auth;
-    emitter.emit();
+    error = null
+    credentials = null
+    delete localStorage.auth
+    emitter.emit()
   }
-};
+}
 
-module.exports = methods;
+module.exports = methods

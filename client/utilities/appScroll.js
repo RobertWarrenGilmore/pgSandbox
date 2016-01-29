@@ -1,18 +1,18 @@
-'use strict';
+'use strict'
 function getElements() {
-  return [document, document.getElementById('appContainer').children[0]];
+  return [document, document.getElementById('appContainer').children[0]]
 }
 module.exports = {
   addListener: function (callback) {
-    var elements = getElements();
+    var elements = getElements()
     for (var i in elements) {
-      elements[i].addEventListener('scroll', callback);
+      elements[i].addEventListener('scroll', callback)
     }
   },
   removeListener: function (callback) {
-    var elements = getElements();
+    var elements = getElements()
     for (var i in elements) {
-      elements[i].removeEventListener('scroll', callback);
+      elements[i].removeEventListener('scroll', callback)
     }
   }
-};
+}

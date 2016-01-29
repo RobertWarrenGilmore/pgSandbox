@@ -1,14 +1,14 @@
-'use strict';
-var Promise = require('bluebird');
-var AuthenticationError = require('../../errors/authenticationError');
-var bcrypt = Promise.promisifyAll(require('bcrypt'));
-var escapeForLike = require('./escapeForLike');
+'use strict'
+var Promise = require('bluebird')
+var AuthenticationError = require('../../errors/authenticationError')
+var bcrypt = Promise.promisifyAll(require('bcrypt'))
+var escapeForLike = require('./escapeForLike')
 
 function authenticatedTransaction(knex, auth, callback) {
 
   return knex.transaction(function (trx) {
 
-    var authPromise;
+    var authPromise
     if (auth && auth.emailAddress && auth.password) {
       authPromise = trx
         .from('users')
@@ -16,26 +16,26 @@ function authenticatedTransaction(knex, auth, callback) {
         .where('emailAddress', 'ilike', escapeForLike(auth.emailAddress))
         .then(function (users) {
           if (users.length === 0) {
-            throw new AuthenticationError('There is no such user.');
+            throw new AuthenticationError('There is no such user.')
           }
-          return users[0];
+          return users[0]
         }).tap(function (authUser) {
           return bcrypt.compareAsync(auth.password, authUser.passwordHash)
             .then(function (passwordGood) {
               if (!passwordGood) {
-                throw new AuthenticationError('The password was incorrect.');
+                throw new AuthenticationError('The password was incorrect.')
               }
-            });
-        });
+            })
+        })
     } else {
-      authPromise = Promise.resolve(null);
+      authPromise = Promise.resolve(null)
     }
 
     return authPromise.then(function (authUser) {
-      return callback(trx, authUser);
-    });
+      return callback(trx, authUser)
+    })
 
-  });
+  })
 }
 
-module.exports = authenticatedTransaction;
+module.exports = authenticatedTransaction

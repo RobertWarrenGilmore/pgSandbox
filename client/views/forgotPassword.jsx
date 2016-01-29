@@ -1,12 +1,12 @@
-'use strict';
-var React = require('react');
-var TitleMixin = require('./titleMixin');
-var ajax = require('../utilities/ajax');
+'use strict'
+var React = require('react')
+var TitleMixin = require('./titleMixin')
+var ajax = require('../utilities/ajax')
 
 var ForgotPassword = React.createClass({
   mixins: [TitleMixin('forgot password')],
   getInitialState: function() {
-    return {busy: false, success: false, error: null};
+    return {busy: false, success: false, error: null}
   },
   render: function() {
     if (this.state.success) {
@@ -16,7 +16,7 @@ var ForgotPassword = React.createClass({
             Success! You'll recieve a password reset email soon.
           </p>
         </div>
-      );
+      )
     } else {
       return (
         <div id='forgotPassword'>
@@ -38,14 +38,14 @@ var ForgotPassword = React.createClass({
             </div>
           </form>
         </div>
-      );
+      )
     }
   },
   _onSubmit: function(event) {
-    event.preventDefault();
-    var emailAddress = this.refs.emailAddress.value;
-    this.setState({busy: true, success: false, error: null});
-    var self = this;
+    event.preventDefault()
+    var emailAddress = this.refs.emailAddress.value
+    this.setState({busy: true, success: false, error: null})
+    var self = this
     return ajax({
       method: 'PUT',
       uri: '/api/users',
@@ -56,14 +56,14 @@ var ForgotPassword = React.createClass({
       }
     }).then(function(response) {
       if (response.statusCode === 200) {
-        self.setState({busy: false, success: true, error: null});
+        self.setState({busy: false, success: true, error: null})
       } else {
-        self.setState({busy: false, success: false, error: response.body});
+        self.setState({busy: false, success: false, error: response.body})
       }
     }).catch(function(error) {
-      self.setState({busy: false, success: false, error: error.message});
-    });
+      self.setState({busy: false, success: false, error: error.message})
+    })
   }
-});
+})
 
-module.exports = ForgotPassword;
+module.exports = ForgotPassword

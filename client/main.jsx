@@ -1,47 +1,47 @@
-'use strict';
-import 'babel-polyfill';
-const React = require('react');
-const ReactDom = require('react-dom');
-const ReactRouter = require('react-router');
-const Router = ReactRouter.Router;
-const Route = ReactRouter.Route;
-const IndexRoute = ReactRouter.IndexRoute;
-const Redirect = ReactRouter.Redirect;
-const createBrowserHistory = require('history/lib/createBrowserHistory');
-const auth = require('./flux/auth');
-const Promise = require('bluebird');
-import App from './views/app.jsx';
-const InfoPage = require('./views/infoPage.jsx');
-const LogIn = require('./views/logIn.jsx');
-const Register = require('./views/register.jsx');
-const ForgotPassword = require('./views/forgotPassword.jsx');
-const SetPassword = require('./views/setPassword.jsx');
-const Users = require('./views/users.jsx');
-const User = require('./views/user.jsx');
-const BlogPost = require('./views/blogPost.jsx');
-const BlogSearch = require('./views/blogSearch.jsx');
-const NotFound = require('./views/notFound.jsx');
+'use strict'
+import 'babel-polyfill'
+const React = require('react')
+const ReactDom = require('react-dom')
+const ReactRouter = require('react-router')
+const Router = ReactRouter.Router
+const Route = ReactRouter.Route
+const IndexRoute = ReactRouter.IndexRoute
+const Redirect = ReactRouter.Redirect
+const createBrowserHistory = require('history/lib/createBrowserHistory')
+const auth = require('./flux/auth')
+const Promise = require('bluebird')
+import App from './views/app.jsx'
+const InfoPage = require('./views/infoPage.jsx')
+const LogIn = require('./views/logIn.jsx')
+const Register = require('./views/register.jsx')
+const ForgotPassword = require('./views/forgotPassword.jsx')
+const SetPassword = require('./views/setPassword.jsx')
+const Users = require('./views/users.jsx')
+const User = require('./views/user.jsx')
+const BlogPost = require('./views/blogPost.jsx')
+const BlogSearch = require('./views/blogSearch.jsx')
+const NotFound = require('./views/notFound.jsx')
 
 Promise.config({
   cancellation: true
-});
+})
 
 function requireAuth(nextState, replaceState) {
   if (!auth.getCredentials()) {
     replaceState({
       nextLocation: nextState.location
-    }, '/login');
+    }, '/login')
   }
 }
 
 function requireNoAuth(nextState, replaceState) {
   if (auth.getCredentials()) {
-    replaceState(null, '/');
+    replaceState(null, '/')
   }
 }
 
 function logOut(nextState, replaceState) {
-  auth.logOut();
+  auth.logOut()
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -79,8 +79,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         </Route>
       </Router>
-    );
-    const element = document.getElementById('appContainer');
-    ReactDom.render(router, element);
-  });
-});
+    )
+    const element = document.getElementById('appContainer')
+    ReactDom.render(router, element)
+  })
+})

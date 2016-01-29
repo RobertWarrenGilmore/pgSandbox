@@ -1,6 +1,6 @@
-'use strict';
-var React = require('react');
-var PropTypes = React.PropTypes;
+'use strict'
+var React = require('react')
+var PropTypes = React.PropTypes
 
 var Modal = React.createClass({
 
@@ -11,9 +11,9 @@ var Modal = React.createClass({
           {this.props.children}
         </div>
       </div>
-    );
+    )
   }
 
-});
+})
 
-module.exports = Modal;
+module.exports = Modal

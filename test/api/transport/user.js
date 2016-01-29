@@ -1,82 +1,82 @@
-'use strict';
-var Promise = require('bluebird');
-var assert = require('assert');
-var ajax = require('../../../client/utilities/ajax');
-var sinon = require('sinon');
-var http = require('http');
-var express = require('express');
-var parseAuth = require('basic-auth');
-var bodyParser = require('body-parser');
+'use strict'
+var Promise = require('bluebird')
+var assert = require('assert')
+var ajax = require('../../../client/utilities/ajax')
+var sinon = require('sinon')
+var http = require('http')
+var express = require('express')
+var parseAuth = require('basic-auth')
+var bodyParser = require('body-parser')
 
 describe('user', function () {
 
-  var emailAddress = 'mocha.test.email.address@not.a.real.domain.com';
-  var password = 'taco tuesday';
+  var emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
+  var password = 'taco tuesday'
 
   var requestAuth = {
     emailAddress: emailAddress,
     password: password
-  };
-  var requestBody;
-  var responseBody;
+  }
+  var requestBody
+  var responseBody
 
-  var bizQueue = [];
+  var bizQueue = []
 
   function bizPromiseReturner() {
-    var result = bizQueue.pop();
+    var result = bizQueue.pop()
     if (result instanceof Error) {
-      return Promise.reject(result);
+      return Promise.reject(result)
     } else {
-      return Promise.resolve(result);
+      return Promise.resolve(result)
     }
   }
   var userBiz = {
     create: sinon.spy(bizPromiseReturner),
     read: sinon.spy(bizPromiseReturner),
     update: sinon.spy(bizPromiseReturner)
-  };
+  }
 
-  var server;
+  var server
 
   before('Host the user transport module on a server.', function () {
-    var userRouter = require('../../../api/transport/user')(userBiz);
-    var app = express();
+    var userRouter = require('../../../api/transport/user')(userBiz)
+    var app = express()
     app.use(function authMiddleware(req, res, next) {
-      var auth = parseAuth(req);
+      var auth = parseAuth(req)
       if (auth) {
         req.auth = {
           emailAddress: auth.name,
           password: auth.pass
-        };
+        }
       }
-      next();
-    });
+      next()
+    })
     app.use(bodyParser.json({
       type: 'application/json'
-    }));
-    app.use('/api/users', userRouter);
-    server = http.createServer(app);
-    server.listen(3000);
-  });
+    }))
+    app.use('/api/users', userRouter)
+    server = http.createServer(app)
+    server.listen(3000)
+  })
 
   after('Close the server.', function () {
-    server.close();
-  });
+    server.close()
+  })
 
   beforeEach('Reset the userBiz stubs.', function () {
-    userBiz.create.reset();
-    userBiz.read.reset();
-    userBiz.update.reset();
-    bizQueue.length = 0;
+    userBiz.create.reset()
+    userBiz.read.reset()
+    userBiz.update.reset()
+    bizQueue.length = 0
 
     requestBody = {
       foo: 'bar'
-    };
+    }
     responseBody = {
       hello: 'world'
-    };
-    bizQueue.unshift(responseBody);
-  });
+    }
+    bizQueue.unshift(responseBody)
+  })
 
   describe('/users', function () {
 
@@ -86,7 +86,7 @@ describe('user', function () {
         params: sinon.match({}),
         query: sinon.match({}),
         body: sinon.match(requestBody)
-      });
+      })
       return ajax({
         method: 'POST',
         uri: 'http://localhost:3000/api/users',
@@ -97,10 +97,10 @@ describe('user', function () {
         json: true,
         body: requestBody
       }).then(function (response) {
-        assert(userBiz.create.withArgs(requestMatcher).calledOnce, 'Create was not called properly.');
-        assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.');
-      });
-    });
+        assert(userBiz.create.withArgs(requestMatcher).calledOnce, 'Create was not called properly.')
+        assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.')
+      })
+    })
 
     it('should read on GET', function () {
       var requestMatcher = sinon.match({
@@ -108,7 +108,7 @@ describe('user', function () {
         params: sinon.match({}),
         query: sinon.match({}),
         body: sinon.match(requestBody)
-      });
+      })
       return ajax({
         method: 'GET',
         uri: 'http://localhost:3000/api/users',
@@ -119,10 +119,10 @@ describe('user', function () {
         json: true,
         body: requestBody
       }).then(function (response) {
-        assert(userBiz.read.withArgs(requestMatcher).calledOnce, 'Create was not called properly.');
-        assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.');
-      });
-    });
+        assert(userBiz.read.withArgs(requestMatcher).calledOnce, 'Create was not called properly.')
+        assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.')
+      })
+    })
 
     it('should update on PUT', function () {
       var requestMatcher = sinon.match({
@@ -130,7 +130,7 @@ describe('user', function () {
         params: sinon.match({}),
         query: sinon.match({}),
         body: sinon.match(requestBody)
-      });
+      })
       return ajax({
         method: 'PUT',
         uri: 'http://localhost:3000/api/users',
@@ -141,10 +141,10 @@ describe('user', function () {
         json: true,
         body: requestBody
       }).then(function (response) {
-        assert(userBiz.update.withArgs(requestMatcher).calledOnce, 'Create was not called properly.');
-        assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.');
-      });
-    });
+        assert(userBiz.update.withArgs(requestMatcher).calledOnce, 'Create was not called properly.')
+        assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.')
+      })
+    })
 
     it('should forward defined errors', function () {
       var requestMatcher = sinon.match({
@@ -152,11 +152,11 @@ describe('user', function () {
         params: sinon.match({}),
         query: sinon.match({}),
         body: sinon.match(requestBody)
-      });
-      bizQueue.pop();
-      var error = new Error();
-      error.errorCode = 599;
-      bizQueue.unshift(error);
+      })
+      bizQueue.pop()
+      var error = new Error()
+      error.errorCode = 599
+      bizQueue.unshift(error)
       return ajax({
         method: 'POST',
         uri: 'http://localhost:3000/api/users',
@@ -167,10 +167,10 @@ describe('user', function () {
         json: true,
         body: requestBody
       }).then(function (response) {
-        assert(userBiz.create.withArgs(requestMatcher).calledOnce, 'Create was not called properly.');
-        assert.equal(response.statusCode, error.errorCode, 'The router returned the wrong thing.');
-      });
-    });
+        assert(userBiz.create.withArgs(requestMatcher).calledOnce, 'Create was not called properly.')
+        assert.equal(response.statusCode, error.errorCode, 'The router returned the wrong thing.')
+      })
+    })
 
     it('should forward generic errors', function () {
       var requestMatcher = sinon.match({
@@ -178,10 +178,10 @@ describe('user', function () {
         params: sinon.match({}),
         query: sinon.match({}),
         body: sinon.match(requestBody)
-      });
-      bizQueue.pop();
-      var error = new Error();
-      bizQueue.unshift(error);
+      })
+      bizQueue.pop()
+      var error = new Error()
+      bizQueue.unshift(error)
       return ajax({
         method: 'POST',
         uri: 'http://localhost:3000/api/users',
@@ -192,10 +192,10 @@ describe('user', function () {
         json: true,
         body: requestBody
       }).then(function (response) {
-        assert(userBiz.create.withArgs(requestMatcher).calledOnce, 'Create was not called properly.');
-        assert.equal(response.statusCode, 500, 'The router returned the wrong thing.');
-      });
-    });
+        assert(userBiz.create.withArgs(requestMatcher).calledOnce, 'Create was not called properly.')
+        assert.equal(response.statusCode, 500, 'The router returned the wrong thing.')
+      })
+    })
 
     describe('/:userId', function () {
 
@@ -205,7 +205,7 @@ describe('user', function () {
           params: sinon.match({}),
           query: sinon.match({}),
           body: sinon.match(requestBody)
-        });
+        })
         return ajax({
           method: 'GET',
           uri: 'http://localhost:3000/api/users/123',
@@ -216,10 +216,10 @@ describe('user', function () {
           json: true,
           body: requestBody
         }).then(function (response) {
-          assert(userBiz.read.withArgs(requestMatcher).calledOnce, 'Create was not called properly.');
-          assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.');
-        });
-      });
+          assert(userBiz.read.withArgs(requestMatcher).calledOnce, 'Create was not called properly.')
+          assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.')
+        })
+      })
 
       it('should update on PUT', function () {
         var requestMatcher = sinon.match({
@@ -227,7 +227,7 @@ describe('user', function () {
           params: sinon.match({}),
           query: sinon.match({}),
           body: sinon.match(requestBody)
-        });
+        })
         return ajax({
           method: 'PUT',
           uri: 'http://localhost:3000/api/users/123',
@@ -238,13 +238,13 @@ describe('user', function () {
           json: true,
           body: requestBody
         }).then(function (response) {
-          assert(userBiz.update.withArgs(requestMatcher).calledOnce, 'Create was not called properly.');
-          assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.');
-        });
-      });
+          assert(userBiz.update.withArgs(requestMatcher).calledOnce, 'Create was not called properly.')
+          assert.deepEqual(response.body, responseBody, 'The router returned the wrong thing.')
+        })
+      })
 
-    });
+    })
 
-  });
+  })
 
-});
+})
