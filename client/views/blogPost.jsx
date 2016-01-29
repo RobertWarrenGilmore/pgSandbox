@@ -11,6 +11,7 @@ import Modal from './modal.jsx'
 import Promise from 'bluebird'
 import appInfo from '../../appInfo.json'
 import processUserHtml from '../utilities/processUserHtml'
+import {bind} from 'decko'
 
 class BlogPost extends React.Component {
   constructor(props) {
@@ -25,18 +26,6 @@ class BlogPost extends React.Component {
       confirmingDelete: false,
       authUser: null
     }
-    this._loadAuthUser = this._loadAuthUser.bind(this)
-    this._loadBlogUsers = this._loadBlogUsers.bind(this)
-    this._loadPost = this._loadPost.bind(this)
-    this._savePost = this._savePost.bind(this)
-    this._revertPost = this._revertPost.bind(this)
-    this._askDeletePost = this._askDeletePost.bind(this)
-    this._stopDeletePost = this._stopDeletePost.bind(this)
-    this._deletePost = this._deletePost.bind(this)
-    this._enterEditMode = this._enterEditMode.bind(this)
-    this._exitEditMode = this._exitEditMode.bind(this)
-    this._updateEditingPost = this._updateEditingPost.bind(this)
-    this._cancelRequest = this._cancelRequest.bind(this)
   }
 
   /*
@@ -49,6 +38,7 @@ class BlogPost extends React.Component {
    *   something important does change about the user, the API will give us
    *   appropriate errors when we try to edit the post.
    */
+   @bind
   _loadAuthUser() {
     const credentials = auth.getCredentials()
     if (credentials) {
@@ -82,6 +72,7 @@ class BlogPost extends React.Component {
     }
   }
 
+  @bind
   _loadBlogUsers() {
     this._cancelRequest()
     let r = ajax({
@@ -128,6 +119,7 @@ class BlogPost extends React.Component {
    * This method is meant to be run every time the URL changes and every time we
    *   leave edit mode.
    */
+   @bind
   _loadPost(postId) {
     this._cancelRequest()
     let r = ajax({
@@ -181,6 +173,7 @@ class BlogPost extends React.Component {
    * Save the post being edited. If the post exists already, this means PUT
    *   otherwise POST.
    */
+   @bind
   _savePost() {
     this._cancelRequest()
     let post = {
@@ -241,6 +234,7 @@ class BlogPost extends React.Component {
     })
   }
 
+  @bind
   _revertPost() {
     this.setState({
       editingPost: this.state.post,
@@ -248,18 +242,21 @@ class BlogPost extends React.Component {
     })
   }
 
+  @bind
   _askDeletePost() {
     this.setState({
       confirmingDelete: true
     })
   }
 
+  @bind
   _stopDeletePost() {
     this.setState({
       confirmingDelete: false
     })
   }
 
+  @bind
   _deletePost() {
     this._cancelRequest()
     let r = ajax ({
@@ -299,6 +296,7 @@ class BlogPost extends React.Component {
     })
   }
 
+  @bind
   _enterEditMode() {
     let editingPost = this.state.post || {
       id: this.props.params.postId,
@@ -319,12 +317,14 @@ class BlogPost extends React.Component {
     })
   }
 
+  @bind
   _exitEditMode() {
     this.setState({
       editingPost: null
     })
   }
 
+  @bind
   _updateEditingPost() {
     let author = this.state.editingPost.author
     if (this.state.blogUsers) {
@@ -345,6 +345,7 @@ class BlogPost extends React.Component {
     })
   }
 
+  @bind
   _cancelRequest() {
     // Cancel any Ajax that's currently running.
     if (this.state.runningRequest) {

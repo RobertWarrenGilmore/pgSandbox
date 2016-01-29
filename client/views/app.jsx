@@ -6,6 +6,7 @@ import setWindowTitle from '../utilities/setWindowTitle'
 import classnames from 'classnames'
 import auth from '../flux/auth'
 import ajax from '../utilities/ajax'
+import {bind} from 'decko'
 
 class App extends React.Component {
   constructor(props) {
@@ -15,11 +16,8 @@ class App extends React.Component {
       authUser: null,
       hamburgerExpanded: false
     }
-    this._loadAuthUser = this._loadAuthUser.bind(this)
-    this._authListener = this._authListener.bind(this)
-    this._onHamburgerClick = this._onHamburgerClick.bind(this)
-    this._onNavClick = this._onNavClick.bind(this)
   }
+  @bind
   _loadAuthUser() {
     const credentials = this.state.authCredentials
     if (credentials) {
@@ -40,13 +38,14 @@ class App extends React.Component {
           })
         }
         return null
-      }).catch()
+      }).catch((err) => {})
     } else {
       this.setState({
         authUser: null
       })
     }
   }
+  @bind
   _authListener() {
     this.setState({
       authCredentials: auth.getCredentials()
@@ -125,11 +124,13 @@ class App extends React.Component {
     )
     return result
   }
+  @bind
   _onHamburgerClick() {
     this.setState({
       hamburgerExpanded: !this.state.hamburgerExpanded
     })
   }
+  @bind
   _onNavClick() {
     this.setState({
       hamburgerExpanded: false

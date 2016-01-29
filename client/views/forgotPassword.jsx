@@ -1,14 +1,25 @@
 'use strict'
-var React = require('react')
-var TitleMixin = require('./titleMixin')
-var ajax = require('../utilities/ajax')
+import React from 'react'
+import setWindowTitle from '../utilities/setWindowTitle'
+import ajax from '../utilities/ajax'
+import {bind} from 'decko'
 
-var ForgotPassword = React.createClass({
-  mixins: [TitleMixin('forgot password')],
-  getInitialState: function() {
-    return {busy: false, success: false, error: null}
-  },
-  render: function() {
+class ForgotPassword extends React.Component{
+  constructor(props) {
+    super(props)
+    this.state = {
+      runningRequest: null,
+      success: false,
+      error: null
+    }
+  }
+  componentDidMount() {
+    setWindowTitle('forgot password')
+  }
+  componentWillUnmount() {
+    setWindowTitle()
+  }
+  render() {
     if (this.state.success) {
       return (
         <div className='message'>
@@ -40,13 +51,12 @@ var ForgotPassword = React.createClass({
         </div>
       )
     }
-  },
-  _onSubmit: function(event) {
+  }
+  @bind
+  _onSubmit(event) {
     event.preventDefault()
-    var emailAddress = this.refs.emailAddress.value
-    this.setState({busy: true, success: false, error: null})
-    var self = this
-    return ajax({
+    let emailAddress = this.refs.emailAddress.value
+    let r = ajax({
       method: 'PUT',
       uri: '/api/users',
       json: true,
@@ -54,16 +64,35 @@ var ForgotPassword = React.createClass({
         emailAddress: emailAddress,
         passwordResetKey: null
       }
-    }).then(function(response) {
+    })
+    this.setState({
+      runningRequest: r,
+      success: false,
+      error: null
+    })
+    return r.then((response) => {
       if (response.statusCode === 200) {
-        self.setState({busy: false, success: true, error: null})
+        this.setState({
+          success: true,
+          error: null
+        })
       } else {
-        self.setState({busy: false, success: false, error: response.body})
+        this.setState({
+          success: false,
+          error: response.body
+        })
       }
-    }).catch(function(error) {
-      self.setState({busy: false, success: false, error: error.message})
+    }).catch((error) => {
+      this.setState({
+        success: false,
+        error: error.message
+      })
+    }).finally(() => {
+      this.setState({
+        runningRequest: null
+      })
     })
   }
-})
+}
 
-module.exports = ForgotPassword
+export default ForgotPassword

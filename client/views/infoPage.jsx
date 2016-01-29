@@ -1,30 +1,31 @@
 'use strict'
-var React = require('react')
-var BusyIndicator = require('./busyIndicator.jsx')
-var ajax = require('../utilities/ajax')
-var auth = require('../flux/auth')
-var processUserHtml = require('../utilities/processUserHtml')
-var TitleMixin = require('./titleMixin')
-var sanitiseHtml = require('sanitize-html')
+import React from 'react'
+import BusyIndicator from './busyIndicator.jsx'
+import ajax from '../utilities/ajax'
+import auth from '../flux/auth'
+import processUserHtml from '../utilities/processUserHtml'
+import setWindowTitle from '../utilities/setWindowTitle'
+import sanitiseHtml from 'sanitize-html'
+import {bind} from 'decko'
 
-var InfoPage = React.createClass({
+class InfoPage extends React.Component {
 
-  mixins: [TitleMixin()],
-
-  getInitialState: function() {
-    return {
+  constructor(props) {
+    super(props)
+    this.state = {
       runningRequest: false,
       content: null,
       editingContent: null,
       error: null,
       authUser: null
     }
-  },
+  }
 
-  _loadAuthUser: function () {
-    var credentials = auth.getCredentials()
+  @bind
+  _loadAuthUser() {
+    const credentials = auth.getCredentials()
     if (credentials) {
-      var r = ajax({
+      let r = ajax({
         method: 'GET',
         uri: '/api/users/' + credentials.id,
         json: true,
@@ -33,34 +34,34 @@ var InfoPage = React.createClass({
       this.setState({
         runningRequest: r // Hold on to the Ajax promise in case we need to cancel it later.
       })
-      var self = this
-      return r.then(function (response) {
+      return r.then((response) => {
         if (response.statusCode === 200) {
-          self.setState({
+          this.setState({
             authUser: response.body
           })
         } else {
-          self.setState({
+          this.setState({
             error: response.body
           })
         }
         return null
-      }).catch(function (error) {
-        self.setState({
+      }).catch((error) => {
+        this.setState({
           error: error.message
         })
       })
     } else {
       return Promise.resolve()
     }
-  },
+  }
 
-  _loadContent: function (pageId) {
+  @bind
+  _loadContent(pageId) {
     this._cancelRequest()
     if (pageId === '/') {
       pageId = '/home'
     }
-    var r = ajax({
+    let r = ajax({
       method: 'GET',
       uri: '/api/infoPages' + pageId,
       json: true,
@@ -70,38 +71,38 @@ var InfoPage = React.createClass({
       runningRequest: r, // Hold on to the Ajax promise in case we need to cancel it later.
       error: null
     })
-    this.setTitle()
-    var self = this
-    return r.then(function (response) {
+    setWindowTitle()
+    return r.then((response) => {
       if (response.statusCode === 200) {
-        self.setState({
+        this.setState({
           runningRequest: null,
           content: response.body
         })
-        self.setTitle(sanitiseHtml(response.body.title, {allowedTags: []}))
+        this.setTitle(sanitiseHtml(response.body.title, {allowedTags: []}))
       } else {
-        self.setState({
+        this.setState({
           runningRequest: null,
           error: response.body
         })
       }
       return null
-    }).catch(function (error) {
-      self.setState({
+    }).catch((error) => {
+      this.setState({
         runningRequest: null,
         error: error.message
       })
     })
-  },
+  }
 
-  _saveContent: function() {
+  @bind
+  _saveContent() {
     this._cancelRequest()
-    var pageId = this.props.location.pathname
+    const pageId = this.props.location.pathname
     if (pageId === '/') {
       pageId = '/home'
     }
-    var page = this.state.editingContent
-    var r = ajax ({
+    let page = this.state.editingContent
+    let r = ajax ({
       method: 'PUT',
       uri: '/api/infoPages' + pageId,
       body: page,
@@ -112,38 +113,39 @@ var InfoPage = React.createClass({
       runningRequest: r,
       error: null
     })
-    var self = this
-    return r.then(function (response) {
+    return r.then((response) => {
       if (response.statusCode === 200 || response.statusCode === 201) {
-        self.setState({
+        this.setState({
           runningRequest: null,
           editingContent: response.body,
           content: response.body
         })
-        self.setTitle(sanitiseHtml(response.body.title, {allowedTags: []}))
+        this.setTitle(sanitiseHtml(response.body.title, {allowedTags: []}))
       } else {
-        self.setState({
+        this.setState({
           runningRequest: null,
           error: response.body
         })
       }
       return null
-    }).catch(function(error) {
-      self.setState({
+    }).catch((error) => {
+      this.setState({
         runningRequest: null,
         error: error.message
       })
     })
-  },
+  }
 
-  _revertContent: function () {
+  @bind
+  _revertContent() {
     this.setState({
       editingContent: this.state.content,
       error: null
     })
-  },
+  }
 
-  _enterEditMode: function () {
+  @bind
+  _enterEditMode() {
     this.setState({
       error: null,
       editingContent: this.state.content || {
@@ -151,57 +153,59 @@ var InfoPage = React.createClass({
         body: ''
       }
     })
-  },
+  }
 
-  _exitEditMode: function () {
+  @bind
+  _exitEditMode() {
     this.setState({
       editingContent: null
     })
-  },
+  }
 
-  _updateEditingContent: function () {
+  @bind
+  _updateEditingContent() {
     this.setState({
       editingContent: {
         title: this.refs.title.value,
         body: this.refs.body.value
       }
     })
-  },
+  }
 
-  _cancelRequest: function () {
+  @bind
+  _cancelRequest() {
     // Cancel any Ajax that's currently running.
     if (this.state.runningRequest) {
       this.state.runningRequest.cancel()
     }
-  },
+  }
 
-  componentWillMount: function() {
-    var self = this
-    this._loadAuthUser().then(function () {
-      return self._loadContent(self.props.location.pathname)
+  componentWillMount() {
+    this._loadAuthUser().then(() => {
+      return this._loadContent(this.props.location.pathname)
     })
-  },
+  }
 
-  componentWillReceiveProps: function(nextProps) {
-    var pageIdChanged = nextProps.params.location.pathname !== this.props.location.pathname
+  componentWillReceiveProps(nextProps) {
+    const pageIdChanged = nextProps.params.location.pathname !== this.props.location.pathname
     if (pageIdChanged) {
       // TODO Confirm leave without saving changes if in edit mode and unsaved.
       this._exitEditMode()
       this._loadContent(nextProps.params.location.pathname)
     }
-  },
+  }
 
-  componentWillUnmount: function() {
+  componentWillUnmount() {
     this._cancelRequest()
-  },
+  }
 
-  render: function() {
-    var result = null
-    var isAdmin = this.state.authUser && this.state.authUser.admin
+  render() {
+    let result = null
+    const isAdmin = this.state.authUser && this.state.authUser.admin
 
     // editor layout
     if (this.state.editingContent) {
-      var content = this.state.editingContent
+      const content = this.state.editingContent
       result = (
         <div id='infoPage'>
           <div className='actions'>
@@ -298,11 +302,11 @@ var InfoPage = React.createClass({
 
     // content layout
     } else {
-      var content = this.state.content || {
+      const content = this.state.content || {
         title: '',
         body: ''
       }
-      var editButton = null
+      let editButton = null
       if (isAdmin) {
         editButton = (
           <button
@@ -330,6 +334,6 @@ var InfoPage = React.createClass({
     return result
   }
 
-})
+}
 
-module.exports = InfoPage
+export default InfoPage

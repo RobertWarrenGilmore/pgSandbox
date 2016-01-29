@@ -570,7 +570,8 @@
       "dependencies": {
         "path-exists": {
           "version": "1.0.0",
-          "from": "path-exists@>=1.0.0 <2.0.0"
+          "from": "path-exists@1.0.0",
+          "resolved": "https://registry.npmjs.org/path-exists/-/path-exists-1.0.0.tgz"
         }
       }
     },
@@ -1099,6 +1100,11 @@
       "from": "decamelize@>=1.1.1 <2.0.0",
       "resolved": "https://registry.npmjs.org/decamelize/-/decamelize-1.1.2.tgz"
     },
+    "decko": {
+      "version": "1.1.3",
+      "from": "decko@*",
+      "resolved": "https://registry.npmjs.org/decko/-/decko-1.1.3.tgz"
+    },
     "deep-equal": {
       "version": "1.0.1",
       "from": "deep-equal@*",
@@ -1136,7 +1142,8 @@
         },
         "esprima-fb": {
           "version": "15001.1001.0-dev-harmony-fb",
-          "from": "esprima-fb@>=15001.1001.0-dev-harmony-fb <15001.1002.0"
+          "from": "esprima-fb@15001.1001.0-dev-harmony-fb",
+          "resolved": "https://registry.npmjs.org/esprima-fb/-/esprima-fb-15001.1001.0-dev-harmony-fb.tgz"
         },
         "wordwrap": {
           "version": "0.0.2",
@@ -3288,11 +3295,13 @@
       "dependencies": {
         "esprima-fb": {
           "version": "15001.1001.0-dev-harmony-fb",
-          "from": "esprima-fb@>=15001.1001.0-dev-harmony-fb <15001.1002.0"
+          "from": "esprima-fb@15001.1001.0-dev-harmony-fb",
+          "resolved": "https://registry.npmjs.org/esprima-fb/-/esprima-fb-15001.1001.0-dev-harmony-fb.tgz"
         },
         "source-map": {
           "version": "0.5.3",
-          "from": "source-map@>=0.5.0 <0.6.0"
+          "from": "source-map@0.5.3",
+          "resolved": "https://registry.npmjs.org/source-map/-/source-map-0.5.3.tgz"
         }
       }
     },

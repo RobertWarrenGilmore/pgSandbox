@@ -1,16 +1,10 @@
 'use strict'
-var React = require('react')
+import React from 'react'
 
-var BusyIndicator = React.createClass({
+const BusyIndicator = (props) => (
+  <div className='busyIndicator'>
+    <span className='icon-spinner2'/>
+  </div>
+)
 
-  render: function() {
-    return (
-      <div className='busyIndicator'>
-        <span className='icon-spinner2'/>
-      </div>
-    )
-  }
-
-})
-
-module.exports = BusyIndicator
+export default BusyIndicator
