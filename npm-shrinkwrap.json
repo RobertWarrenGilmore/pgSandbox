@@ -1800,6 +1800,11 @@
         }
       }
     },
+    "flux-standard-action": {
+      "version": "0.6.0",
+      "from": "flux-standard-action@>=0.6.0 <0.7.0",
+      "resolved": "https://registry.npmjs.org/flux-standard-action/-/flux-standard-action-0.6.0.tgz"
+    },
     "for-in": {
       "version": "0.1.4",
       "from": "for-in@>=0.1.4 <0.2.0",
@@ -2058,6 +2063,11 @@
       "version": "2.16.3",
       "from": "hoek@>=2.0.0 <3.0.0",
       "resolved": "https://registry.npmjs.org/hoek/-/hoek-2.16.3.tgz"
+    },
+    "hoist-non-react-statics": {
+      "version": "1.0.3",
+      "from": "hoist-non-react-statics@>=1.0.3 <2.0.0",
+      "resolved": "https://registry.npmjs.org/hoist-non-react-statics/-/hoist-non-react-statics-1.0.3.tgz"
     },
     "home-or-tmp": {
       "version": "1.0.0",
@@ -3366,6 +3376,11 @@
       "from": "react-dom@0.14.6",
       "resolved": "https://registry.npmjs.org/react-dom/-/react-dom-0.14.6.tgz"
     },
+    "react-redux": {
+      "version": "4.1.2",
+      "from": "react-redux@*",
+      "resolved": "https://registry.npmjs.org/react-redux/-/react-redux-4.1.2.tgz"
+    },
     "react-router": {
       "version": "1.0.3",
       "from": "react-router@>=1.0.0-rc3 <2.0.0",
@@ -3439,6 +3454,31 @@
       "version": "1.0.0",
       "from": "redent@>=1.0.0 <2.0.0",
       "resolved": "https://registry.npmjs.org/redent/-/redent-1.0.0.tgz"
+    },
+    "reduce-reducers": {
+      "version": "0.1.1",
+      "from": "reduce-reducers@>=0.1.0 <0.2.0",
+      "resolved": "https://registry.npmjs.org/reduce-reducers/-/reduce-reducers-0.1.1.tgz"
+    },
+    "redux": {
+      "version": "3.1.7",
+      "from": "redux@*",
+      "resolved": "https://registry.npmjs.org/redux/-/redux-3.1.7.tgz"
+    },
+    "redux-actions": {
+      "version": "0.9.1",
+      "from": "redux-actions@*",
+      "resolved": "https://registry.npmjs.org/redux-actions/-/redux-actions-0.9.1.tgz"
+    },
+    "redux-logger": {
+      "version": "2.4.0",
+      "from": "redux-logger@*",
+      "resolved": "https://registry.npmjs.org/redux-logger/-/redux-logger-2.4.0.tgz"
+    },
+    "redux-thunk": {
+      "version": "1.0.3",
+      "from": "redux-thunk@*",
+      "resolved": "https://registry.npmjs.org/redux-thunk/-/redux-thunk-1.0.3.tgz"
     },
     "regenerate": {
       "version": "1.2.1",
@@ -3599,6 +3639,11 @@
       "version": "2.0.1",
       "from": "sass-graph@>=2.0.1 <3.0.0",
       "resolved": "https://registry.npmjs.org/sass-graph/-/sass-graph-2.0.1.tgz"
+    },
+    "seamless-immutable": {
+      "version": "5.0.1",
+      "from": "seamless-immutable@*",
+      "resolved": "https://registry.npmjs.org/seamless-immutable/-/seamless-immutable-5.0.1.tgz"
     },
     "semver": {
       "version": "5.1.0",

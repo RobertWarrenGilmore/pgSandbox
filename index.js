@@ -59,18 +59,12 @@ b.transform('babelify', {
     'stage-0',
     'react'
   ],
-  plugins: [
-    'transform-decorators'
-  ],
-  sourceMaps: true
+  sourceMaps: (process.env.NODE_ENV !== 'production')
 })
 if (process.env.NODE_ENV === 'production') {
-  b.transform({
-    global: true,
-    ignore: [
-      '**/node_modules/when/**' // TODO Find out why this library won't uglify properly.
-    ]
-  }, uglifyify)
+  b.transform('uglifyify', {
+    global: true
+  })
 }
 b.add('./client/main.jsx')
 var clientScriptPromise = Promise.promisify(b.bundle, {

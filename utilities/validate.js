@@ -137,6 +137,8 @@ var commonValidations = {
     return val === undefined
       || val === null
       || _.isBoolean(val)
+      || val === 'true'
+      || val === 'false'
   },
   empty: function (a, val) {
     return commonValidations.maxLength(0, val)

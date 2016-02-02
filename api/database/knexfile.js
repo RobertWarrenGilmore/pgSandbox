@@ -11,9 +11,9 @@ module.exports = {
     client: 'postgresql',
     connection: {
       host: 'localhost',
-      user: 'adjuvet',
+      user: 'sandboxUser',
       password: dbPassword,
-      database: 'adjuvetTest',
+      database: 'sandboxTest',
       charset: 'utf8'
     },
     pool: {
@@ -30,9 +30,9 @@ module.exports = {
     client: 'postgresql',
     connection: {
       host: 'localhost',
-      user: 'adjuvet',
+      user: 'sandboxUser',
       password: dbPassword,
-      database: 'adjuvet',
+      database: 'sandbox',
       charset: 'utf8'
     },
     pool: {
@@ -49,9 +49,9 @@ module.exports = {
     client: 'postgresql',
     connection: {
       host: 'localhost',
-      user: 'adjuvet',
+      user: 'sandboxUser',
       password: dbPassword,
-      database: 'adjuvet',
+      database: 'sandbox',
       charset: 'utf8'
     },
     pool: {
