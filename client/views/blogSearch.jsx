@@ -7,6 +7,7 @@ const appScroll = require('../utilities/appScroll')
 const processUserHtml = require('../utilities/processUserHtml')
 const { connect } = require('react-redux')
 const blogActions = require('../flux/blog/actions')
+const Helmet = require('react-helmet')
 
 class BlogSearch extends React.Component {
   constructor(props) {
@@ -133,6 +134,7 @@ class BlogSearch extends React.Component {
 
     return (
       <div id='blogSearch'>
+        <Helmet title='blog'/>
         {(authorisedToBlog || isAdmin) ? (
           <div className='actions'>
             <Link

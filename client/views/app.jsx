@@ -4,6 +4,7 @@ const React = require('react')
 const { Link, IndexLink } = require('react-router')
 const classnames = require('classnames')
 const { connect } = require('react-redux')
+const Helmet = require('react-helmet')
 
 class App extends React.Component {
   constructor(props) {
@@ -30,6 +31,9 @@ class App extends React.Component {
     })
     let result = (
       <div>
+        <Helmet
+          title='home'
+          titleTemplate={appInfo.name + ' - %s'}/>
         <header>
           <Link to='/'>
             <h1>

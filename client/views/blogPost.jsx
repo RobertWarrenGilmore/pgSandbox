@@ -10,6 +10,7 @@ const processUserHtml = require('../utilities/processUserHtml')
 const { connect } = require('react-redux')
 const blogActions = require('../flux/blog/actions')
 const usersActions = require('../flux/users/actions')
+const Helmet = require('react-helmet')
 
 class BlogPost extends React.Component {
   constructor(props) {
@@ -96,7 +97,7 @@ class BlogPost extends React.Component {
 
   _revertPost() {
     this.setState({
-      editingPost: this.state.post,
+      editingPost: this.props.posts[this.props.params.postId],
       error: null
     })
   }
@@ -264,6 +265,7 @@ class BlogPost extends React.Component {
       )
       result = (
         <div id='blogPost'>
+          <Helmet title={title}/>
           {this.state.confirmingDelete ? deletionModal : null}
           <div className='actions'>
             <button
@@ -438,6 +440,7 @@ class BlogPost extends React.Component {
     } else if (this.state.busy) {
       result = (
         <div id='blogPost' className='message'>
+          <Helmet title='blog'/>
           <BusyIndicator/>
           loading
         </div>
@@ -460,6 +463,7 @@ class BlogPost extends React.Component {
       }
       result = (
         <div id='blogPost' className='message'>
+          <Helmet title='blog'/>
           {editButton ||
             <p className='error'>
               {this.state.error || 'This post is not published.'}
@@ -487,6 +491,7 @@ class BlogPost extends React.Component {
       }
       result = (
         <div id='blogPost' className='blogPost'>
+          <Helmet title={title}/>
           <div className='actions'>
             {editButton}
           </div>
