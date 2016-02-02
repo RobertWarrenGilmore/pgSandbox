@@ -3,7 +3,6 @@ const _ = require('lodash')
 const React = require('react')
 const BusyIndicator = require('./busyIndicator.jsx')
 const { Link } = require('react-router')
-const setWindowTitle = require('../utilities/setWindowTitle')
 const sanitiseHtml = require('sanitize-html')
 const Modal = require('./modal.jsx')
 const appInfo = require('../../appInfo.json')
@@ -20,8 +19,7 @@ class BlogPost extends React.Component {
       editingPost: null,
       blogUserIds: null, // a list of all users that can be set as authors of a post
       error: null,
-      confirmingDelete: false,
-      authUser: null
+      confirmingDelete: false
     }
     this._loadBlogUsers = this._loadBlogUsers.bind(this)
     this._loadPost = this._loadPost.bind(this)
@@ -41,11 +39,9 @@ class BlogPost extends React.Component {
       error: null
     })
     this.props.searchUsers({authorisedToBlog: true})
-      .then(ids => {
-        this.setState({
-          blogUserIds: ids
-        })
-      }).catch(err => this.setState({
+      .then(ids => this.setState({
+        blogUserIds: ids
+      })).catch(err => this.setState({
         error: err.message || err
       })).finally(() => this.setState({
         busy: false
@@ -214,11 +210,6 @@ class BlogPost extends React.Component {
         this._loadPost(nextProps.params.postId)
       }
     }
-  }
-
-  componentWillUnmount() {
-    this._cancelRequest()
-    setWindowTitle()
   }
 
   render() {

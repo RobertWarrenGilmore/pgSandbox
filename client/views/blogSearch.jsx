@@ -3,69 +3,25 @@ const _ = require('lodash')
 const React = require('react')
 const {Link} = require('react-router')
 const BusyIndicator = require('./busyIndicator.jsx')
-const setWindowTitle = require('../utilities/setWindowTitle')
 const appScroll = require('../utilities/appScroll')
-const ajax = require('../utilities/ajax')
-const auth = require('../flux/auth')
 const processUserHtml = require('../utilities/processUserHtml')
+const { connect } = require('react-redux')
+const blogActions = require('../flux/blog/actions')
 
 class BlogSearch extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      busy: false,
       error: null,
       results: [],
-      endReached: false,
-      authUser: null
+      endReached: false
     }
-    this._loadAuthUser = this._loadAuthUser.bind(this)
     this._correctUrlQuery = this._correctUrlQuery.bind(this)
     this._doSearch = this._doSearch.bind(this)
     this._loadMoreResults = this._loadMoreResults.bind(this)
     this._isInNextPageZone = this._isInNextPageZone.bind(this)
     this._onScroll = this._onScroll.bind(this)
-  }
-
-  /*
-   * Load the full details of the authenticated user and store them in
-   *   this.state.authUser. (We need to know a few things about the
-   *   authenticated user in order to render the blog post.)
-   * If the user is not authenticated, do nothing.
-   * This method is meant to be run only once, when the component mounts. We
-   *   assume that the user will not change while we're on this page. If
-   *   something important does change about the user, the API will give us
-   *   appropriate errors when we try to edit the post.
-   */
-  _loadAuthUser() {
-    const credentials = auth.getCredentials()
-    if (credentials) {
-      let r = ajax({
-        method: 'GET',
-        uri: '/api/users/' + credentials.id,
-        json: true,
-        auth: credentials
-      })
-      this.setState({
-        runningRequest: r // Hold on to the Ajax promise in case we need to cancel it later.
-      })
-      return r.then((response) => {
-        if (response.statusCode === 200) {
-          this.setState({
-            authUser: response.body
-          })
-        } else {
-          this.setState({
-            error: response.body
-          })
-        }
-      }).catch((error) => {
-        this.setState({
-          error: error.message
-        })
-      })
-    } else {
-      return Promise.resolve()
-    }
   }
 
   // Redirect the URL to the provided query.
@@ -88,44 +44,28 @@ class BlogSearch extends React.Component {
       navigate(null, this.props.location.pathname, validQuery)
     }
   }
-  // Initiate a search = require(the URL query.
+  // Initiate a search from the URL query.
   _doSearch(offset) {
-    if (this.state.runningRequest) {
-      this.state.runningRequest.cancel()
-    }
-    const authCredentials = auth.getCredentials()
+    this.setState({
+      busy: true,
+      error: null
+    })
     let query = _.cloneDeep(this.props.location.query)
     if (offset) {
       query.offset = offset
     }
-    let r = ajax({
-      method: 'GET',
-      uri: '/api/blog',
-      auth: authCredentials,
-      json: true,
-      qs: query
-    })
-    this.setState({runningRequest: r, error: null})
-    r.then((response) => {
-      if (response.statusCode === 200) {
-        let results = []
-        if (offset) {
-          Array.prototype.push.apply(results, this.state.results)
-        }
-        Array.prototype.push.apply(results, response.body)
+    return this.props.searchPosts(query)
+      .then(ids => {
+        let results = (offset ? this.state.results : []).concat(ids)
         this.setState({
-          error: null,
-          results: results,
-          runningRequest: null,
-          endReached: !response.body.length
+          results,
+          endReached: !ids.length
         }, this._loadMoreResults)
-        return null
-      } else {
-        this.setState({error: response.body, runningRequest: null})
-      }
-    }).catch((error) => {
-      this.setState({error: error.message, runningRequest: null})
-    })
+      }).catch(err => this.setState({
+        error: err.message || err
+      })).finally(() => this.setState({
+        busy: false
+      }))
   }
   _loadMoreResults() {
     if (this._isInNextPageZone() && !this.state.runningRequest && !this.state.endReached) {
@@ -137,9 +77,7 @@ class BlogSearch extends React.Component {
     this._correctUrlQuery(this.props.location.query, {
       replace: true
     })
-    this._loadAuthUser().then(() => {
-      this._doSearch()
-    })
+    this._doSearch()
   }
   componentDidUpdate(prevProps, prevState) {
     const urlQueryChanged = !_.isEqual(this.props.location.query, prevProps.location.query)
@@ -152,11 +90,9 @@ class BlogSearch extends React.Component {
   }
   componentDidMount() {
     appScroll.addListener(this._onScroll)
-    setWindowTitle('blog')
   }
   componentWillUnmount() {
     appScroll.removeListener(this._onScroll)
-    setWindowTitle()
   }
   _isInNextPageZone() {
     let element = this.refs.caboose
@@ -187,12 +123,13 @@ class BlogSearch extends React.Component {
         </div>
       )
     }
-    let posts = _.filter(this.state.results, (post) => {
-      const hidden = (this.state.authUser === null || (post.author.id !== this.state.authUser.id && !this.state.authUser.admin)) && (!post.active)
+    let posts = this.state.results.map(id => this.props.posts[id])
+    posts = _.filter(posts, (post) => {
+      const hidden = (this.props.authUser === null || (post.author.id !== this.props.authUser.id && !this.props.authUser.admin)) && (!post.active)
       return !hidden
     })
-    const authorisedToBlog = this.state.authUser && this.state.authUser.authorisedToBlog
-    const isAdmin = this.state.authUser && this.state.authUser.admin
+    const authorisedToBlog = this.props.authUser && this.props.authUser.authorisedToBlog
+    const isAdmin = this.props.authUser && this.props.authUser.admin
 
     return (
       <div id='blogSearch'>
@@ -258,5 +195,31 @@ const Entry = (props) => {
     </Link>
   )
 }
+BlogSearch.propTypes = {
+  authUser: React.PropTypes.object,
+  posts: React.PropTypes.object
+}
+BlogSearch.defaultProps = {
+  authUser: null,
+  posts: null
+}
 
-module.exports = BlogSearch
+const wrapped = connect(
+  function mapStateToProps(state) {
+    let authUser
+    if (state.auth.id && state.users) {
+      authUser = state.users[state.auth.id]
+    }
+    return {
+      authUser,
+      posts: state.blog.posts
+    }
+  },
+  function mapDispatchToProps(dispatch) {
+    return {
+      searchPosts: (query) => dispatch(blogActions.searchPosts(query))
+    }
+  }
+)(BlogSearch)
+
+module.exports = wrapped

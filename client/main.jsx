@@ -17,7 +17,7 @@ const App = require('./views/app.jsx')
 // const Users = require('./views/users.jsx')
 // const User = require('./views/user.jsx')
 const BlogPost = require('./views/blogPost.jsx')
-// const BlogSearch = require('./views/blogSearch.jsx')
+const BlogSearch = require('./views/blogSearch.jsx')
 // const NotFound = require('./views/notFound.jsx')
 
 function requireAuth(nextState, replaceState) {
@@ -50,9 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
             */}
 
             <Route path='blog'>
-              {/*
               <IndexRoute component={BlogSearch}/>
-              */}
               <Route component={BlogPost} path=':postId'/>
             </Route>
 
