@@ -1,70 +1,28 @@
 'use strict'
 const appInfo = require('../../appInfo.json')
 const React = require('react')
-const {Link, IndexLink} = require('react-router')
-const setWindowTitle = require('../utilities/setWindowTitle')
+const { Link, IndexLink } = require('react-router')
 const classnames = require('classnames')
-const auth = require('../flux/auth')
-const ajax = require('../utilities/ajax')
+const { connect } = require('react-redux')
 
 class App extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      authCredentials: auth.getCredentials(),
-      authUser: null,
       hamburgerExpanded: false
     }
-    this._loadAuthUser = this._loadAuthUser.bind(this)
-    this._authListener = this._authListener.bind(this)
     this._onHamburgerClick = this._onHamburgerClick.bind(this)
     this._onNavClick = this._onNavClick.bind(this)
   }
-
-  _loadAuthUser() {
-    const credentials = this.state.authCredentials
-    if (credentials) {
-      let r = ajax({
-        method: 'GET',
-        uri: '/api/users/' + credentials.id,
-        json: true,
-        auth: credentials
-      })
-      this.setState({
-        authUser: null,
-        runningRequest: r // Hold on to the Ajax promise in case we need to cancel it later.
-      })
-      return r.then((response) => {
-        if (response.statusCode === 200) {
-          this.setState({
-            authUser: response.body
-          })
-        }
-        return null
-      }).catch((err) => {})
-    } else {
-      this.setState({
-        authUser: null
-      })
-    }
-  }
-  _authListener() {
+  _onHamburgerClick() {
     this.setState({
-      authCredentials: auth.getCredentials()
-    }, () => {
-      this._loadAuthUser()
+      hamburgerExpanded: !this.state.hamburgerExpanded
     })
   }
-  componentWillMount() {
-    auth.listen(this._authListener)
-    this._loadAuthUser()
-  }
-  componentDidMount() {
-    setWindowTitle()
-  }
-  componentWillUnmount() {
-    auth.unlisten(this._authListener)
-    setWindowTitle()
+  _onNavClick() {
+    this.setState({
+      hamburgerExpanded: false
+    })
   }
   render() {
     let headerNavClasses = classnames({
@@ -92,7 +50,7 @@ class App extends React.Component {
               blog
             </Link>
             <div className='spacer'></div>
-            {this.state.authCredentials
+            {this.props.authUser
               ? (
                 <Link activeClassName='active' to='/logOut' onClick={this._onNavClick}>
                   log out
@@ -109,12 +67,12 @@ class App extends React.Component {
           </nav>
         </header>
         <main>
-          {this.state.authUser ? (
+          {this.props.authUser ? (
             <div id='authIndicator'>
-              <Link to={'/users/' + this.state.authUser.id}>
+              <Link to={'/users/' + this.props.authUser.id}>
                 <span className='icon-user'/>
                 &nbsp;
-                {this.state.authUser.givenName} {this.state.authUser.familyName}
+                {this.props.authUser.givenName} {this.props.authUser.familyName}
               </Link>
             </div>
           ) : null}
@@ -126,16 +84,25 @@ class App extends React.Component {
     )
     return result
   }
-  _onHamburgerClick() {
-    this.setState({
-      hamburgerExpanded: !this.state.hamburgerExpanded
-    })
-  }
-  _onNavClick() {
-    this.setState({
-      hamburgerExpanded: false
-    })
-  }
+}
+App.propTypes = {
+  authUser: React.PropTypes.object
+}
+App.defaultProps = {
+  authUser: null
 }
 
-module.exports = App
+const wrapped = connect(
+  function mapStateToProps(state) {
+    let authUser
+    if (state.auth.id && state.users) {
+      authUser = state.users[state.auth.id]
+    }
+    return {
+      authUser
+    }
+  },
+  null
+)(App)
+
+module.exports = wrapped

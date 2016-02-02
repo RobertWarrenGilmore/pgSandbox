@@ -3,27 +3,25 @@ require('babel-polyfill')
 const React = require('react')
 const ReactDom = require('react-dom')
 const {Router, Route, IndexRoute, Redirect} = require('react-router')
+const { Provider } = require('react-redux')
 const createBrowserHistory = require('history/lib/createBrowserHistory')
-const auth = require('./flux/auth')
+const flux = require('./flux')
+const authActions = require('./flux/auth/actions')
 const Promise = require('bluebird')
 const App = require('./views/app.jsx')
-const InfoPage = require('./views/infoPage.jsx')
-const LogIn = require('./views/logIn.jsx')
-const Register = require('./views/register.jsx')
-const ForgotPassword = require('./views/forgotPassword.jsx')
-const SetPassword = require('./views/setPassword.jsx')
-const Users = require('./views/users.jsx')
-const User = require('./views/user.jsx')
+// const InfoPage = require('./views/infoPage.jsx')
+// const LogIn = require('./views/logIn.jsx')
+// const Register = require('./views/register.jsx')
+// const ForgotPassword = require('./views/forgotPassword.jsx')
+// const SetPassword = require('./views/setPassword.jsx')
+// const Users = require('./views/users.jsx')
+// const User = require('./views/user.jsx')
 const BlogPost = require('./views/blogPost.jsx')
-const BlogSearch = require('./views/blogSearch.jsx')
-const NotFound = require('./views/notFound.jsx')
-
-Promise.config({
-  cancellation: true
-})
+// const BlogSearch = require('./views/blogSearch.jsx')
+// const NotFound = require('./views/notFound.jsx')
 
 function requireAuth(nextState, replaceState) {
-  if (!auth.getCredentials()) {
+  if (!flux.getState().auth.credentials) {
     replaceState({
       nextLocation: nextState.location
     }, '/login')
@@ -31,50 +29,58 @@ function requireAuth(nextState, replaceState) {
 }
 
 function requireNoAuth(nextState, replaceState) {
-  if (auth.getCredentials()) {
+  if (flux.getState().auth.credentials) {
     replaceState(null, '/')
   }
 }
 
 function logOut(nextState, replaceState) {
-  auth.logOut()
+  flux.dispatch(authActions.logOut())
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  auth.resume().then(function () {
+  flux.dispatch(authActions.resume()).then(function () {
     const router = (
-      <Router history={createBrowserHistory()}>
-        <Route component={App} path='/'>
+      <Provider store={flux}>
+        <Router history={createBrowserHistory()}>
+          <Route component={App} path='/'>
 
-          <IndexRoute component={InfoPage}/>
+            {/*
+            <IndexRoute component={InfoPage}/>
+            */}
 
-          <Route path='blog'>
-            <IndexRoute component={BlogSearch}/>
-            <Route component={BlogPost} path=':postId'/>
-          </Route>
-
-          <Route onEnter={requireNoAuth}>
-            <Route component={LogIn} path='logIn'/>
-            <Route component={Register} path='register'/>
-            <Route component={ForgotPassword} path='forgotPassword'/>
-          </Route>
-
-          <Route onEnter={requireAuth}>
-            <Route path='users'>
-              <IndexRoute component={Users}/>
-              <Route component={User} path=':userId'/>
+            <Route path='blog'>
+              {/*
+              <IndexRoute component={BlogSearch}/>
+              */}
+              <Route component={BlogPost} path=':postId'/>
             </Route>
+
+            {/*
+            <Route onEnter={requireNoAuth}>
+              <Route component={LogIn} path='logIn'/>
+              <Route component={Register} path='register'/>
+              <Route component={ForgotPassword} path='forgotPassword'/>
+            </Route>
+
+            <Route onEnter={requireAuth}>
+              <Route path='users'>
+                <IndexRoute component={Users}/>
+                <Route component={User} path=':userId'/>
+              </Route>
+            </Route>
+
+            <Route onEnter={logOut}>
+              <Route component={SetPassword} path='users/:userId/setPassword'/>
+              <Redirect from='/logOut' to='/'/>
+            </Route>
+
+            <Route component={NotFound} path='*'/>
+            */}
+
           </Route>
-
-          <Route onEnter={logOut}>
-            <Route component={SetPassword} path='users/:userId/setPassword'/>
-            <Redirect from='/logOut' to='/'/>
-          </Route>
-
-          <Route component={NotFound} path='*'/>
-
-        </Route>
-      </Router>
+        </Router>
+      </Provider>
     )
     const element = document.getElementById('appContainer')
     ReactDom.render(router, element)

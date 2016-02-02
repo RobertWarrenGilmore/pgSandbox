@@ -4,7 +4,7 @@ const Promise = require('bluebird')
 const _ = require('lodash')
 
 module.exports = function (options) {
-  return new Promise(function (resolve, reject, onCancel) {
+  return new Promise(function (resolve, reject) {
     const optionsClone = _.cloneDeep(options)
     if (optionsClone.auth && optionsClone.auth.emailAddress) {
       optionsClone.auth.username = optionsClone.auth.emailAddress
@@ -16,7 +16,7 @@ module.exports = function (options) {
       }
       optionsClone.uri = window.location.origin + optionsClone.uri
     }
-    let r = request(optionsClone, function (error, response, body) {
+    request(optionsClone, function (error, response, body) {
       if (error) {
         console.error(error)
         error.message = 'The server could not be reached.'
@@ -24,9 +24,6 @@ module.exports = function (options) {
       } else {
         resolve(response)
       }
-    })
-    onCancel(function () {
-      r.abort()
     })
   })
 }

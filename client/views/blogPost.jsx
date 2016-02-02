@@ -2,30 +2,27 @@
 const _ = require('lodash')
 const React = require('react')
 const BusyIndicator = require('./busyIndicator.jsx')
-const {Link} = require('react-router')
+const { Link } = require('react-router')
 const setWindowTitle = require('../utilities/setWindowTitle')
-const ajax = require('../utilities/ajax')
 const sanitiseHtml = require('sanitize-html')
-const auth = require('../flux/auth')
 const Modal = require('./modal.jsx')
-const Promise = require('bluebird')
 const appInfo = require('../../appInfo.json')
 const processUserHtml = require('../utilities/processUserHtml')
+const { connect } = require('react-redux')
+const blogActions = require('../flux/blog/actions')
+const usersActions = require('../flux/users/actions')
 
 class BlogPost extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      runningRequest: null,
+      busy: false,
       editingPost: null,
-      post: null,
-      exists: null, // Boolean true means the post exists false means no such post null means we don't whether the post exists, for instance before the request has finished or if there was an error
-      blogUsers: null, // a list of all users that can be set as authors of a post
+      blogUserIds: null, // a list of all users that can be set as authors of a post
       error: null,
       confirmingDelete: false,
       authUser: null
     }
-    this._loadAuthUser = this._loadAuthUser.bind(this)
     this._loadBlogUsers = this._loadBlogUsers.bind(this)
     this._loadPost = this._loadPost.bind(this)
     this._savePost = this._savePost.bind(this)
@@ -36,209 +33,69 @@ class BlogPost extends React.Component {
     this._enterEditMode = this._enterEditMode.bind(this)
     this._exitEditMode = this._exitEditMode.bind(this)
     this._updateEditingPost = this._updateEditingPost.bind(this)
-    this._cancelRequest = this._cancelRequest.bind(this)
-  }
-
-  /*
-   * Load the full details of the authenticated user and store them in
-   *   this.state.authUser. (We need to know a few things about the
-   *   authenticated user in order to render the blog post.)
-   * If the user is not authenticated, do nothing.
-   * This method is meant to be run only once, when the component mounts. We
-   *   assume that the user will not change while we're on this page. If
-   *   something important does change about the user, the API will give us
-   *   appropriate errors when we try to edit the post.
-   */
-  _loadAuthUser() {
-    const credentials = auth.getCredentials()
-    if (credentials) {
-      let r = ajax({
-        method: 'GET',
-        uri: '/api/users/' + credentials.id,
-        json: true,
-        auth: credentials
-      })
-      this.setState({
-        runningRequest: r // Hold on to the Ajax promise in case we need to cancel it later.
-      })
-      return r.then((response) => {
-        if (response.statusCode === 200) {
-          this.setState({
-            authUser: response.body
-          })
-        } else {
-          this.setState({
-            error: response.body
-          })
-        }
-        return null
-      }).catch((error) => {
-        this.setState({
-          error: error.message
-        })
-      })
-    } else {
-      return Promise.resolve()
-    }
   }
 
   _loadBlogUsers() {
-    this._cancelRequest()
-    let r = ajax({
-      method: 'GET',
-      uri: '/api/users',
-      json: true,
-      auth: auth.getCredentials()
-    })
     this.setState({
-      runningRequest: r,
+      busy: true,
       error: null
     })
-    return r.then((response) => {
-      if (response.statusCode === 200) {
-        let blogUsers = response.body.map((user) =>
-          _.pick(user, [
-            'id',
-            'givenName',
-            'familyName'
-          ])
-        )
+    this.props.searchUsers({authorisedToBlog: true})
+      .then(ids => {
         this.setState({
-          blogUsers: blogUsers
+          blogUserIds: ids
         })
-      } else {
-        this.setState({
-          error: response.body
-        })
-      }
-      return null
-    }).catch((error) => {
-      this.setState({
-        error: error.message
-      })
-    }).finally(() => {
-      this.setState({
-        runningRequest: null
-      })
-    })
+      }).catch(err => this.setState({
+        error: err.message || err
+      })).finally(() => this.setState({
+        busy: false
+      }))
   }
 
-  /*
-   * Load the post indicated by the URL parameter.
-   * This method is meant to be run every time the URL changes and every time we
-   *   leave edit mode.
-   */
   _loadPost(postId) {
-    this._cancelRequest()
-    let r = ajax({
-      method: 'GET',
-      uri: '/api/blog/' + postId,
-      json: true,
-      auth: auth.getCredentials()
-    })
     this.setState({
-      runningRequest: r, // Hold on to the Ajax promise in case we need to cancel it later.
-      error: null,
-      exists: null
+      busy: true,
+      error: null
     })
-    setWindowTitle('blog')
-    return r.then((response) => {
-      if (response.statusCode === 200) {
-        this.setState({
-          runningRequest: null,
-          post: response.body,
-          exists: true
-        })
-        let parsedTitle = processUserHtml(response.body.title, {
-          inline: true
-        }).__html
-        let fullySanitisedTitle = sanitiseHtml(
-          parsedTitle,
-          {allowedTags: []}
-        )
-        setWindowTitle(fullySanitisedTitle)
-      } else {
-        if (response.statusCode === 404) {
-          this.setState({
-            exists: false
-          })
-        }
-        this.setState({
-          runningRequest: null,
-          error: response.body.message || response.body
-        })
-      }
-      return null
-    }).catch((error) => {
-      this.setState({
-        runningRequest: null,
-        error: error.message
-      })
-    })
+    this.props.loadPost(this.props.params.postId)
+      .catch(err => this.setState({
+        error: err.message || err
+      })).finally(() => this.setState({
+        busy: false
+      }))
   }
 
-  /*
-   * Save the post being edited. If the post exists already, this means PUT
-   *   otherwise POST.
-   */
   _savePost() {
-    this._cancelRequest()
+    this.setState({
+      busy: true,
+      error: null
+    })
     let post = {
-      id: this.state.exists ? this.state.editingPost.id : undefined,
+      id: this.state.editingPost.id,
       title: this.state.editingPost.title,
-      author: this.state.editingPost.author ? {
+      author: {
         id: this.state.editingPost.author.id
-      } : undefined,
+      },
       preview: this.state.editingPost.preview,
       body: this.state.editingPost.body,
       postedTime: this.state.editingPost.postedTime,
       active: this.state.editingPost.active
     }
-    let r = ajax ({
-      method: this.state.exists ? 'PUT' : 'POST',
-      uri: '/api/blog/' + (this.state.exists ? this.props.params.postId : this.state.editingPost.id),
-      body: post,
-      json: true,
-      auth: auth.getCredentials()
-    })
-    this.setState({
-      runningRequest: r,
-      error: null
-    })
-    return r.then((response) => {
-      if (response.statusCode === 200 || response.statusCode === 201) {
+    this.props.savePost(post, this.props.params.postId)
+      .then(() => {
         this.setState({
-          runningRequest: null,
-          editingPost: response.body,
-          post: response.body,
-          exists: true
+          editingPost: this.props.posts[post.id]
         })
-        let parsedTitle = processUserHtml(response.body.title, {
-          inline: true
-        }).__html
-        let fullySanitisedTitle = sanitiseHtml(
-          parsedTitle,
-          {allowedTags: []}
-        )
-        setWindowTitle(fullySanitisedTitle)
-        if (this.state.editingPost.id !== this.props.params.postId) {
+        if (post.id !== this.props.params.postId) {
           this.props.history.replaceState({
             editing: true
           }, '/blog/' + this.state.editingPost.id)
         }
-      } else {
-        this.setState({
-          runningRequest: null,
-          error: response.body.message || response.body
-        })
-      }
-      return null
-    }).catch((error) => {
-      this.setState({
-        runningRequest: null,
-        error: error.message
-      })
-    })
+      }).catch(err => this.setState({
+        error: err.message || err
+      })).finally(() => this.setState({
+        busy: false
+      }))
   }
 
   _revertPost() {
@@ -261,55 +118,32 @@ class BlogPost extends React.Component {
   }
 
   _deletePost() {
-    this._cancelRequest()
-    let r = ajax ({
-      method: 'DELETE',
-      uri: '/api/blog/' + this.props.params.postId,
-      auth: auth.getCredentials()
-    })
     this.setState({
-      runningRequest: r,
+      busy: true,
       error: null
     })
-    return r.then((response) => {
-      if (response.statusCode === 200) {
-        this.setState({
-          runningRequest: null,
-          editingPost: null,
-          confirmingDelete: false,
-          post: null,
-          exists: false
-        })
-        setWindowTitle('blog')
-      } else {
-        this.setState({
-          runningRequest: null,
-          confirmingDelete: false,
-          error: response.body
-        })
-      }
-      return null
-    }).catch((error) => {
-      this.setState({
-        runningRequest: null,
-        confirmingDelete: false,
-        error: error.message
-      })
-      setWindowTitle('blog')
-    })
+    this.props.deletePost(this.props.params.postId)
+      .then(() => this.setState({
+        editingPost: null
+      })).catch(err => this.setState({
+        error: err.message || err
+      })).finally(() => this.setState({
+        busy: false,
+        confirmingDelete: false
+      }))
   }
 
   _enterEditMode() {
-    let editingPost = this.state.post || {
+    let editingPost = this.props.posts[this.props.params.postId] || {
       id: this.props.params.postId,
       title: '',
       postedTime: new Date().toISOString(),
       preview: null,
       body: '',
       author: {
-        id: this.state.authUser.id,
-        givenName: this.state.authUser.givenName,
-        familyName: this.state.authUser.familyName
+        id: this.props.authUser.id,
+        givenName: this.props.authUser.givenName,
+        familyName: this.props.authUser.familyName
       },
       active: false
     }
@@ -327,10 +161,10 @@ class BlogPost extends React.Component {
 
   _updateEditingPost() {
     let author = this.state.editingPost.author
-    if (this.state.blogUsers) {
-      author = _.find(this.state.blogUsers, (user) => {
-        return this.refs.author.value == user.id
-      })
+    if (this.state.blogUserIds) {
+      author = this.props.users[_.find(this.state.blogUserIds, (id) => {
+        return this.refs.author.value == id
+      })]
     }
     this.setState({
       editingPost: {
@@ -340,36 +174,29 @@ class BlogPost extends React.Component {
         body: this.refs.body.value || '',
         active: this.refs.active.checked,
         postedTime: this.refs.postedTime.value,
-        author: author
+        author
       }
     })
-  }
-
-  _cancelRequest() {
-    // Cancel any Ajax that's currently running.
-    if (this.state.runningRequest) {
-      this.state.runningRequest.cancel()
-    }
   }
 
   componentWillMount() {
-    this._loadAuthUser().then(() => {
-      if (this.state.authUser && this.state.authUser.admin) {
-        return this._loadBlogUsers()
-      }
-    }).then(() => {
-      return this._loadPost(this.props.params.postId)
-    })
-    // Enter edit mode if we arrived on this page with a truthy .editing in the location state.
-    .then(() => {
-      if (this.props.location.state && this.props.location.state.editing) {
-        this._enterEditMode()
-      }
-    })
-  }
-
-  componentDidMount() {
-    setWindowTitle('blog')
+    return Promise.resolve()
+      .then(() => {
+        if (!this.props.posts[this.props.params.postId]) {
+          return this._loadPost(this.props.params.postId)
+        }
+      })
+      .then(() => {
+        if (this.props.authUser && this.props.authUser.admin) {
+          return this._loadBlogUsers()
+        }
+      })
+      // Enter edit mode if we arrived on this page with a truthy .editing in the location state.
+      .then(() => {
+        if (this.props.location.state && this.props.location.state.editing) {
+          this._enterEditMode()
+        }
+      })
   }
 
   componentWillReceiveProps(nextProps) {
@@ -383,7 +210,9 @@ class BlogPost extends React.Component {
       } else {
         this.props.history.replaceState(null, nextProps.location.pathname)
       }
-      this._loadPost(nextProps.params.postId)
+      if (!this.props.posts[nextProps.params.postId]) {
+        this._loadPost(nextProps.params.postId)
+      }
     }
   }
 
@@ -394,9 +223,21 @@ class BlogPost extends React.Component {
 
   render() {
     let result = null
-    const postIsHidden = this.state.post && (this.state.authUser === null || this.state.post.author.id !== this.state.authUser.id) && !this.state.post.active
-    const authorisedToBlog = this.state.authUser && this.state.authUser.authorisedToBlog
-    const isAdmin = this.state.authUser && this.state.authUser.admin
+    const existingPost = this.props.posts[this.props.params.postId]
+    const postIsHidden = existingPost && (this.props.authUser === null || existingPost.author.id !== this.props.authUser.id) && !existingPost.active
+    const authorisedToBlog = this.props.authUser && this.props.authUser.authorisedToBlog
+    const isAdmin = this.props.authUser && this.props.authUser.admin
+    let title
+    if (existingPost) {
+      let parsedTitle = processUserHtml(existingPost.title, {
+        inline: true
+      }).__html
+      let fullySanitisedTitle = sanitiseHtml(
+        parsedTitle,
+        {allowedTags: []}
+      )
+      title = fullySanitisedTitle
+    }
 
     // editor layout
     if (this.state.editingPost) {
@@ -414,14 +255,14 @@ class BlogPost extends React.Component {
           <div className='actions'>
             <button
               className='highlighted'
-              disabled={!!this.state.runningRequest}
+              disabled={this.state.busy}
               onClick={this._deletePost}>
               <span className='icon-bin'/>
               &nbsp;
               delete
             </button>
             <button
-              disabled={!!this.state.runningRequest}
+              disabled={this.state.busy}
               onClick={this._stopDeletePost}>
               <span className='icon-cancel-circle'/>
               &nbsp;
@@ -436,7 +277,7 @@ class BlogPost extends React.Component {
           <div className='actions'>
             <button
               className='edit'
-              disabled={!!this.state.runningRequest}
+              disabled={this.state.busy}
               onClick={this._exitEditMode}>
               <span className='icon-pencil'/>
               &nbsp;
@@ -454,7 +295,7 @@ class BlogPost extends React.Component {
                   className='id'
                   ref='id'
                   value={post.id}
-                  disabled={!!this.state.runningRequest}
+                  disabled={this.state.busy}
                   onChange={this._updateEditingPost}/>
               </div>
             </label>
@@ -463,7 +304,7 @@ class BlogPost extends React.Component {
                 type='checkbox'
                 ref='active'
                 checked={post.active}
-                disabled={!!this.state.runningRequest}
+                disabled={this.state.busy}
                 onChange={this._updateEditingPost}/>
               published
             </label>
@@ -477,21 +318,21 @@ class BlogPost extends React.Component {
                   type='text'
                   ref='title'
                   value={post.title}
-                  disabled={!!this.state.runningRequest}
+                  disabled={this.state.busy}
                   onChange={this._updateEditingPost}/>
               </h1>
             </label>
-            {this.state.blogUsers ? (
+            {this.state.blogUserIds ? (
               <label>
                 author
                 <select
                   ref='author'
                   value={post.author.id}
-                  disabled={!!this.state.runningRequest}
+                  disabled={this.state.busy}
                   onChange={this._updateEditingPost}>
-                  {this.state.blogUsers.map((user) => (
-                    <option value={user.id}>
-                      {user.givenName} {user.familyName}
+                  {this.state.blogUserIds.map((id) => (
+                    <option value={id}>
+                      {this.props.users[id].givenName} {this.props.users[id].familyName}
                     </option>
                   ))}
                 </select>
@@ -503,7 +344,7 @@ class BlogPost extends React.Component {
                 type='text'
                 ref='postedTime'
                 value={post.postedTime.substring(0,10)}
-                disabled={!!this.state.runningRequest}
+                disabled={this.state.busy}
                 onChange={this._updateEditingPost}/>
             </label>
             <label>
@@ -514,7 +355,7 @@ class BlogPost extends React.Component {
                 placeholder={'The preview is shown instead of the body when the post is in a list of posts. It defaults to the first paragraph of the body:\n\n'
                   + preview}
                 value={post.preview}
-                disabled={!!this.state.runningRequest}
+                disabled={this.state.busy}
                 onChange={this._updateEditingPost}/>
             </label>
             <label>
@@ -523,7 +364,7 @@ class BlogPost extends React.Component {
                 className='body'
                 ref='body'
                 value={post.body}
-                disabled={!!this.state.runningRequest}
+                disabled={this.state.busy}
                 onChange={this._updateEditingPost}/>
             </label>
             {this.state.error
@@ -532,7 +373,7 @@ class BlogPost extends React.Component {
                   {this.state.error}
                 </p>
               ) : null}
-            {this.state.runningRequest
+            {this.state.busy
               ? (
                 <div>
                   <BusyIndicator/>
@@ -542,7 +383,7 @@ class BlogPost extends React.Component {
             <div className='actions'>
               <button
                 id='save'
-                disabled={!!this.state.runningRequest}
+                disabled={this.state.busy}
                 onClick={this._savePost}
                 className='highlighted'>
                 <span className='icon-floppy-disk'/>
@@ -553,7 +394,7 @@ class BlogPost extends React.Component {
                 this.state.exists ? [
                   <button
                     id='revert'
-                    disabled={!!this.state.runningRequest}
+                    disabled={this.state.busy}
                     onClick={this._revertPost}>
                     <span className='icon-undo2'/>
                     &nbsp;
@@ -561,7 +402,7 @@ class BlogPost extends React.Component {
                   </button>,
                   <button
                     id='delete'
-                    disabled={!!this.state.runningRequest}
+                    disabled={this.state.busy}
                     onClick={this._askDeletePost}>
                     <span className='icon-bin'/>
                     &nbsp;
@@ -603,7 +444,7 @@ class BlogPost extends React.Component {
       )
 
     // busy layout
-    } else if (this.state.runningRequest) {
+    } else if (this.state.busy) {
       result = (
         <div id='blogPost' className='message'>
           <BusyIndicator/>
@@ -612,13 +453,13 @@ class BlogPost extends React.Component {
       )
 
     // error layout
-    } else if (this.state.error || (postIsHidden && !isAdmin) || !this.state.exists) {
+    } else if (this.state.error || (postIsHidden && !isAdmin) || !existingPost) {
       let editButton = null
       if ((authorisedToBlog || isAdmin) && this.state.exists === false) {
         editButton = (
           <button
             className='edit'
-            disabled={!!this.state.runningRequest}
+            disabled={this.state.busy}
             onClick={this._enterEditMode}>
             <span className='icon-plus'/>
             &nbsp;
@@ -638,14 +479,14 @@ class BlogPost extends React.Component {
 
     // post layout
     } else {
-      const post = this.state.post
+      const post = existingPost
       let editButton = null
-      const postIsOwn = this.state.authUser && post.author.id === this.state.authUser.id
+      const postIsOwn = this.props.authUser && post.author.id === this.props.authUser.id
       if ((authorisedToBlog && postIsOwn) || isAdmin) {
         editButton = (
           <button
             className='edit'
-            disabled={!!this.state.runningRequest}
+            disabled={this.state.busy}
             onClick={this._enterEditMode}>
             <span className='icon-pencil'/>
             &nbsp;
@@ -682,5 +523,37 @@ class BlogPost extends React.Component {
   }
 
 }
+BlogPost.propTypes = {
+  authUser: React.PropTypes.object,
+  posts: React.PropTypes.object,
+  users: React.PropTypes.object
+}
+BlogPost.defaultProps = {
+  authUser: null,
+  posts: null,
+  users: null
+}
 
-module.exports = BlogPost
+const wrapped = connect(
+  function mapStateToProps(state) {
+    let authUser
+    if (state.auth.id && state.users) {
+      authUser = state.users[state.auth.id]
+    }
+    return {
+      authUser,
+      posts: state.blog.posts,
+      users: state.users
+    }
+  },
+  function mapDispatchToProps(dispatch) {
+    return {
+      savePost: (post, previousId) => dispatch(blogActions.savePost(post, previousId)),
+      loadPost: (id) => dispatch(blogActions.loadPost(id)),
+      deletePost: (id) => dispatch(blogActions.deletePost(id)),
+      searchUsers: (query) => dispatch(usersActions.searchUsers(query))
+    }
+  }
+)(BlogPost)
+
+module.exports = wrapped
