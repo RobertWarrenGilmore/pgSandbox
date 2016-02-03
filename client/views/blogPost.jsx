@@ -328,8 +328,8 @@ class BlogPost extends React.Component {
                   disabled={this.state.busy}
                   onChange={this._updateEditingPost}>
                   {this.state.blogUserIds.map((id) => (
-                    <option value={id}>
-                      {this.props.users[id].givenName} {this.props.users[id].familyName}
+                    <option value={id} key={'author_option_' + id}>
+                        {((this.props.users[id].givenName || '') + ' ' + (this.props.users[id].familyName || '')).trim()}
                     </option>
                   ))}
                 </select>
@@ -391,6 +391,7 @@ class BlogPost extends React.Component {
                 !!existingPost ? [
                   <button
                     id='revert'
+                    key='revert'
                     disabled={this.state.busy}
                     onClick={this._revertPost}>
                     <span className='icon-undo2'/>
@@ -399,6 +400,7 @@ class BlogPost extends React.Component {
                   </button>,
                   <button
                     id='delete'
+                    key='delete'
                     disabled={this.state.busy}
                     onClick={this._askDeletePost}>
                     <span className='icon-bin'/>
