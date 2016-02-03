@@ -78,7 +78,11 @@ class BlogPost extends React.Component {
       postedTime: this.state.editingPost.postedTime,
       active: this.state.editingPost.active
     }
-    this.props.savePost(post, this.props.params.postId)
+    let existingId = this.props.params.postId
+    if (existingId === 'new') {
+      existingId = undefined
+    }
+    this.props.savePost(post, existingId)
       .then(() => {
         this.setState({
           editingPost: this.props.posts[post.id]
@@ -384,7 +388,7 @@ class BlogPost extends React.Component {
                 save
               </button>
               {
-                this.state.exists ? [
+                !!existingPost ? [
                   <button
                     id='revert'
                     disabled={this.state.busy}
@@ -449,7 +453,7 @@ class BlogPost extends React.Component {
     // error layout
     } else if (this.state.error || (postIsHidden && !isAdmin) || !existingPost) {
       let editButton = null
-      if ((authorisedToBlog || isAdmin) && this.state.exists === false) {
+      if ((authorisedToBlog || isAdmin) && !existingPost) {
         editButton = (
           <button
             className='edit'

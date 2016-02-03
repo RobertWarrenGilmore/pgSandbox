@@ -12,25 +12,26 @@ const creators = {
   savePost(post, existingId) {
     return dispatch => {
       const auth = store.getState().auth.credentials
-      const exists = !!store.getState().blog.posts[existingId || post.id]
-      let method = 'POST'
-      let uri = '/api/blog/'
-      if (exists) {
-        method = 'PUT'
-        uri += existingId || post.id
+      const newId = existingId || post.id
+      const exists = !!store.getState().blog.posts[newId]
+      const method = exists ? 'PUT' : 'POST'
+      const uri = '/api/blog/' + newId
+      let requestBody = Object.assign({}, post)
+      if (!!requestBody.id && !exists) {
+        delete requestBody.id
       }
       return ajax({
         method,
         uri,
         json: true,
         auth,
-        body: post
-      }).then(({statusCode, body }) => {
-        if (statusCode === 200) {
+        body: requestBody
+      }).then(({ statusCode, body }) => {
+        if (statusCode === (exists ? 200 : 201)) {
           let postMap = {
             [post.id]: body
           }
-          if (post.id !== existingId) {
+          if (existingId && (post.id !== existingId)) {
             postMap[existingId] = null
           }
           dispatch(cachePosts(postMap))
