@@ -223,7 +223,7 @@ class BlogPost extends React.Component {
     const postIsHidden = existingPost && (this.props.authUser === null || existingPost.author.id !== this.props.authUser.id) && !existingPost.active
     const authorisedToBlog = this.props.authUser && this.props.authUser.authorisedToBlog
     const isAdmin = this.props.authUser && this.props.authUser.admin
-    let title
+    let windowTitle
     if (existingPost) {
       let parsedTitle = processUserHtml(existingPost.title, {
         inline: true
@@ -232,7 +232,7 @@ class BlogPost extends React.Component {
         parsedTitle,
         {allowedTags: []}
       )
-      title = fullySanitisedTitle
+      windowTitle = fullySanitisedTitle
     }
 
     // editor layout
@@ -269,7 +269,7 @@ class BlogPost extends React.Component {
       )
       result = (
         <div id='blogPost'>
-          <Helmet title={title}/>
+          <Helmet title={windowTitle}/>
           {this.state.confirmingDelete ? deletionModal : null}
           <div className='actions'>
             <button
@@ -495,7 +495,7 @@ class BlogPost extends React.Component {
       }
       result = (
         <div id='blogPost' className='blogPost'>
-          <Helmet title={title}/>
+          <Helmet title={windowTitle}/>
           <div className='actions'>
             {editButton}
           </div>
