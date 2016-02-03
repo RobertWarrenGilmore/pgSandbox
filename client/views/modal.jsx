@@ -4,7 +4,7 @@ const React = require('react')
 const Modal = (props) => (
   <div className='modalWrapper'>
     <div className='modal'>
-      {this.props.children}
+      {props.children}
     </div>
   </div>
 )
