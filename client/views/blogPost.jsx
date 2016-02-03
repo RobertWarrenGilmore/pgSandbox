@@ -40,9 +40,17 @@ class BlogPost extends React.Component {
       error: null
     })
     this.props.searchUsers({authorisedToBlog: true})
-      .then(ids => this.setState({
-        blogUserIds: ids
-      })).catch(err => this.setState({
+      .then(ids => {
+        if (ids.length) {
+          let newIdsList = this.state.blogUserIds || []
+          newIdsList = newIdsList.concat(ids)
+          this.setState({
+            blogUserIds: newIdsList
+          })
+          // We keep adding this back into this promise chain until no more ids are returned.
+          return this.props.searchUsers({authorisedToBlog: true})
+        }
+      }).catch(err => this.setState({
         error: err.message || err
       })).finally(() => this.setState({
         busy: false
@@ -54,7 +62,7 @@ class BlogPost extends React.Component {
       busy: true,
       error: null
     })
-    this.props.loadPost(this.props.params.postId)
+    return this.props.loadPost(this.props.params.postId)
       .catch(err => this.setState({
         error: err.message || err
       })).finally(() => this.setState({
@@ -82,7 +90,7 @@ class BlogPost extends React.Component {
     if (existingId === 'new') {
       existingId = undefined
     }
-    this.props.savePost(post, existingId)
+    return this.props.savePost(post, existingId)
       .then(() => {
         this.setState({
           editingPost: this.props.posts[post.id]
@@ -211,7 +219,7 @@ class BlogPost extends React.Component {
       } else {
         this.props.history.replaceState(null, nextProps.location.pathname)
       }
-      if (!this.props.posts[nextProps.params.postId]) {
+      if (!nextProps.posts[nextProps.params.postId]) {
         this._loadPost(nextProps.params.postId)
       }
     }

@@ -70,7 +70,7 @@ class BlogSearch extends React.Component {
   }
   _loadMoreResults() {
     if (this._isInNextPageZone() && !this.state.runningRequest && !this.state.endReached) {
-      this._doSearch(this.state.results.length)
+      return this._doSearch(this.state.results.length)
     }
   }
   componentWillMount() {
@@ -78,7 +78,7 @@ class BlogSearch extends React.Component {
     this._correctUrlQuery(this.props.location.query, {
       replace: true
     })
-    this._doSearch()
+    return this._doSearch()
   }
   componentDidUpdate(prevProps, prevState) {
     const urlQueryChanged = !_.isEqual(this.props.location.query, prevProps.location.query)
@@ -86,7 +86,7 @@ class BlogSearch extends React.Component {
       this._correctUrlQuery(this.props.location.query, {
         replace: true
       })
-      this._doSearch()
+      return this._doSearch()
     }
   }
   componentDidMount() {
