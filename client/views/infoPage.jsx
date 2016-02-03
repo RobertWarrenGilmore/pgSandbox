@@ -1,148 +1,71 @@
 'use strict'
 const React = require('react')
 const BusyIndicator = require('./busyIndicator.jsx')
-const ajax = require('../utilities/ajax')
-const auth = require('../flux/auth')
 const processUserHtml = require('../utilities/processUserHtml')
-const setWindowTitle = require('../utilities/setWindowTitle')
 const sanitiseHtml = require('sanitize-html')
+const appInfo = require('../../appInfo.json')
+const Helmet = require('react-helmet')
+const { connect } = require('react-redux')
+const infoPageActions = require('../flux/infoPages/actions')
+
+const getPageId = (props) => {
+  let pageId = props.location.pathname.slice(1)
+  if (pageId === '') {
+    pageId = 'home'
+  }
+  return pageId
+}
+
+const getPage = (props) => props.pages[getPageId(props)]
 
 class InfoPage extends React.Component {
 
   constructor(props) {
     super(props)
     this.state = {
-      runningRequest: false,
-      content: null,
+      busy: false,
       editingContent: null,
-      error: null,
-      authUser: null
+      error: null
     }
-    this._loadAuthUser = this._loadAuthUser.bind(this)
     this._loadContent = this._loadContent.bind(this)
     this._saveContent = this._saveContent.bind(this)
     this._revertContent = this._revertContent.bind(this)
     this._enterEditMode = this._enterEditMode.bind(this)
     this._exitEditMode = this._exitEditMode.bind(this)
     this._updateEditingContent = this._updateEditingContent.bind(this)
-    this._cancelRequest = this._cancelRequest.bind(this)
-  }
-
-  _loadAuthUser() {
-    const credentials = auth.getCredentials()
-    if (credentials) {
-      let r = ajax({
-        method: 'GET',
-        uri: '/api/users/' + credentials.id,
-        json: true,
-        auth: credentials
-      })
-      this.setState({
-        runningRequest: r // Hold on to the Ajax promise in case we need to cancel it later.
-      })
-      return r.then((response) => {
-        if (response.statusCode === 200) {
-          this.setState({
-            authUser: response.body
-          })
-        } else {
-          this.setState({
-            error: response.body
-          })
-        }
-        return null
-      }).catch((error) => {
-        this.setState({
-          error: error.message
-        })
-      })
-    } else {
-      return Promise.resolve()
-    }
   }
 
   _loadContent(pageId) {
-    this._cancelRequest()
-    if (pageId === '/') {
-      pageId = '/home'
-    }
-    let r = ajax({
-      method: 'GET',
-      uri: '/api/infoPages' + pageId,
-      json: true,
-      auth: auth.getCredentials()
-    })
     this.setState({
-      runningRequest: r, // Hold on to the Ajax promise in case we need to cancel it later.
+      busy: true,
       error: null
     })
-    setWindowTitle()
-    return r.then((response) => {
-      if (response.statusCode === 200) {
-        this.setState({
-          runningRequest: null,
-          content: response.body
-        })
-        setWindowTitle(sanitiseHtml(response.body.title, {allowedTags: []}))
-      } else {
-        this.setState({
-          runningRequest: null,
-          error: response.body
-        })
-      }
-      return null
-    }).catch((error) => {
-      this.setState({
-        runningRequest: null,
-        error: error.message
-      })
-    })
+    return this.props.loadPage(getPageId(this.props))
+      .catch(err => this.setState({
+        error: err.message || err
+      })).finally(() => this.setState({
+        busy: false
+      }))
   }
 
   _saveContent() {
-    this._cancelRequest()
-    let pageId = this.props.location.pathname
-    if (pageId === '/') {
-      pageId = '/home'
-    }
-    let page = this.state.editingContent
-    let r = ajax ({
-      method: 'PUT',
-      uri: '/api/infoPages' + pageId,
-      body: page,
-      json: true,
-      auth: auth.getCredentials()
-    })
     this.setState({
-      runningRequest: r,
+      busy: true,
       error: null
     })
-    return r.then((response) => {
-      if (response.statusCode === 200 || response.statusCode === 201) {
-        this.setState({
-          runningRequest: null,
-          editingContent: response.body,
-          content: response.body
-        })
-        setWindowTitle(sanitiseHtml(response.body.title, {allowedTags: []}))
-      } else {
-        this.setState({
-          runningRequest: null,
-          error: response.body
-        })
-      }
-      return null
-    }).catch((error) => {
-      this.setState({
-        runningRequest: null,
-        error: error.message
-      })
-    })
+    return this.props.savePage(this.state.editingContent, getPageId(this.props))
+      .then(() => this.setState({
+        editingPost: getPage(this.props)
+      })).catch(err => this.setState({
+        error: err.message || err
+      })).finally(() => this.setState({
+        busy: false
+      }))
   }
 
   _revertContent() {
     this.setState({
-      editingContent: this.state.content,
+      editingContent: getPage(this.props),
       error: null
     })
   }
@@ -150,7 +73,7 @@ class InfoPage extends React.Component {
   _enterEditMode() {
     this.setState({
       error: null,
-      editingContent: this.state.content || {
+      editingContent: getPage(this.props) || {
         title: '',
         body: ''
       }
@@ -172,45 +95,53 @@ class InfoPage extends React.Component {
     })
   }
 
-  _cancelRequest() {
-    // Cancel any Ajax that's currently running.
-    if (this.state.runningRequest) {
-      this.state.runningRequest.cancel()
-    }
-  }
-
   componentWillMount() {
-    this._loadAuthUser().then(() => {
-      return this._loadContent(this.props.location.pathname)
-    })
+    if (!getPage(this.props)) {
+      return this._loadContent(getPageId(this.props))
+    }
   }
 
   componentWillReceiveProps(nextProps) {
-    const pageIdChanged = nextProps.params.location.pathname !== this.props.location.pathname
+    const pageIdChanged = getPageId(nextProps) !== getPageId(this.props)
     if (pageIdChanged) {
       // TODO Confirm leave without saving changes if in edit mode and unsaved.
       this._exitEditMode()
-      this._loadContent(nextProps.params.location.pathname)
+      this._loadContent(getPageId(nextProps))
     }
-  }
-
-  componentWillUnmount() {
-    this._cancelRequest()
   }
 
   render() {
     let result = null
-    const isAdmin = this.state.authUser && this.state.authUser.admin
+    const isAdmin = this.props.authUser && this.props.authUser.admin
+    const existingPage = getPage(this.props) || {
+      title: '',
+      body: ''
+    }
+    let parsedTitle = processUserHtml(existingPage.title, {
+      inline: true
+    }).__html
+    let fullySanitisedTitle = sanitiseHtml(
+      parsedTitle,
+      {allowedTags: []}
+    )
+    const titleElement = fullySanitisedTitle.length ? (
+      <Helmet title={fullySanitisedTitle}/>
+    ) : (
+      <Helmet
+        title=''
+        titleTemplate={appInfo.name}/>
+    )
 
     // editor layout
     if (this.state.editingContent) {
       const content = this.state.editingContent
       result = (
         <div id='infoPage'>
+          {titleElement}
           <div className='actions'>
             <button
               className='edit'
-              disabled={!!this.state.runningRequest}
+              disabled={this.state.busy}
               onClick={this._exitEditMode}>
               <span className='icon-pencil'/>
               &nbsp;
@@ -225,7 +156,7 @@ class InfoPage extends React.Component {
                   type='text'
                   ref='title'
                   value={content.title}
-                  disabled={!!this.state.runningRequest}
+                  disabled={this.state.busy}
                   onChange={this._updateEditingContent}/>
               </h1>
             </label>
@@ -238,7 +169,7 @@ class InfoPage extends React.Component {
                 className='body'
                 ref='body'
                 value={content.body}
-                disabled={!!this.state.runningRequest}
+                disabled={this.state.busy}
                 onChange={this._updateEditingContent}/>
             </label>
             {this.state.error
@@ -247,7 +178,7 @@ class InfoPage extends React.Component {
                   {this.state.error}
                 </p>
               ) : null}
-            {this.state.runningRequest
+            {this.state.busy
               ? (
                 <div>
                   <BusyIndicator/>
@@ -257,7 +188,7 @@ class InfoPage extends React.Component {
             <div className='actions'>
               <button
                 id='save'
-                disabled={!!this.state.runningRequest}
+                disabled={this.state.busy}
                 onClick={this._saveContent}
                 className='highlighted'>
                 <span className='icon-floppy-disk'/>
@@ -266,7 +197,7 @@ class InfoPage extends React.Component {
               </button>
               <button
                 id='revert'
-                disabled={!!this.state.runningRequest}
+                disabled={this.state.busy}
                 onClick={this._revertContent}>
                 <span className='icon-undo2'/>
                 &nbsp;
@@ -281,9 +212,10 @@ class InfoPage extends React.Component {
       )
 
     // busy layout
-    } else if (this.state.runningRequest) {
+    } else if (this.state.busy) {
       result = (
         <div id='infoPage' className='message'>
+          <Helmet title='loading'/>
           <BusyIndicator/>
           loading
         </div>
@@ -293,6 +225,7 @@ class InfoPage extends React.Component {
     } else if (this.state.error) {
       result = (
         <div id='infoPage' className='message'>
+          <Helmet title='error'/>
           <p className='error'>
             {this.state.error}
           </p>
@@ -301,16 +234,12 @@ class InfoPage extends React.Component {
 
     // content layout
     } else {
-      const content = this.state.content || {
-        title: '',
-        body: ''
-      }
       let editButton = null
       if (isAdmin) {
         editButton = (
           <button
             className='edit'
-            disabled={!!this.state.runningRequest}
+            disabled={this.state.busy}
             onClick={this._enterEditMode}>
             <span className='icon-pencil'/>
             &nbsp;
@@ -320,10 +249,11 @@ class InfoPage extends React.Component {
       }
       result = (
         <div id='infoPage'>
+          {titleElement}
           <div className='actions'>
             {editButton}
           </div>
-          <div dangerouslySetInnerHTML={processUserHtml(content.body, {
+          <div dangerouslySetInnerHTML={processUserHtml(existingPage.body, {
             sanitise: false
           })}/>
         </div>
@@ -334,5 +264,32 @@ class InfoPage extends React.Component {
   }
 
 }
+InfoPage.propTypes = {
+  authUser: React.PropTypes.object,
+  pages: React.PropTypes.object
+}
+InfoPage.defaultProps = {
+  authUser: null,
+  pages: null
+}
 
-module.exports = InfoPage
+const wrapped = connect(
+  function mapStateToProps(state) {
+    let authUser
+    if (state.auth.id && state.users) {
+      authUser = state.users[state.auth.id]
+    }
+    return {
+      authUser,
+      pages: state.infoPages.pages
+    }
+  },
+  function mapDispatchToProps(dispatch) {
+    return {
+      loadPage: (id) => dispatch(infoPageActions.loadPage(id)),
+      savePage: (page, id) => dispatch(infoPageActions.savePage(page, id))
+    }
+  }
+)(InfoPage)
+
+module.exports = wrapped

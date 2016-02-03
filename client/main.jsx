@@ -8,7 +8,7 @@ const createBrowserHistory = require('history/lib/createBrowserHistory')
 const flux = require('./flux')
 const authActions = require('./flux/auth/actions')
 const App = require('./views/app.jsx')
-// const InfoPage = require('./views/infoPage.jsx')
+const InfoPage = require('./views/infoPage.jsx')
 // const LogIn = require('./views/logIn.jsx')
 // const Register = require('./views/register.jsx')
 // const ForgotPassword = require('./views/forgotPassword.jsx')
@@ -44,9 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <Router history={createBrowserHistory()}>
           <Route component={App} path='/'>
 
-            {/*
             <IndexRoute component={InfoPage}/>
-            */}
 
             <Route path='blog'>
               <IndexRoute component={BlogSearch}/>

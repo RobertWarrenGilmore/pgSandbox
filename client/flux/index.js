@@ -8,11 +8,13 @@ const { createStore, applyMiddleware, combineReducers } = require('redux')
 const auth = require('./auth/reducer')
 const users = require('./users/reducer')
 const blog = require('./blog/reducer')
+const infoPages = require('./infoPages/reducer')
 
 const rootReducer = combineReducers({
   auth,
   users,
-  blog
+  blog,
+  infoPages
 })
 
 const loggerMiddleware = createLogger()
