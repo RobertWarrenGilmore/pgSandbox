@@ -57,7 +57,7 @@ const BlogPost = ({ post, linkAuthor = true, showPreview = false, showBody = tru
       {(showPreview) ? (
         <div className='preview'>
           <div dangerouslySetInnerHTML={processUserHtml(preview)}/>
-          {(previewIsFromBody) ? (
+          {(!previewIsFromBody || (preview.length < post.body.length)) ? (
               <p>
                 Read more...
               </p>
