@@ -17,10 +17,12 @@ const rootReducer = combineReducers({
   infoPages
 })
 
+const immutableRootReducer = (...args) => Immutable(rootReducer(...args))
+
 const loggerMiddleware = createLogger()
 
 const store = createStore(
-  rootReducer,
+  immutableRootReducer,
   Immutable({}),
   applyMiddleware(
     thunkMiddleware, // lets us dispatch() functions
