@@ -1,41 +1,20 @@
 'use strict'
 const React = require('react')
-const {Link} = require('react-router')
-const setWindowTitle = require('../utilities/setWindowTitle')
-const auth = require('../flux/auth')
+const { Link } = require('react-router')
+const { connect } = require('react-redux')
+const { logIn } = require('../flux/auth/actions')
+const Helmet = require('react-helmet')
 
 class LogIn extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      credentials: auth.getCredentials(),
-      busy: auth.isBusy(),
       error: null
     }
-    this._authListener = this._authListener.bind(this)
     this._onSubmit = this._onSubmit.bind(this)
   }
-
-  _authListener() {
-    this.setState({
-      credentials: auth.getCredentials(),
-      busy: auth.isBusy(),
-      error: auth.getError()
-    })
-  }
-  componentWillMount() {
-    auth.clearError()
-  }
-  componentDidMount() {
-    auth.listen(this._authListener)
-    setWindowTitle('log in')
-  }
-  componentWillUnmount() {
-    auth.unlisten(this._authListener)
-    setWindowTitle()
-  }
-  componentWillUpdate(nextProps, nextState) {
-    if (nextState.credentials) {
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.credentials) {
       const location = this.props.location
       if (location.state && location.state.nextLocation) {
         this.props.history.replaceState(null, location.state.nextLocation.pathname, location.state.nextLocation.query)
@@ -49,6 +28,7 @@ class LogIn extends React.Component {
     const nextLocation = location.state ? location.state.nextLocation : null
     return (
       <div id='logIn'>
+        <Helmet title='log in'/>
         <h1>
           log in
         </h1>
@@ -77,13 +57,37 @@ class LogIn extends React.Component {
   }
   _onSubmit(event) {
     event.preventDefault()
-    const emailAddress = this.refs.emailAddress.value
-    const password = this.refs.password.value
-    auth.logIn({
-      emailAddress: emailAddress,
-      password: password
-    })
+    this.props.logIn({
+      emailAddress: this.refs.emailAddress.value,
+      password: this.refs.password.value
+    }).catch(err => this.setState({
+      error: err.message || err
+    }))
   }
 }
+LogIn.propTypes = {
+  authUser: React.PropTypes.object,
+  posts: React.PropTypes.object,
+  users: React.PropTypes.object
+}
+LogIn.defaultProps = {
+  authUser: null,
+  posts: null,
+  users: null
+}
 
-module.exports = LogIn
+const wrapped = connect(
+  function mapStateToProps(state) {
+    return {
+      credentials: state.auth.credentials,
+      busy: state.auth.busy
+    }
+  },
+  function mapDispatchToProps(dispatch) {
+    return {
+      logIn: (credentials) => dispatch(logIn(credentials))
+    }
+  }
+)(LogIn)
+
+module.exports = wrapped
