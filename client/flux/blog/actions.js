@@ -3,9 +3,11 @@ const ajax = require('../../utilities/ajax')
 const store = require('../')
 const { createAction: createActionCreator } = require('redux-actions')
 const types = require('./types')
+const { searchUsers } = require('../users/actions')
 
 // private action creators
 const cachePosts = createActionCreator(types.CACHE_POSTS)
+const setAuthorIds = createActionCreator(types.SET_AUTHOR_IDS)
 
 // public action creators
 const creators = {
@@ -110,6 +112,26 @@ const creators = {
           throw new Error(body.message || body)
         }
       })
+    }
+  },
+  loadAuthors() {
+    return dispatch => {
+      // Recursively add authors to the list until no more can be loaded.
+      const loadMoreAuthors = (authorIds = []) => {
+        return dispatch(searchUsers({
+          authorisedToBlog: true,
+          offset: authorIds.length
+        })).then(ids => {
+          if (ids.length) {
+            // We keep adding this back into this promise chain until no more ids are returned.
+            return loadMoreAuthors(authorIds.concat(ids))
+          } else {
+            // Base case; no more authors to add.
+            dispatch(setAuthorIds(authorIds))
+          }
+        })
+      }
+      return loadMoreAuthors()
     }
   }
 }

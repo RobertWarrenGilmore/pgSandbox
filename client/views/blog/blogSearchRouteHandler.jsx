@@ -2,11 +2,11 @@
 const _ = require('lodash')
 const React = require('react')
 const {Link} = require('react-router')
-const BusyIndicator = require('./busyIndicator.jsx')
-const appScroll = require('../utilities/appScroll')
-const processUserHtml = require('../utilities/processUserHtml')
+const BusyIndicator = require('../busyIndicator.jsx')
+const BlogEntry = require('./entry.jsx')
+const appScroll = require('../../utilities/appScroll')
 const { connect } = require('react-redux')
-const blogActions = require('../flux/blog/actions')
+const blogActions = require('../../flux/blog/actions')
 const Helmet = require('react-helmet')
 
 class BlogSearch extends React.Component {
@@ -151,51 +151,15 @@ class BlogSearch extends React.Component {
         ) : null}
         <div id='blogPostList'>
           {posts.map((post) =>
-            <Entry post={post} key={post.id}/>
+            <Link key={post.id} to={'/blog/' + post.id}>
+              <BlogEntry post={post} linkAuthor={false} showPreview={true} showBody={false}/>
+            </Link>
           )}
           {caboose}
         </div>
       </div>
     )
   }
-}
-
-const Entry = (props) => {
-  const post = props.post
-  let preview = post.preview
-  // If no preview was provided, use the first paragraph of the body.
-  if (!preview) {
-    preview = post.body.split(/(\r?\n){2,}/)[0].trim()
-  }
-  return (
-    <Link className='blogPost' to={'/blog/' + post.id}>
-      {post.active ? null : (
-        <span className='icon-eye-blocked' title='This post is not published.'/>
-      )}
-      <header>
-        <h1 dangerouslySetInnerHTML={processUserHtml(post.title, {
-          inline: true
-        })}/>
-        <p className='byLine'>
-          by {post.author.givenName} {post.author.familyName}
-        </p>
-        <p className='postedTime'>
-          <time dateTime={post.postedTime}>
-            {post.postedTime.substring(0, 10)}
-          </time>
-        </p>
-      </header>
-      <div className='preview'>
-        <div dangerouslySetInnerHTML={processUserHtml(preview)}/>
-        {(preview.length < post.body.trim().length)
-          ? (
-            <p>
-              Read more...
-            </p>
-        ) : null}
-      </div>
-    </Link>
-  )
 }
 BlogSearch.propTypes = {
   authUser: React.PropTypes.object,

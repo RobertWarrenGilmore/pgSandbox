@@ -5,7 +5,7 @@
         margin: auto
         display: block
     &:not(.message)
-      > #editor
+      > .editor
         > label
           display: block
           margin: $small-padding
@@ -22,10 +22,10 @@
             margin: $small-padding
           h1
             margin: 0
-      > #demo
-        border-top: thin solid grey
-        margin-top: $medium-padding
-        padding-top: $medium-padding
+        ~ .blogPost
+          border-top: thin solid grey
+          margin-top: $medium-padding
+          padding-top: $medium-padding
   .blogPost
     header
       text-align: center
