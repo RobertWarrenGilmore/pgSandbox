@@ -16,6 +16,16 @@ class BlogEditor extends React.Component {
     this._onDelete = this._onDelete.bind(this)
   }
   _onChange() {
+    let author
+    for (var i in this.props.authors) {
+      if (this.props.authors[i].id == this.refs.author.value) {
+        author = this.props.authors[i]
+        break
+      }
+    }
+    if (!author) {
+      author = this.props.post.author
+    }
     this.props.onChange({
       id: this.refs.id.value,
       title: this.refs.title.value,
@@ -23,7 +33,7 @@ class BlogEditor extends React.Component {
       body: this.refs.body.value || '',
       active: this.refs.active.checked,
       postedTime: this.refs.postedTime.value,
-      author: this.props.post.authors[this.refs.author.value]
+      author
     })
   }
   _onConfirmDelete() {
