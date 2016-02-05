@@ -1,6 +1,7 @@
 'use strict'
 const React = require('react')
 const BusyIndicator = require('../busyIndicator.jsx')
+const Editor = require('./editor.jsx')
 const processUserHtml = require('../../utilities/processUserHtml')
 const sanitiseHtml = require('sanitize-html')
 const appInfo = require('../../../appInfo.json')
@@ -24,18 +25,18 @@ class InfoPage extends React.Component {
     super(props)
     this.state = {
       busy: false,
-      editingContent: null,
+      editingPage: null,
       error: null
     }
-    this._loadContent = this._loadContent.bind(this)
-    this._saveContent = this._saveContent.bind(this)
-    this._revertContent = this._revertContent.bind(this)
+    this._loadPage = this._loadPage.bind(this)
+    this._onEditorSave = this._onEditorSave.bind(this)
+    this._onEditorRevert = this._onEditorRevert.bind(this)
+    this._onEditorChange = this._onEditorChange.bind(this)
     this._enterEditMode = this._enterEditMode.bind(this)
     this._exitEditMode = this._exitEditMode.bind(this)
-    this._updateEditingContent = this._updateEditingContent.bind(this)
   }
 
-  _loadContent(pageId) {
+  _loadPage(pageId) {
     this.setState({
       busy: true,
       error: null
@@ -48,12 +49,12 @@ class InfoPage extends React.Component {
       }))
   }
 
-  _saveContent() {
+  _onEditorSave() {
     this.setState({
       busy: true,
       error: null
     })
-    return this.props.savePage(this.state.editingContent, getPageId(this.props))
+    return this.props.savePage(this.state.editingPage, getPageId(this.props))
       .then(() => this.setState({
         editingPost: getPage(this.props)
       })).catch(err => this.setState({
@@ -63,17 +64,23 @@ class InfoPage extends React.Component {
       }))
   }
 
-  _revertContent() {
+  _onEditorRevert() {
     this.setState({
-      editingContent: getPage(this.props),
+      editingPage: getPage(this.props),
       error: null
+    })
+  }
+
+  _onEditorChange(page) {
+    this.setState({
+      editingPage: page
     })
   }
 
   _enterEditMode() {
     this.setState({
       error: null,
-      editingContent: getPage(this.props) || {
+      editingPage: getPage(this.props) || {
         title: '',
         body: ''
       }
@@ -82,22 +89,13 @@ class InfoPage extends React.Component {
 
   _exitEditMode() {
     this.setState({
-      editingContent: null
-    })
-  }
-
-  _updateEditingContent() {
-    this.setState({
-      editingContent: {
-        title: this.refs.title.value,
-        body: this.refs.body.value
-      }
+      editingPage: null
     })
   }
 
   componentWillMount() {
     if (!getPage(this.props)) {
-      return this._loadContent(getPageId(this.props))
+      return this._loadPage(getPageId(this.props))
     }
   }
 
@@ -106,7 +104,7 @@ class InfoPage extends React.Component {
     if (pageIdChanged) {
       // TODO Confirm leave without saving changes if in edit mode and unsaved.
       this._exitEditMode()
-      this._loadContent(getPageId(nextProps))
+      this._loadPage(getPageId(nextProps))
     }
   }
 
@@ -133,8 +131,8 @@ class InfoPage extends React.Component {
     )
 
     // editor layout
-    if (this.state.editingContent) {
-      const content = this.state.editingContent
+    if (this.state.editingPage) {
+      const page = this.state.editingPage
       result = (
         <div id='infoPage'>
           {titleElement}
@@ -148,64 +146,14 @@ class InfoPage extends React.Component {
               stop editing
             </button>
           </div>
-          <div id='editor'>
-            <label>
-              title
-              <h1>
-                <input
-                  type='text'
-                  ref='title'
-                  value={content.title}
-                  disabled={this.state.busy}
-                  onChange={this._updateEditingContent}/>
-              </h1>
-            </label>
-            <p className='info'>
-              Format using <a href='https://gist.github.com/jonschlinkert/5854601'>Markdown</a>.<br/><em>_italic_ *italic*</em><br/><strong>__bold__ **bold**</strong><br/>[This text will become a link.](http://example.com)
-            </p>
-            <label>
-              body
-              <textarea
-                className='body'
-                ref='body'
-                value={content.body}
-                disabled={this.state.busy}
-                onChange={this._updateEditingContent}/>
-            </label>
-            {this.state.error
-              ? (
-                <p className='error'>
-                  {this.state.error}
-                </p>
-              ) : null}
-            {this.state.busy
-              ? (
-                <div>
-                  <BusyIndicator/>
-                  saving
-                </div>
-              ) : null}
-            <div className='actions'>
-              <button
-                id='save'
-                disabled={this.state.busy}
-                onClick={this._saveContent}
-                className='highlighted'>
-                <span className='icon-floppy-disk'/>
-                &nbsp;
-                save
-              </button>
-              <button
-                id='revert'
-                disabled={this.state.busy}
-                onClick={this._revertContent}>
-                <span className='icon-undo2'/>
-                &nbsp;
-                revert
-              </button>
-            </div>
-          </div>
-          <div id='demo' className='infoPage' dangerouslySetInnerHTML={processUserHtml(content.body, {
+          <Editor
+            page={page}
+            error={this.state.error}
+            disabled={this.state.busy}
+            onChange={this._onEditorChange}
+            onSave={this._onEditorSave}
+            onRevert={this._onEditorRevert}/>
+          <div id='demo' className='infoPage' dangerouslySetInnerHTML={processUserHtml(page.body, {
             sanitise: false
           })}/>
         </div>
@@ -232,27 +180,23 @@ class InfoPage extends React.Component {
         </div>
       )
 
-    // content layout
+    // page layout
     } else {
-      let editButton = null
-      if (isAdmin) {
-        editButton = (
-          <button
-            className='edit'
-            disabled={this.state.busy}
-            onClick={this._enterEditMode}>
-            <span className='icon-pencil'/>
-            &nbsp;
-            edit
-          </button>
-        )
-      }
       result = (
         <div id='infoPage'>
           {titleElement}
-          <div className='actions'>
-            {editButton}
-          </div>
+          {isAdmin ? (
+            <div className='actions'>
+              <button
+                className='edit'
+                disabled={this.state.busy}
+                onClick={this._enterEditMode}>
+                <span className='icon-pencil'/>
+                &nbsp;
+                edit
+              </button>
+            </div>
+          ) : null}
           <div dangerouslySetInnerHTML={processUserHtml(existingPage.body, {
             sanitise: false
           })}/>

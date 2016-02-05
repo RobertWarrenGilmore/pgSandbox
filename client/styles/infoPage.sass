@@ -1,6 +1,6 @@
 #appContainer > div > main
   > #infoPage:not(.message)
-    > #editor
+    > .editor
       > label
         display: block
         margin: $small-padding
@@ -12,10 +12,10 @@
             height: 20em
         h1
           margin: 0
-    > #demo
-      border-top: thin solid grey
-      margin-top: $medium-padding
-      padding-top: $medium-padding
+      ~ .infoPage
+        border-top: thin solid grey
+        margin-top: $medium-padding
+        padding-top: $medium-padding
   .infoPage
     header
       text-align: center
