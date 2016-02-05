@@ -1,12 +1,12 @@
 'use strict'
 const React = require('react')
-const BusyIndicator = require('./busyIndicator.jsx')
-const processUserHtml = require('../utilities/processUserHtml')
+const BusyIndicator = require('../busyIndicator.jsx')
+const processUserHtml = require('../../utilities/processUserHtml')
 const sanitiseHtml = require('sanitize-html')
-const appInfo = require('../../appInfo.json')
+const appInfo = require('../../../appInfo.json')
 const Helmet = require('react-helmet')
 const { connect } = require('react-redux')
-const infoPageActions = require('../flux/infoPages/actions')
+const infoPageActions = require('../../flux/infoPages/actions')
 
 const getPageId = (props) => {
   let pageId = props.location.pathname.slice(1)
