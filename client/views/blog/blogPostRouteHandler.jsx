@@ -292,12 +292,22 @@ class BlogPost extends React.Component {
 BlogPost.propTypes = {
   authUser: React.PropTypes.object,
   posts: React.PropTypes.object,
-  users: React.PropTypes.object
+  users: React.PropTypes.object,
+  authors: React.PropTypes.array,
+  savePost: React.PropTypes.function,
+  loadPost: React.PropTypes.function,
+  deletePost: React.PropTypes.function,
+  loadAuthors: React.PropTypes.function
 }
 BlogPost.defaultProps = {
   authUser: null,
   posts: null,
-  users: null
+  users: null,
+  authors: [],
+  savePost: null,
+  loadPost: null,
+  deletePost: null,
+  loadAuthors: null
 }
 
 const wrapped = connect(

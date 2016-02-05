@@ -163,11 +163,13 @@ class BlogSearch extends React.Component {
 }
 BlogSearch.propTypes = {
   authUser: React.PropTypes.object,
-  posts: React.PropTypes.object
+  posts: React.PropTypes.object,
+  searchPosts: React.PropTypes.function
 }
 BlogSearch.defaultProps = {
   authUser: null,
-  posts: null
+  posts: null,
+  searchPosts: null
 }
 
 const wrapped = connect(

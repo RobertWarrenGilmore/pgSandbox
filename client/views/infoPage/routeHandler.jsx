@@ -210,11 +210,15 @@ class InfoPage extends React.Component {
 }
 InfoPage.propTypes = {
   authUser: React.PropTypes.object,
-  pages: React.PropTypes.object
+  pages: React.PropTypes.object,
+  loadPage: React.PropTypes.function,
+  savePage: React.PropTypes.function
 }
 InfoPage.defaultProps = {
   authUser: null,
-  pages: null
+  pages: null,
+  loadPost: null,
+  savePost: null
 }
 
 const wrapped = connect(

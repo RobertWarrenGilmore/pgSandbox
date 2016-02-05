@@ -66,14 +66,14 @@ class LogIn extends React.Component {
   }
 }
 LogIn.propTypes = {
-  authUser: React.PropTypes.object,
-  posts: React.PropTypes.object,
-  users: React.PropTypes.object
+  credentials: React.PropTypes.object,
+  busy: React.PropTypes.bool,
+  logIn: React.PropTypes.function
 }
 LogIn.defaultProps = {
-  authUser: null,
-  posts: null,
-  users: null
+  credentials: null,
+  busy: false,
+  logIn: null
 }
 
 const wrapped = connect(
