@@ -3,7 +3,7 @@ const _ = require('lodash')
 const React = require('react')
 const {Link} = require('react-router')
 const BusyIndicator = require('../busyIndicator.jsx')
-const BlogEntry = require('./entry.jsx')
+const Post = require('./post.jsx')
 const appScroll = require('../../utilities/appScroll')
 const { connect } = require('react-redux')
 const blogActions = require('../../flux/blog/actions')
@@ -152,7 +152,7 @@ class BlogSearch extends React.Component {
         <div id='blogPostList'>
           {posts.map((post) =>
             <Link key={post.id} to={'/blog/' + post.id}>
-              <BlogEntry post={post} linkAuthor={false} showPreview={true} showBody={false}/>
+              <Post post={post} linkAuthor={false} showPreview={true} showBody={false}/>
             </Link>
           )}
           {caboose}

@@ -1,8 +1,8 @@
 'use strict'
 const React = require('react')
 const BusyIndicator = require('../busyIndicator.jsx')
-const BlogPost = require('./post.jsx')
-const BlogEditor = require('./editor.jsx')
+const Post = require('./post.jsx')
+const Editor = require('./editor.jsx')
 const sanitiseHtml = require('sanitize-html')
 const processUserHtml = require('../../utilities/processUserHtml')
 const { connect } = require('react-redux')
@@ -208,7 +208,7 @@ class BlogPost extends React.Component {
               stop editing
             </button>
           </div>
-          <BlogEditor
+          <Editor
             post={this.state.editingPost}
             error={this.state.error}
             exists={!!existingPost}
@@ -218,7 +218,7 @@ class BlogPost extends React.Component {
             onSave={this._onEditorSave}
             onRevert={this._onEditorRevert}
             authors={this.props.authors}/>
-          <BlogPost post={this.state.editingPost} showPreview={true}/>
+          <Post post={this.state.editingPost} showPreview={true}/>
         </div>
       )
 
@@ -281,7 +281,7 @@ class BlogPost extends React.Component {
           <div className='actions'>
             {editButton}
           </div>
-          <BlogPost post={post}/>
+          <Post post={post}/>
         </div>
       )
     }

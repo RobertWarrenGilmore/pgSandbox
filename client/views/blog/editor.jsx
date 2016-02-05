@@ -45,33 +45,32 @@ class BlogEditor extends React.Component {
   render() {
     const post = this.props.post
     const previewFromBody = post.body.split(/(\r?\n){2,}/)[0].trim()
-    const deletionModal = (
-      <Modal>
-        <p>
-          Are you sure that you want to delete the post?
-        </p>
-        <div className='actions'>
-          <button
-            className='highlighted'
-            disabled={this.props.disabled}
-            onClick={this._onDelete}>
-            <span className='icon-bin'/>
-            &nbsp;
-            delete
-          </button>
-          <button
-            disabled={this.props.disabled}
-            onClick={this._onCancelDelete}>
-            <span className='icon-cancel-circle'/>
-            &nbsp;
-            cancel
-          </button>
-        </div>
-      </Modal>
-    )
     return (
       <div className='editor'>
-        {this.state.confirmingDelete ? deletionModal : null}
+        {this.state.confirmingDelete ? (
+          <Modal>
+            <p>
+              Are you sure that you want to delete the post?
+            </p>
+            <div className='actions'>
+              <button
+                className='highlighted'
+                disabled={this.props.disabled}
+                onClick={this._onDelete}>
+                <span className='icon-bin'/>
+                &nbsp;
+                delete
+              </button>
+              <button
+                disabled={this.props.disabled}
+                onClick={this._onCancelDelete}>
+                <span className='icon-cancel-circle'/>
+                &nbsp;
+                cancel
+              </button>
+            </div>
+          </Modal>
+        ) : null}
         <label>
           url
           <div className='urlLine'>
