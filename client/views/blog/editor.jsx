@@ -154,13 +154,13 @@ class BlogEditor extends React.Component {
             disabled={this.props.disabled}
             onChange={this._onChange}/>
         </label>
-        {this.state.error
+        {this.props.error
           ? (
             <p className='error'>
-              {this.state.error}
+              {this.props.error}
             </p>
           ) : null}
-        {this.state.busy
+        {this.props.busy
           ? (
             <div>
               <BusyIndicator/>
@@ -206,6 +206,7 @@ class BlogEditor extends React.Component {
 }
 BlogEditor.defaultProps = {
   post: null,
+  error: null,
   exists: true,
   disabled: false,
   onChange: () => {},

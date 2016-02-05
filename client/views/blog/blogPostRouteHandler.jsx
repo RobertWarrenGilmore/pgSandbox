@@ -210,6 +210,7 @@ class BlogPost extends React.Component {
           </div>
           <BlogEditor
             post={this.state.editingPost}
+            error={this.state.error}
             exists={!!existingPost}
             disabled={this.state.busy}
             onChange={this._onEditorChange}
@@ -217,7 +218,7 @@ class BlogPost extends React.Component {
             onSave={this._onEditorSave}
             onRevert={this._onEditorRevert}
             authors={this.props.authors}/>
-          <BlogEntry post={this.state.editingPost} showPreview={true}/>
+          <BlogPost post={this.state.editingPost} showPreview={true}/>
         </div>
       )
 
@@ -280,7 +281,7 @@ class BlogPost extends React.Component {
           <div className='actions'>
             {editButton}
           </div>
-          <BlogEntry post={post}/>
+          <BlogPost post={post}/>
         </div>
       )
     }
