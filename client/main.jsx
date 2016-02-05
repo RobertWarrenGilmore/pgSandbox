@@ -9,7 +9,7 @@ const flux = require('./flux')
 const authActions = require('./flux/auth/actions')
 const App = require('./views/app.jsx')
 const InfoPage = require('./views/infoPage/routeHandler.jsx')
-// const LogIn = require('./views/logIn.jsx')
+const LogIn = require('./views/logInRouteHandler.jsx')
 // const Register = require('./views/register.jsx')
 // const ForgotPassword = require('./views/forgotPassword.jsx')
 // const SetPassword = require('./views/setPassword.jsx')
@@ -51,25 +51,31 @@ document.addEventListener('DOMContentLoaded', function() {
               <Route component={BlogPost} path=':postId'/>
             </Route>
 
-            {/*
             <Route onEnter={requireNoAuth}>
               <Route component={LogIn} path='logIn'/>
+            {/*
               <Route component={Register} path='register'/>
               <Route component={ForgotPassword} path='forgotPassword'/>
+            */}
             </Route>
 
             <Route onEnter={requireAuth}>
               <Route path='users'>
+            {/*
                 <IndexRoute component={Users}/>
                 <Route component={User} path=':userId'/>
+            */}
               </Route>
             </Route>
 
             <Route onEnter={logOut}>
+            {/*
               <Route component={SetPassword} path='users/:userId/setPassword'/>
+            */}
               <Redirect from='/logOut' to='/'/>
             </Route>
 
+            {/*
             <Route component={NotFound} path='*'/>
             */}
 
