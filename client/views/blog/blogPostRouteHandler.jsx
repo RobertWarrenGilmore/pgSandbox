@@ -1,7 +1,7 @@
 'use strict'
 const React = require('react')
 const BusyIndicator = require('../busyIndicator.jsx')
-const BlogEntry = require('./entry.jsx')
+const BlogPost = require('./post.jsx')
 const BlogEditor = require('./editor.jsx')
 const sanitiseHtml = require('sanitize-html')
 const processUserHtml = require('../../utilities/processUserHtml')

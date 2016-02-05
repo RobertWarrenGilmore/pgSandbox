@@ -3,7 +3,7 @@ const React = require('react')
 const { Link } = require('react-router')
 const processUserHtml = require('../../utilities/processUserHtml')
 
-const BlogEntry = ({ post, linkAuthor = true, showPreview = false, showBody = true }) => {
+const BlogPost = ({ post, linkAuthor = true, showPreview = false, showBody = true }) => {
 
   let preview = post.preview
   let previewIsFromBody = !preview
@@ -73,4 +73,4 @@ const BlogEntry = ({ post, linkAuthor = true, showPreview = false, showBody = tr
   )
 }
 
-module.exports = BlogEntry
+module.exports = BlogPost
