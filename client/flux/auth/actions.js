@@ -7,7 +7,7 @@ const types = require('./types')
 // private action creators
 const setAuthBusy = createActionCreator(types.SET_AUTH_BUSY, (arg) => arg !== false)
 const setAuthCredentials = createActionCreator(types.SET_AUTH_CREDENTIALS)
-const { loadUser } = require('../users/actions')
+const { load: loadUser } = require('../users/actions')
 
 // public action creators
 const creators = {

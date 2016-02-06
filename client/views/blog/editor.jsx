@@ -17,7 +17,7 @@ class BlogEditor extends React.Component {
   }
   _onChange() {
     let author
-    for (var i in this.props.authors) {
+    for (let i in this.props.authors) {
       if (this.props.authors[i].id == this.refs.author.value) {
         author = this.props.authors[i]
         break

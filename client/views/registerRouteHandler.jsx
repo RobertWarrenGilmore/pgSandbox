@@ -1,6 +1,6 @@
 'use strict'
 const React = require('react')
-const { createUser } = require('../flux/users/actions')
+const { create: createUser } = require('../flux/users/actions')
 const { connect } = require('react-redux')
 const Helmet = require('react-helmet')
 

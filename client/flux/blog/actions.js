@@ -3,7 +3,7 @@ const ajax = require('../../utilities/ajax')
 const store = require('../')
 const { createAction: createActionCreator } = require('redux-actions')
 const types = require('./types')
-const { searchUsers } = require('../users/actions')
+const { search: searchUsers } = require('../users/actions')
 
 // private action creators
 const cachePosts = createActionCreator(types.CACHE_POSTS)

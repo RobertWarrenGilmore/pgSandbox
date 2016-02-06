@@ -9,7 +9,7 @@ const cacheUsers = createActionCreator(types.CACHE_USERS)
 
 // public action creators
 const creators = {
-  createUser(user) {
+  create(user) {
     return dispatch => {
       return ajax({
         method: 'POST',
@@ -23,7 +23,7 @@ const creators = {
       })
     }
   },
-  saveUser(user) {
+  save(user) {
     return dispatch => {
       const authCredentials = store.getState().auth.credentials
       let id = user.id
@@ -64,7 +64,7 @@ const creators = {
       })
     }
   },
-  loadUser(id) {
+  load(id) {
     return dispatch => {
       const authCredentials = store.getState().auth.credentials
       return ajax({
@@ -87,7 +87,7 @@ const creators = {
       })
     }
   },
-  searchUsers(query) {
+  search(query) {
     return dispatch => {
       const authCredentials = store.getState().auth.credentials
       return ajax({
