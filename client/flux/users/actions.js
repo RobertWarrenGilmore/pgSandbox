@@ -3,6 +3,7 @@ const ajax = require('../../utilities/ajax')
 const store = require('../')
 const { createAction: createActionCreator } = require('redux-actions')
 const types = require('./types')
+const { logIn } = require('../auth/actions')
 
 // private action creators
 const cacheUsers = createActionCreator(types.CACHE_USERS)
@@ -45,11 +46,17 @@ const creators = {
         json: true,
         auth: authCredentials,
         body: user
-      }).then(({statusCode, body }) => {
+      }).then(({ statusCode, body }) => {
         if (statusCode === 200) {
           if (id) {
             dispatch(cacheUsers({
               [id]: body
+            }))
+          }
+          if (user.id === store.getState().auth.id) {
+            dispatch(logIn({
+              emailAddress: user.emailAddress || authCredentials.emailAddress,
+              password: user.password || authCredentials.password
             }))
           }
         } else if (statusCode === 404) {
