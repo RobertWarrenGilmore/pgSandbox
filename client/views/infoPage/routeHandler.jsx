@@ -211,8 +211,8 @@ class InfoPage extends React.Component {
 InfoPage.propTypes = {
   authUser: React.PropTypes.object,
   pages: React.PropTypes.object,
-  loadPage: React.PropTypes.function,
-  savePage: React.PropTypes.function
+  loadPage: React.PropTypes.func,
+  savePage: React.PropTypes.func
 }
 InfoPage.defaultProps = {
   authUser: null,

@@ -102,7 +102,7 @@ class SetPassword extends React.Component{
   }
 }
 SetPassword.propTypes = {
-  saveUser: React.PropTypes.function
+  saveUser: React.PropTypes.func
 }
 SetPassword.defaultProps = {
   saveUser: () => {}

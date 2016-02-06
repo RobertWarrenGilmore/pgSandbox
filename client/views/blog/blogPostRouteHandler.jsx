@@ -294,10 +294,10 @@ BlogPost.propTypes = {
   posts: React.PropTypes.object,
   users: React.PropTypes.object,
   authors: React.PropTypes.array,
-  savePost: React.PropTypes.function,
-  loadPost: React.PropTypes.function,
-  deletePost: React.PropTypes.function,
-  loadAuthors: React.PropTypes.function
+  savePost: React.PropTypes.func,
+  loadPost: React.PropTypes.func,
+  deletePost: React.PropTypes.func,
+  loadAuthors: React.PropTypes.func
 }
 BlogPost.defaultProps = {
   authUser: null,

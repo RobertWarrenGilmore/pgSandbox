@@ -66,7 +66,7 @@ class Register extends React.Component {
   }
 }
 Register.propTypes = {
-  createUser: React.PropTypes.function
+  createUser: React.PropTypes.func
 }
 Register.defaultProps = {
   createUser: () => {}

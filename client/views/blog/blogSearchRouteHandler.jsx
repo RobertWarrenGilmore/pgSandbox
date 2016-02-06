@@ -164,7 +164,7 @@ class BlogSearch extends React.Component {
 BlogSearch.propTypes = {
   authUser: React.PropTypes.object,
   posts: React.PropTypes.object,
-  searchPosts: React.PropTypes.function
+  searchPosts: React.PropTypes.func
 }
 BlogSearch.defaultProps = {
   authUser: null,

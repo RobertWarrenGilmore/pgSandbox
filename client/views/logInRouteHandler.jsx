@@ -68,7 +68,7 @@ class LogIn extends React.Component {
 LogIn.propTypes = {
   credentials: React.PropTypes.object,
   busy: React.PropTypes.bool,
-  logIn: React.PropTypes.function
+  logIn: React.PropTypes.func
 }
 LogIn.defaultProps = {
   credentials: null,

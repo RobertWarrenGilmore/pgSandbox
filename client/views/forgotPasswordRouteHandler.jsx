@@ -68,7 +68,7 @@ class ForgotPassword extends React.Component{
   }
 }
 ForgotPassword.propTypes = {
-  saveUser: React.PropTypes.function
+  saveUser: React.PropTypes.func
 }
 ForgotPassword.defaultProps = {
   saveUser: () => {}
