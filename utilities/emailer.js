@@ -13,21 +13,26 @@ var send = Promise.promisify(transporter.sendMail, {
 })
 
 function emailer(recipient, subject, message) {
-  return send({
-    recipients: [{
-      address: {
-        email: recipient
+  if (process.env.NODE_ENV === 'production') {
+    return send({
+      recipients: [{
+        address: {
+          email: recipient
+        }
+      }],
+      content: {
+        from: {
+          name: appInfo.name,
+          email: 'app@' + appInfo.host
+        },
+        subject: subject,
+        text: message
       }
-    }],
-    content: {
-      from: {
-        name: appInfo.name,
-        email: 'app@' + appInfo.host
-      },
-      subject: subject,
-      text: message
-    }
-  })
+    })
+  } else {
+    console.info('Pretended to send an email.', recipient, subject, message)
+    return Promise.resolve()
+  }
 }
 
 module.exports = emailer
