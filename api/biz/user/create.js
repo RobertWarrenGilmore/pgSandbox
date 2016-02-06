@@ -46,6 +46,7 @@ module.exports = function (knex, emailer) {
         return trx
           .into('users')
           .insert(newUser, 'id')
+          .returning(['id'])
           .then(function (rows) {
             return {
               id: rows[0].id,
