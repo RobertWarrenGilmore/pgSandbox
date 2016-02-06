@@ -17,7 +17,7 @@ const SetPassword = require('./views/setPasswordRouteHandler.jsx')
 // const User = require('./views/user.jsx')
 const BlogPost = require('./views/blog/blogPostRouteHandler.jsx')
 const BlogSearch = require('./views/blog/blogSearchRouteHandler.jsx')
-// const NotFound = require('./views/notFound.jsx')
+const NotFound = require('./views/notFoundRouteHandler.jsx')
 
 function requireAuth(nextState, replaceState) {
   if (!flux.getState().auth.credentials) {
@@ -71,9 +71,7 @@ document.addEventListener('DOMContentLoaded', function() {
               <Redirect from='/logOut' to='/'/>
             </Route>
 
-            {/*
             <Route component={NotFound} path='*'/>
-            */}
 
           </Route>
         </Router>
