@@ -1,12 +1,12 @@
 'use strict'
 const React = require('react')
-const BusyIndicator = require('./busyIndicator.jsx')
-const auth = require('../flux/auth')
-const ajax = require('../utilities/ajax')
-const validate = require('../../utilities/validate')
-const setWindowTitle = require('../utilities/setWindowTitle')
+const BusyIndicator = require('../busyIndicator.jsx')
+const validate = require('../../../utilities/validate')
 const vf = validate.funcs
 const ValidationError = validate.ValidationError
+const { connect } = require('react-redux')
+const { save: saveUser, load: loadUser } = require('../../flux/users/actions')
+const Helmet = require('react-helmet')
 
 class User extends React.Component {
 
