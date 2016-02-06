@@ -11,7 +11,7 @@ const App = require('./views/app.jsx')
 const InfoPage = require('./views/infoPage/routeHandler.jsx')
 const LogIn = require('./views/logInRouteHandler.jsx')
 const Register = require('./views/registerRouteHandler.jsx')
-// const ForgotPassword = require('./views/forgotPassword.jsx')
+const ForgotPassword = require('./views/forgotPasswordRouteHandler.jsx')
 const SetPassword = require('./views/setPasswordRouteHandler.jsx')
 // const Users = require('./views/users.jsx')
 // const User = require('./views/user.jsx')
@@ -54,9 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <Route onEnter={requireNoAuth}>
               <Route component={LogIn} path='logIn'/>
               <Route component={Register} path='register'/>
-            {/*
               <Route component={ForgotPassword} path='forgotPassword'/>
-            */}
             </Route>
 
             <Route onEnter={requireAuth}>
