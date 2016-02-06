@@ -27,11 +27,17 @@ const creators = {
     return dispatch => {
       const authCredentials = store.getState().auth.credentials
       let id = user.id
-      if (user.passwordResetKey) {
+      if (typeof user.passwordResetKey === 'string') {
         user = {
           password: user.password,
           passwordResetKey: user.passwordResetKey
         }
+      } else if (user.passwordResetKey === null) {
+        user = {
+          emailAddress: user.emailAddress,
+          passwordResetKey: null
+        }
+        id = ''
       }
       return ajax({
         method: 'PUT',
@@ -41,13 +47,17 @@ const creators = {
         body: user
       }).then(({statusCode, body }) => {
         if (statusCode === 200) {
-          dispatch(cacheUsers({
-            [user.id]: body
-          }))
+          if (id) {
+            dispatch(cacheUsers({
+              [id]: body
+            }))
+          }
         } else if (statusCode === 404) {
-          dispatch(cacheUsers({
-            [user.id]: null
-          }))
+          if (id) {
+            dispatch(cacheUsers({
+              [id]: null
+            }))
+          }
         } else {
           throw new Error(body.message || body)
         }

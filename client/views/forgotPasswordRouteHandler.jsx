@@ -1,23 +1,18 @@
 'use strict'
 const React = require('react')
-const setWindowTitle = require('../utilities/setWindowTitle')
-const ajax = require('../utilities/ajax')
+const { saveUser } = require('../flux/users/actions')
+const { connect } = require('react-redux')
+const Helmet = require('react-helmet')
 
 class ForgotPassword extends React.Component{
   constructor(props) {
     super(props)
     this.state = {
-      runningRequest: null,
+      busy: false,
       success: false,
       error: null
     }
     this._onSubmit = this._onSubmit.bind(this)
-  }
-  componentDidMount() {
-    setWindowTitle('forgot password')
-  }
-  componentWillUnmount() {
-    setWindowTitle()
   }
   render() {
     if (this.state.success) {
@@ -31,6 +26,7 @@ class ForgotPassword extends React.Component{
     } else {
       return (
         <div id='forgotPassword'>
+          <Helmet title='forgot password'/>
           <h1>
             forgotten password recovery
           </h1>
@@ -55,43 +51,39 @@ class ForgotPassword extends React.Component{
   _onSubmit(event) {
     event.preventDefault()
     let emailAddress = this.refs.emailAddress.value
-    let r = ajax({
-      method: 'PUT',
-      uri: '/api/users',
-      json: true,
-      body: {
-        emailAddress: emailAddress,
-        passwordResetKey: null
-      }
-    })
     this.setState({
-      runningRequest: r,
-      success: false,
+      busy: true,
       error: null
     })
-    return r.then((response) => {
-      if (response.statusCode === 200) {
-        this.setState({
-          success: true,
-          error: null
-        })
-      } else {
-        this.setState({
-          success: false,
-          error: response.body
-        })
-      }
-    }).catch((error) => {
-      this.setState({
-        success: false,
-        error: error.message
-      })
-    }).finally(() => {
-      this.setState({
-        runningRequest: null
-      })
-    })
+    return this.props.saveUser({
+      emailAddress,
+      passwordResetKey: null
+    }).then(() => this.setState({
+      success: true
+    })).catch(err => this.setState({
+      error: err.message || err
+    })).finally(() => this.setState({
+      busy: false
+    }))
   }
 }
+ForgotPassword.propTypes = {
+  saveUser: React.PropTypes.function
+}
+ForgotPassword.defaultProps = {
+  saveUser: () => {}
+}
 
-module.exports = ForgotPassword
+const wrapped = connect(
+  function mapStateToProps(state) {
+    return {}
+  },
+  function mapDispatchToProps(dispatch) {
+    return {
+      saveUser: ({ emailAddress, passwordResetKey }) =>
+        dispatch(saveUser({ emailAddress, passwordResetKey }))
+    }
+  }
+)(ForgotPassword)
+
+module.exports = wrapped
