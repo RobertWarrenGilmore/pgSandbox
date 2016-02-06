@@ -12,7 +12,7 @@ const InfoPage = require('./views/infoPage/routeHandler.jsx')
 const LogIn = require('./views/logInRouteHandler.jsx')
 const Register = require('./views/registerRouteHandler.jsx')
 // const ForgotPassword = require('./views/forgotPassword.jsx')
-// const SetPassword = require('./views/setPassword.jsx')
+const SetPassword = require('./views/setPasswordRouteHandler.jsx')
 // const Users = require('./views/users.jsx')
 // const User = require('./views/user.jsx')
 const BlogPost = require('./views/blog/blogPostRouteHandler.jsx')
@@ -69,9 +69,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </Route>
 
             <Route onEnter={logOut}>
-            {/*
               <Route component={SetPassword} path='users/:userId/setPassword'/>
-            */}
               <Redirect from='/logOut' to='/'/>
             </Route>
 

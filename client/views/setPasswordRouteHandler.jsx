@@ -1,23 +1,18 @@
 'use strict'
 const React = require('react')
-const ajax = require('../utilities/ajax')
-const setWindowTitle = require('../utilities/setWindowTitle')
+const { saveUser } = require('../flux/users/actions')
+const { connect } = require('react-redux')
+const Helmet = require('react-helmet')
 
 class SetPassword extends React.Component{
   constructor(props) {
     super(props)
     this.state = {
-      runningRequest: null,
+      busy: false,
       success: false,
       error: null
     }
     this._onSubmit = this._onSubmit.bind(this)
-  }
-  componentDidMount() {
-    setWindowTitle('set password')
-  }
-  componentWillUnmount() {
-    setWindowTitle()
   }
   componentWillUpdate(nextProps, nextState) {
     if (nextState.success) {
@@ -38,6 +33,7 @@ class SetPassword extends React.Component{
     } else {
       return (
         <div id='setPassword'>
+          <Helmet title='set password'/>
           <h1>
             set password
           </h1>
@@ -50,14 +46,14 @@ class SetPassword extends React.Component{
               ref='password'
               name='password'
               placeholder='new password'
-              disabled={!!this.state.runningRequest}
+              disabled={this.state.busy}
               required/>
             <input
               type='password'
               ref='verifyPassword'
               name='verifyPassword'
               placeholder='verify new password'
-              disabled={!!this.state.runningRequest}
+              disabled={this.state.busy}
               required/>
             {this.state.error
               ? <p className='error'>
@@ -78,7 +74,7 @@ class SetPassword extends React.Component{
   }
   _onSubmit(event) {
     event.preventDefault()
-    const userId = this.props.params.userId
+    const id = this.props.params.userId
     const passwordResetKey = this.props.location.query.key
     const password = this.refs.password.value
     const verifyPassword = this.refs.verifyPassword.value
@@ -87,44 +83,41 @@ class SetPassword extends React.Component{
         error: 'The passwords must match.'
       })
     } else {
-      let r = ajax({
-        method: 'PUT',
-        uri: '/api/users/' + userId,
-        json: true,
-        body: {
-          password: password,
-          passwordResetKey: passwordResetKey
-        }
-      })
       this.setState({
-        runningRequest: r,
-        success: false,
+        busy: true,
         error: null
       })
-      return r.then((response) => {
-        if (response.statusCode === 200) {
-          this.setState({
-            success: true,
-            error: null
-          })
-        } else {
-          this.setState({
-            success: false,
-            error: response.body
-          })
-        }
-      }).catch((error) => {
-        this.setState({
-          success: false,
-          error: error.message
-        })
-      }).finally(() => {
-        this.setState({
-          runningRequest: null
-        })
-      })
+      return this.props.saveUser({
+        id,
+        password,
+        passwordResetKey
+      }).then(() => this.setState({
+        success: true
+      })).catch(err => this.setState({
+        error: err.message || err
+      })).finally(() => this.setState({
+        busy: false
+      }))
     }
   }
 }
+SetPassword.propTypes = {
+  saveUser: React.PropTypes.function
+}
+SetPassword.defaultProps = {
+  saveUser: () => {}
+}
 
-module.exports = SetPassword
+const wrapped = connect(
+  function mapStateToProps(state) {
+    return {}
+  },
+  function mapDispatchToProps(dispatch) {
+    return {
+      saveUser: ({ id, password, passwordResetKey }) =>
+        dispatch(saveUser({ id, password, passwordResetKey }))
+    }
+  }
+)(SetPassword)
+
+module.exports = wrapped

@@ -26,9 +26,16 @@ const creators = {
   saveUser(user) {
     return dispatch => {
       const authCredentials = store.getState().auth.credentials
+      let id = user.id
+      if (user.passwordResetKey) {
+        user = {
+          password: user.password,
+          passwordResetKey: user.passwordResetKey
+        }
+      }
       return ajax({
         method: 'PUT',
-        uri: '/api/users/' + user.id,
+        uri: '/api/users/' + id,
         json: true,
         auth: authCredentials,
         body: user
