@@ -10,7 +10,7 @@ const authActions = require('./flux/auth/actions')
 const App = require('./views/app.jsx')
 const InfoPage = require('./views/infoPage/routeHandler.jsx')
 const LogIn = require('./views/logInRouteHandler.jsx')
-// const Register = require('./views/register.jsx')
+const Register = require('./views/register.jsx')
 // const ForgotPassword = require('./views/forgotPassword.jsx')
 // const SetPassword = require('./views/setPassword.jsx')
 // const Users = require('./views/users.jsx')
@@ -53,8 +53,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             <Route onEnter={requireNoAuth}>
               <Route component={LogIn} path='logIn'/>
-            {/*
               <Route component={Register} path='register'/>
+            {/*
               <Route component={ForgotPassword} path='forgotPassword'/>
             */}
             </Route>
