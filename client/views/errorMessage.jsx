@@ -4,7 +4,8 @@ const React = require('react')
 const ErrorMessage = props => {
   const { error } = props
   let errorMessage
-  if (Array.isArray(error)) {
+  if (!error) {
+  } else if (Array.isArray(error)) {
     errorMessage = error.join(' ')
   } else if (error.message) {
     errorMessage = error.message
