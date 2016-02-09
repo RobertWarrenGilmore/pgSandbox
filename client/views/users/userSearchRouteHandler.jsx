@@ -50,7 +50,9 @@ class UserSearch extends React.Component {
       sortBy: this.refs.sortBy.value,
       sortOrder: this.refs.sortOrderDescending.checked ? 'descending' : 'ascending'
     }
-    this.setState({workingQuery: parameters})
+    this.setState({
+      workingQuery: parameters
+    })
   }
   // Correct any errors in the provided query.
   _correctUrlQuery(query, options) {
@@ -96,7 +98,7 @@ class UserSearch extends React.Component {
     }
     // If the valid query differs from the supplied query, redirect to it.
     if (delayed) {
-      // Delay the query update to one second after the most recent edit.
+      // Delay the query update to half a second after the most recent edit.
       let queryUpdateTimeout = setTimeout(doRedirect, 500)
       this.setState({
         queryUpdateTimeout: queryUpdateTimeout
