@@ -13,7 +13,7 @@ const LogIn = require('./views/logInRouteHandler.jsx')
 const Register = require('./views/registerRouteHandler.jsx')
 const ForgotPassword = require('./views/forgotPasswordRouteHandler.jsx')
 const SetPassword = require('./views/setPasswordRouteHandler.jsx')
-// const Users = require('./views/users.jsx')
+// const UserSearch = require('./views/users/userSearchRouteHandler.jsx')
 const UserPage = require('./views/users/userPageRouteHandler.jsx')
 const BlogPost = require('./views/blog/blogPostRouteHandler.jsx')
 const BlogSearch = require('./views/blog/blogSearchRouteHandler.jsx')
@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <Route onEnter={requireAuth}>
               <Route path='users'>
             {/*
-                <IndexRoute component={Users}/>
+                <IndexRoute component={UserSearch}/>
             */}
                 <Route component={UserPage} path=':userId'/>
               </Route>
