@@ -38,7 +38,7 @@ function logOut(nextState, replaceState) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  flux.dispatch(authActions.resume()).then(function () {
+  flux.dispatch(authActions.resume()).catch(err => {}).then(function () {
     const router = (
       <Provider store={flux}>
         <Router history={createBrowserHistory()}>

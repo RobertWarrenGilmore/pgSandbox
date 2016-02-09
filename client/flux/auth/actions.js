@@ -43,7 +43,6 @@ const creators = {
           auth: credentials
         }).then(({ statusCode, body }) => {
           if (statusCode === 200) {
-            localStorage.auth = JSON.stringify(credentials)
             dispatch(setAuthCredentials({
               credentials,
               id: body.id
@@ -52,9 +51,6 @@ const creators = {
           } else {
             throw new Error(body.message || body)
           }
-        }).catch(err => {
-          delete localStorage.auth
-          throw err
         })
         // Cache the new user.
         .then(newId => dispatch(loadUser(newId)))
@@ -64,6 +60,13 @@ const creators = {
             dispatch(loadUser(prevId))
           }
         })
+        .catch(err => {
+          dispatch(setAuthCredentials({
+            credentials: null,
+            id: null
+          }))
+          throw err
+        })
         .finally(() => dispatch(setAuthBusy(false)))
       }
     }
@@ -71,7 +74,6 @@ const creators = {
   logOut() {
     return dispatch => {
       if (!store.getState().auth.busy) {
-        delete localStorage.auth
         dispatch(setAuthCredentials({
           credentials: null,
           id: null

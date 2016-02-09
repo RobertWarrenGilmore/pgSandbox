@@ -12,10 +12,14 @@ const reducer = handleActions({
   [types.SET_AUTH_BUSY]: (state = initialState, action) => state.merge({
     busy: action.payload
   }),
-  [types.SET_AUTH_CREDENTIALS]: (state = initialState, action) => state.merge({
-    credentials: action.payload.credentials,
-    id: action.payload.id
-  })
+  [types.SET_AUTH_CREDENTIALS]: (state = initialState, action) => {
+    const newState = state.merge({
+      credentials: action.payload.credentials,
+      id: action.payload.id
+    })
+    localStorage.auth = JSON.stringify(newState.credentials)
+    return newState
+  }
 }, initialState)
 
 module.exports = reducer
