@@ -1,79 +1,44 @@
 'use strict'
 const _ = require('lodash')
 const React = require('react')
-const {Link} = require('react-router')
-const BusyIndicator = require('./busyIndicator.jsx')
-const appScroll = require('../utilities/appScroll')
-const ajax = require('../utilities/ajax')
-const auth = require('../flux/auth')
-const setWindowTitle = require('../utilities/setWindowTitle')
+const { Link } = require('react-router')
+const BusyIndicator = require('../busyIndicator.jsx')
+const ScrollCaboose = require('../scrollCaboose.jsx')
+const ErrorMessage = require('../errorMessage.jsx')
+const { connect } = require('react-redux')
+const { search: searchUsers } = require('../../flux/users/actions')
+const Helmet = require('react-helmet')
 
-class Users extends React.Component {
+const ua = navigator.userAgent
+// Are we redirecting after input or waiting until the user manually clicks "apply"?
+// Borrowed from rackt/history/modules/DOMUtils.supportsHistory
+const useManualApply =
+  (
+    (ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) &&
+    ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1
+  ) ||
+  (ua.indexOf('CriOS') !== -1) ||
+  !window.history ||
+  !window.history.pushState
+
+class UserSearch extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      authUser: null,
       error: null,
       queryUpdateTimeout: null,
       workingQuery: this.props.location.query,
       results: [],
-      endReached: false
+      endReached: false,
+      scrolledToBottom: false
     }
-    this._useManualApply = this._useManualApply.bind(this)
-    this._loadAuthUser = this._loadAuthUser.bind(this)
     this._updateWorkingQuery = this._updateWorkingQuery.bind(this)
     this._correctUrlQuery = this._correctUrlQuery.bind(this)
     this._doSearch = this._doSearch.bind(this)
     this._loadMoreResults = this._loadMoreResults.bind(this)
-    this._isInNextPageZone = this._isInNextPageZone.bind(this)
-    this._onScroll = this._onScroll.bind(this)
+    this._scrollCabooseListener = this._scrollCabooseListener.bind(this)
     this._onApply = this._onApply.bind(this)
     this._onRevert = this._onRevert.bind(this)
-  }
-  // Are we redirecting after input or waiting until the user manually clicks "apply"?
-  _useManualApply() {
-    // Borrowed = require(rackt/history/modules/DOMUtils.supportsHistory
-    const ua = navigator.userAgent
-    if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) {
-      return true
-    }
-    if (ua.indexOf('CriOS') !== -1) {
-      return true
-    }
-    return !window.history || !window.history.pushState
-
-  }
-  _loadAuthUser() {
-    const credentials = auth.getCredentials()
-    if (credentials) {
-      let r = ajax({
-        method: 'GET',
-        uri: '/api/users/' + credentials.id,
-        json: true,
-        auth: credentials
-      })
-      this.setState({
-        runningRequest: r // Hold on to the Ajax promise in case we need to cancel it later.
-      })
-      return r.then((response) =>{
-        if (response.statusCode === 200) {
-          this.setState({
-            authUser: response.body
-          })
-        } else {
-          this.setState({
-            serverError: response.body
-          })
-        }
-        return null
-      }).catch((error) => {
-        this.setState({
-          serverError: error.message
-        })
-      })
-    } else {
-      return Promise.resolve()
-    }
   }
   // Read the search parameters = require(the controls and use them to construct the working query.
   _updateWorkingQuery() {
@@ -89,8 +54,7 @@ class Users extends React.Component {
   }
   // Correct any errors in the provided query.
   _correctUrlQuery(query, options) {
-    const delayed = options && !!options.delayed
-    const replace = options && !!options.replace
+    const { delayed, replace } = options || {}
     let validQuery = {}
     // Only these parameters can be filtered on.
     const validFilter = ['familyName', 'givenName', 'emailAddress']
@@ -122,92 +86,86 @@ class Users extends React.Component {
         navigate(null, this.props.location.pathname, validQuery)
       }
       if (this.state.queryUpdateTimeout) {
-        this.setState({queryUpdateTimeout: null})
+        this.setState({
+          queryUpdateTimeout: null
+        })
       }
     }
     if (this.state.queryUpdateTimeout) {
       clearTimeout(this.state.queryUpdateTimeout)
     }
-    // If the valid query differs = require(the supplied query, redirect to it.
+    // If the valid query differs from the supplied query, redirect to it.
     if (delayed) {
       // Delay the query update to one second after the most recent edit.
       let queryUpdateTimeout = setTimeout(doRedirect, 500)
-      this.setState({queryUpdateTimeout: queryUpdateTimeout})
+      this.setState({
+        queryUpdateTimeout: queryUpdateTimeout
+      })
     } else {
       doRedirect()
     }
   }
-  // Initiate a search = require(the URL query.
-  _doSearch(offset) {
-    if (this.state.runningRequest) {
-      this.state.runningRequest.cancel()
-    }
-    const authCredentials = auth.getCredentials()
-    let query = _.cloneDeep(this.props.location.query)
-    if (offset) {
-      query.offset = offset
-    }
-    let r = ajax({
-      method: 'GET',
-      uri: '/api/users',
-      auth: authCredentials,
-      json: true,
-      qs: query
-    })
-    this.setState({
-      runningRequest: r,
-      error: null
-    })
-    r.then((response) => {
-      if (response.statusCode === 200) {
-        let results = []
-        if (offset) {
-          Array.prototype.push.apply(results, this.state.results)
-        }
-        Array.prototype.push.apply(results, response.body)
-        this.setState({
-          error: null,
-          results: results,
-          runningRequest: null,
-          endReached: !response.body.length
-        }, this._loadMoreResults)
-        return null
-      } else {
-        this.setState({
-          error: response.body,
-          runningRequest: null
-        })
-      }
-    }).catch((error) => {
+  // Initiate a search.
+  _doSearch(newSearch = true) {
+    return new Promise((resolve, reject) => {
       this.setState({
-        error: error.message,
-        runningRequest: null
+        busy: true,
+        error: null
       })
+      return this._loadMoreResults(newSearch ? [] : this.state.results)
+        .catch(err => this.setState({
+          error: err.message || err
+        }))
+        .then(() => this.setState({
+          busy: false
+        }))
     })
   }
-  _loadMoreResults() {
-    if (this._isInNextPageZone() && !this.state.runningRequest && !this.state.endReached) {
-      this._doSearch(this.state.results.length)
+  // Continue a search.
+  _loadMoreResults(existingResults = []) {
+    if (this.state.scrolledToBottom && !this.state.endReached) {
+      const query = Object.assign({
+        offset: this.state.results.length
+      }, this.props.location.query)
+      return this.props.searchUsers(query).then(ids => {
+        if (ids.length) {
+          const newResults = existingResults.concat(ids)
+          this.setState({
+            results: newResults
+          })
+          // We keep adding this back into this promise chain until no more ids are returned.
+          return this._loadMoreResults(newResults)
+        } else {
+          // Base case; no more ids to add.
+          this.setState({
+            endReached: true
+          })
+        }
+      })
+    } else {
+      return Promise.resolve()
     }
   }
   componentWillMount() {
     // Correct the URL query if it's invalid.
-    this._loadAuthUser().then(() => {
-      this._correctUrlQuery(this.props.location.query, {
-        replace: true,
-        delayed: false
-      })
-      this._doSearch()
+    this._correctUrlQuery(this.props.location.query, {
+      replace: true,
+      delayed: false
     })
+  }
+  componentDidMount() {
+    this._doSearch()
   }
   componentWillReceiveProps(nextProps) {
     const urlQueryChanged = !_.isEqual(nextProps.location.query, this.props.location.query)
     if (urlQueryChanged) {
-      this.setState({workingQuery: nextProps.location.query})
+      this.setState({
+        workingQuery: nextProps.location.query
+      })
     }
   }
   componentWillUpdate(nextProps, nextState) {
-    if (!this._useManualApply()) {
+    if (!useManualApply) {
       const workingQueryChanged = !_.isEqual(nextState.workingQuery, this.state.workingQuery)
       const urlQueryIsBehindWorkingQuery = !_.isEqual(nextState.workingQuery, nextProps.location.query)
       if (workingQueryChanged && urlQueryIsBehindWorkingQuery) {
@@ -226,26 +184,14 @@ class Users extends React.Component {
         delayed: false
       })
       this._doSearch()
+    } else if (this.state.scrolledToBottom && !this.state.endReached && !this.state.busy) {
+      this._doSearch(false)
     }
   }
-  componentDidMount() {
-    appScroll.addListener(this._onScroll)
-    setWindowTitle('user search')
-  }
-  componentWillUnmount() {
-    appScroll.removeListener(this._onScroll)
-    setWindowTitle()
-  }
-  _isInNextPageZone() {
-    const element = this.refs.caboose
-    if (element) {
-      return element.getBoundingClientRect().top <= window.innerHeight
-    } else {
-      return false
-    }
-  }
-  _onScroll(event) {
-    return this._loadMoreResults()
+  _scrollCabooseListener(visible) {
+    this.setState({
+      scrolledToBottom: visible
+    })
   }
   _onApply(event) {
     event.preventDefault()
@@ -256,47 +202,34 @@ class Users extends React.Component {
   }
   _onRevert(event) {
     event.preventDefault()
-    this.setState({workingQuery: this.props.location.query})
+    this.setState({
+      workingQuery: this.props.location.query
+    })
   }
   render() {
-    let caboose = null
-    const authUser = this.state.authUser
-    if (this.state.endReached) {
-      if (!this.state.results.length) {
-        caboose = (
-          <div className='caboose' ref='caboose'>
-            no results
-          </div>
-        )
-      }
-    } else {
-      caboose = (
-        <div className='caboose' ref='caboose'>
-          <BusyIndicator/>
-          loading more
-        </div>
-      )
-    }
+    const { authUser, users } = this.props
+    const { busy, results, error, endReached, workingQuery } = this.state
     return (
       <div id='userSearch'>
+        <Helmet title='user search'/>
         <form id='filter' onChange={this._updateWorkingQuery}>
           {(authUser && authUser.admin) ? (
             <label>
               email address
-              <input type='text' ref='emailAddress' value={this.state.workingQuery.emailAddress}/>
+              <input type='text' ref='emailAddress' value={workingQuery.emailAddress}/>
             </label>
           ) : null}
           <label>
             first name
-            <input type='text' ref='givenName' value={this.state.workingQuery.givenName}/>
+            <input type='text' ref='givenName' value={workingQuery.givenName}/>
           </label>
           <label>
             last name
-            <input type='text' ref='familyName' value={this.state.workingQuery.familyName}/>
+            <input type='text' ref='familyName' value={workingQuery.familyName}/>
           </label>
           <label>
             sort by
-            <select ref='sortBy' value={this.state.workingQuery.sortBy}>
+            <select ref='sortBy' value={workingQuery.sortBy}>
               {(authUser && authUser.admin) ? (
                 <option value='emailAddress'>
                   email address
@@ -311,27 +244,39 @@ class Users extends React.Component {
             </select>
           </label>
           <label>
-            <input type='checkbox' ref='sortOrderDescending' checked={this.state.workingQuery.sortOrder === 'descending'}/>
+            <input type='checkbox' ref='sortOrderDescending' checked={workingQuery.sortOrder === 'descending'}/>
             descending
           </label>
-          {this._useManualApply()
+          {useManualApply
             ? (
               <div>
-                <button onClick={this._onApply} disabled={!!this.state.runningRequest} className='highlighted'>
+                <button onClick={this._onApply} disabled={busy} className='highlighted'>
                   apply
                 </button>
-                <button onClick={this._onRevert} disabled={!!this.state.runningRequest}>
+                <button onClick={this._onRevert} disabled={busy}>
                   revert
                 </button>
               </div>
             )
             : (null)}
+          <ErrorMessage error={error}/>
         </form>
         <div id='userList'>
-          {_.map(this.state.results, function(user) {
-            return <Entry user={user} authUser={authUser} key={user.id}/>
-          })}
-          {caboose}
+          {_.map(results, userId =>
+            <Entry user={users[userId]} authUser={authUser} key={userId}/>
+          )}
+          {(endReached) ? (
+            (!results.length) ? (
+              <ScrollCaboose visibilityListener={this._scrollCabooseListener}>
+                no results
+              </ScrollCaboose>
+            ) : null
+          ) : (
+            <ScrollCaboose visibilityListener={this._scrollCabooseListener}>
+              <BusyIndicator/>
+              loading more
+            </ScrollCaboose>
+          )}
         </div>
       </div>
     )
@@ -353,5 +298,34 @@ const Entry = (props) => {
     </Link>
   )
 }
+UserSearch.propTypes = {
+  authUser: React.PropTypes.object,
+  users: React.PropTypes.object,
+  searchUsers: React.PropTypes.func
+}
+UserSearch.defaultProps = {
+  authUser: null,
+  users: null,
+  searchUsers: null
+}
 
-module.exports = Users
+const wrapped = connect(
+  function mapStateToProps(state) {
+    state = state.asMutable({deep: true})
+    let authUser
+    if (state.auth.id && state.users) {
+      authUser = state.users[state.auth.id]
+    }
+    return {
+      authUser,
+      users: state.users
+    }
+  },
+  function mapDispatchToProps(dispatch) {
+    return {
+      searchUsers: (user, id) => dispatch(searchUsers(user, id))
+    }
+  }
+)(UserSearch)
+
+module.exports = wrapped
