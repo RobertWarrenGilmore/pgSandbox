@@ -107,19 +107,21 @@ class UserSearch extends React.Component {
   }
   // Initiate a search.
   _doSearch(newSearch = true) {
-    return new Promise((resolve, reject) => {
-      this.setState({
-        busy: true,
-        error: null
-      })
-      return this._loadMoreResults(newSearch ? [] : this.state.results)
-        .catch(err => this.setState({
-          error: err.message || err
-        }))
-        .then(() => this.setState({
-          busy: false
-        }))
+    const startingResults = newSearch ? [] : this.state.results
+    const endReached = newSearch ? false : this.state.endReached
+    this.setState({
+      busy: true,
+      error: null,
+      results: startingResults,
+      endReached
     })
+    return this._loadMoreResults(startingResults)
+      .catch(err => this.setState({
+        error: err.message || err
+      }))
+      .then(() => this.setState({
+        busy: false
+      }))
   }
   // Continue a search.
   _loadMoreResults(existingResults = []) {
