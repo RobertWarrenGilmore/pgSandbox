@@ -143,7 +143,7 @@ class UserPage extends React.Component {
             existingUser={user}
             editingUser={editingUser}
             disabled={busy}
-            adminMode={authUser.id === user.id}
+            adminMode={authUser.admin}
             onChange={_onEditorChange}
             onSave={_onEditorSave}
             onRevert={_onEditorRevert}
