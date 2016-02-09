@@ -29,8 +29,6 @@ const creators = {
   save(user, id) {
     return dispatch => {
       const authCredentials = store.getState().auth.credentials
-      let id = user.id
-      delete user.id
       if (typeof user.passwordResetKey === 'string') {
         user = {
           password: user.password,
