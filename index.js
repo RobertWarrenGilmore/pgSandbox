@@ -1,5 +1,6 @@
 'use strict'
 require('dotenv').load()
+var appInfo = require('./appInfo')
 var fs = require('fs')
 var path = require('path')
 var express = require('express')
@@ -8,13 +9,15 @@ var https = require('https')
 var http = require('http')
 var api = require('./api')
 var browserify = require('browserify')
-var uglifyify = require('uglifyify')
 var sass = require('node-sass')
 var knex = require('./api/database/knex')
 var Promise = require('bluebird')
 var forever = require('forever')
 var commandLineArgs = require('command-line-args')
 var app = express()
+
+const insecurePort = 8000
+const securePort = 44300
 
 var cli = commandLineArgs([
   { name: 'replace', alias: 'r', type: String }
@@ -33,13 +36,20 @@ var sslOptions = {
   cert: fs.readFileSync(path.join('.', 'ssl', 'fullchain.pem'))
 }
 
-// Redirect insecure to secure.
-console.info('Enforcing SSL.')
+console.info('Enforcing protocol, domain, and port.')
 app.use(function enforceSsl(req, res, next) {
-  if (req.secure) {
+  if (req.secure && req.headers.host === appInfo.host) {
     next()
   } else {
-    res.redirect('https://' + req.headers.host + req.url)
+    let targetUrl = ['https://']
+    targetUrl.push(appInfo.host)
+    if (process.env.NODE_ENV !== 'production') {
+      targetUrl.push(':')
+      targetUrl.push(securePort)
+    }
+    targetUrl.push(req.url)
+    targetUrl = targetUrl.join()
+    res.redirect(targetUrl)
   }
 })
 
@@ -131,8 +141,8 @@ Promise.join(clientScriptPromise, clientStylePromise,
     return knex.migrate.latest()
   }).then(function () {
 
-    http.createServer(app).listen(8000)
-    https.createServer(sslOptions, app).listen(44300)
+    http.createServer(app).listen(insecurePort)
+    https.createServer(sslOptions, app).listen(securePort)
     console.info('Serving.')
 
   }).catch(function (err) {
