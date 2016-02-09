@@ -3,7 +3,9 @@ const ajax = require('../../utilities/ajax')
 const store = require('../')
 const { createAction: createActionCreator } = require('redux-actions')
 const types = require('./types')
-const { logIn } = require('../auth/actions')
+const authTypes = require('../auth/types')
+
+const setAuthCredentials = createActionCreator(authTypes.SET_AUTH_CREDENTIALS)
 
 // private action creators
 const cacheUsers = createActionCreator(types.CACHE_USERS)
@@ -24,10 +26,11 @@ const creators = {
       })
     }
   },
-  save(user) {
+  save(user, id) {
     return dispatch => {
       const authCredentials = store.getState().auth.credentials
       let id = user.id
+      delete user.id
       if (typeof user.passwordResetKey === 'string') {
         user = {
           password: user.password,
@@ -53,10 +56,13 @@ const creators = {
               [id]: body
             }))
           }
-          if (user.id === store.getState().auth.id) {
-            dispatch(logIn({
-              emailAddress: user.emailAddress || authCredentials.emailAddress,
-              password: user.password || authCredentials.password
+          if (id == store.getState().auth.id) {
+            dispatch(setAuthCredentials({
+              credentials: {
+                emailAddress: user.emailAddress || authCredentials.emailAddress,
+                password: user.password || authCredentials.password
+              },
+              id: id
             }))
           }
         } else if (statusCode === 404) {

@@ -54,7 +54,7 @@ class UserPage extends React.Component {
       authorisedToBlog: this.state.editingUser.authorisedToBlog,
       admin: this.state.editingUser.admin
     }
-    return this.props.saveUser(user)
+    return this.props.saveUser(user, this.props.params.userId)
       .catch(err => {
         if (err.messages) {
           this.setState({
@@ -233,7 +233,7 @@ const wrapped = connect(
   },
   function mapDispatchToProps(dispatch) {
     return {
-      saveUser: user => dispatch(saveUser(user)),
+      saveUser: (user, id) => dispatch(saveUser(user, id)),
       loadUser: id => dispatch(loadUser(id))
     }
   }
