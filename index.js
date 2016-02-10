@@ -48,7 +48,7 @@ app.use(function enforceSsl(req, res, next) {
       targetUrl.push(securePort)
     }
     targetUrl.push(req.url)
-    targetUrl = targetUrl.join()
+    targetUrl = targetUrl.join('')
     res.redirect(targetUrl)
   }
 })
