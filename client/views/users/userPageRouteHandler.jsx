@@ -3,6 +3,7 @@ const React = require('react')
 const BusyIndicator = require('../busyIndicator.jsx')
 const ErrorMessage = require('../errorMessage.jsx')
 const UserEditor = require('./editor.jsx')
+const UserProfile = require('./profile.jsx')
 const { connect } = require('react-redux')
 const { save: saveUser, load: loadUser } = require('../../flux/users/actions')
 const Helmet = require('react-helmet')
@@ -189,16 +190,7 @@ class UserPage extends React.Component {
               </button>
             ) : null}
           </div>
-          <header>
-            <h1>
-              {user.givenName} {user.familyName}
-            </h1>
-          </header>
-          {(user.emailAddress) ? (
-            <p>
-              {user.emailAddress}
-            </p>
-          ): null}
+          <UserProfile user={user}/>
         </div>
       )
     }

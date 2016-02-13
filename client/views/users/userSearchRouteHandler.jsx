@@ -2,6 +2,7 @@
 const _ = require('lodash')
 const React = require('react')
 const { Link } = require('react-router')
+const UserProfile = require('./profile.jsx')
 const BusyIndicator = require('../busyIndicator.jsx')
 const ScrollCaboose = require('../scrollCaboose.jsx')
 const ErrorMessage = require('../errorMessage.jsx')
@@ -267,7 +268,9 @@ class UserSearch extends React.Component {
         </form>
         <div id='userList'>
           {_.map(results, userId =>
-            <Entry user={users[userId]} authUser={authUser} key={userId}/>
+            <Link className='user' to={'/users/' + userId}>
+              <UserProfile user={users[userId]} brief={true} key={userId}/>
+            </Link>
           )}
           {(endReached) ? (
             (!results.length) ? (
@@ -285,22 +288,6 @@ class UserSearch extends React.Component {
       </div>
     )
   }
-}
-
-const Entry = (props) => {
-  const user = props.user
-  return (
-    <Link className='user' to={'/users/' + user.id}>
-      <div className='name'>
-        {user.givenName} {user.familyName}
-      </div>
-      {(user.emailAddress) ? (
-        <div className='emailAddress'>
-          {user.emailAddress}
-        </div>
-      ) : null}
-    </Link>
-  )
 }
 UserSearch.propTypes = {
   authUser: React.PropTypes.object,

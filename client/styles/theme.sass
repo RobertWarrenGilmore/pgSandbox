@@ -71,7 +71,8 @@ body
         + h1, + h2, + h3, + h4, + h5, + h6
           margin-top: 1em
       p, ul, ol, dl
-        margin-bottom: $medium-padding
+        &:not(:last-child)
+          margin-bottom: $medium-padding
       a
         color: lighten($body-colour, 20%)
         text-decoration: underline
