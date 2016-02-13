@@ -38,18 +38,20 @@ var sslOptions = {
 
 console.info('Enforcing protocol, domain, and port.')
 app.use(function enforceSsl(req, res, next) {
-  if (req.secure && req.headers.host === appInfo.host) {
+  const correctUrl = 'https://' +
+    appInfo.host + (
+      (process.env.NODE_ENV !== 'production') ?
+        (':' + securePort) :
+        ''
+    ) +
+    req.url
+  const actualUrl = (req.secure ? 'https' : 'http') + '://' +
+    req.headers.host +
+    req.originalUrl
+  if (actualUrl === correctUrl) {
     next()
   } else {
-    let targetUrl = ['https://']
-    targetUrl.push(appInfo.host)
-    if (process.env.NODE_ENV !== 'production') {
-      targetUrl.push(':')
-      targetUrl.push(securePort)
-    }
-    targetUrl.push(req.url)
-    targetUrl = targetUrl.join('')
-    res.redirect(targetUrl)
+    res.redirect(correctUrl)
   }
 })
 
