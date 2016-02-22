@@ -4,7 +4,7 @@ var Promise = require('bluebird')
 var knex = require('../../../api/database/knex')
 var escapeForLike = require('../../../api/biz/utilities/escapeForLike')
 var bcrypt = Promise.promisifyAll(require('bcrypt'))
-var BlogPost = require('../../../api/biz/blogPost')(knex)
+var BlogPost = require('../../../api/biz/blogPosts')(knex)
 var AuthenticationError = require('../../../api/errors/authenticationError')
 var AuthorisationError = require('../../../api/errors/authorisationError')
 var MalformedRequestError = require('../../../api/errors/malformedRequestError')
@@ -13,7 +13,7 @@ var NoSuchResourceError = require('../../../api/errors/noSuchResourceError')
 var validate = require('../../../utilities/validate')
 var ValidationError = validate.ValidationError
 
-describe('blog post', function () {
+describe('blog posts', function () {
   var emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
   var authorId
   var password = 'taco tuesday'

@@ -1,42 +1,42 @@
 'use strict'
-var express = require('express')
-var handleError = require('./handleError')
+const express = require('express')
+const handleError = require('./handleError')
 
-module.exports = function (user) {
-  var router = express.Router({
+module.exports = usersBiz => {
+  const router = express.Router({
     mergeParams: true
   })
 
   // users in general
   router.route('/')
-    .post(function (req, res) {
-      user.create(req)
+    .post((req, res) =>
+      usersBiz.create(req)
         .then(res.status(201).send.bind(res))
         .catch(handleError(res))
-    })
-    .get(function (req, res) {
-      user.read(req)
+    )
+    .get((req, res) =>
+      usersBiz.read(req)
         .then(res.send.bind(res))
         .catch(handleError(res))
-    })
-    .put(function (req, res) {
-      user.update(req)
+    )
+    .put((req, res) =>
+      usersBiz.update(req)
         .then(res.send.bind(res))
         .catch(handleError(res))
-    })
+    )
 
   // a specific user
-  router.route('/:userId')
-    .get(function (req, res) {
-      user.read(req)
+  router.route('/:usersBizId')
+    .get((req, res) =>
+      usersBiz.read(req)
         .then(res.send.bind(res))
         .catch(handleError(res))
-    })
-    .put(function (req, res) {
-      user.update(req)
+    )
+    .put((req, res) =>
+      usersBiz.update(req)
         .then(res.send.bind(res))
         .catch(handleError(res))
-    })
+    )
 
   return router
 }

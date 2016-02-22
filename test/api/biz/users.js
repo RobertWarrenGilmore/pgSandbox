@@ -11,7 +11,7 @@ var mockEmailer = sinon.spy(function () {
     return Promise.resolve()
   }
 })
-var User = require('../../../api/biz/user')(knex, mockEmailer)
+var User = require('../../../api/biz/users')(knex, mockEmailer)
 var MalformedRequestError = require('../../../api/errors/malformedRequestError')
 var ConflictingEditError = require('../../../api/errors/conflictingEditError')
 var AuthenticationError = require('../../../api/errors/authenticationError')
@@ -30,7 +30,7 @@ function EmailerError(message) {
 EmailerError.prototype = Object.create(Error.prototype)
 EmailerError.prototype.constructor = EmailerError
 
-describe('user', function () {
+describe('users', function () {
   var createdIds = []
 
   beforeEach('Reset the mock emailer.', function () {

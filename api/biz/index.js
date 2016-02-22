@@ -1,16 +1,14 @@
 'use strict'
-var auth = require('./auth')
-var infoPage = require('./infoPage')
-var blogPost = require('./blogPost')
-var user = require('./user')
-var emailer = require('../../utilities/emailer')
+const auth = require('./auth')
+const infoPages = require('./infoPages')
+const blogPosts = require('./blogPosts')
+const users = require('./users')
+const emailer = require('../../utilities/emailer')
 
-module.exports = function (knex) {
-  return {
-    // This list gets longer as business modules are added.
-    auth: auth(knex),
-    infoPage: infoPage(knex),
-    blogPost: blogPost(knex),
-    user: user(knex, emailer)
-  }
-}
+module.exports = knex => ({
+  // This list gets longer as business modules are added.
+  auth: auth(knex),
+  infoPages: infoPages(knex),
+  blogPosts: blogPosts(knex),
+  users: users(knex, emailer)
+})

@@ -1,42 +1,42 @@
 'use strict'
-var express = require('express')
-var handleError = require('./handleError')
+const express = require('express')
+const handleError = require('./handleError')
 
-module.exports = function (blogPost) {
-  var router = express.Router({
+module.exports = blogPostsBiz => {
+  const router = express.Router({
     mergeParams: true
   })
 
   // posts in general
   router.route('/')
-    .get(function (req, res) {
-      blogPost.read(req)
+    .get((req, res) =>
+      blogPostsBiz.read(req)
         .then(res.send.bind(res))
         .catch(handleError(res))
-    })
+    )
 
   // a specific post
   router.route('/:postId')
-    .post(function (req, res) {
-      blogPost.create(req)
+    .post((req, res) =>
+      blogPostsBiz.create(req)
         .then(res.status(201).send.bind(res))
         .catch(handleError(res))
-    })
-    .get(function (req, res) {
-      blogPost.read(req)
+    )
+    .get((req, res) =>
+      blogPostsBiz.read(req)
         .then(res.send.bind(res))
         .catch(handleError(res))
-    })
-    .put(function (req, res) {
-      blogPost.update(req)
+    )
+    .put((req, res) =>
+      blogPostsBiz.update(req)
         .then(res.send.bind(res))
         .catch(handleError(res))
-    })
-    .delete(function (req, res) {
-      blogPost.delete(req)
+    )
+    .delete((req, res) =>
+      blogPostsBiz.delete(req)
         .then(res.send.bind(res))
         .catch(handleError(res))
-    })
+    )
 
   return router
 }

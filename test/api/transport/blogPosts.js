@@ -8,7 +8,7 @@ var express = require('express')
 var parseAuth = require('basic-auth')
 var bodyParser = require('body-parser')
 
-describe('blog post', function () {
+describe('blog posts', function () {
 
   var emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
   var password = 'taco tuesday'
@@ -40,7 +40,7 @@ describe('blog post', function () {
   var server
 
   before('Host the blog post transport module on a server.', function () {
-    var blogRouter = require('../../../api/transport/blogPost')(blogPostBiz)
+    var blogRouter = require('../../../api/transport/blogPosts')(blogPostBiz)
     var app = express()
     app.use(function authMiddleware(req, res, next) {
       var auth = parseAuth(req)

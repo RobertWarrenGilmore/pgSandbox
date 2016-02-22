@@ -2,14 +2,18 @@
 const express = require('express')
 const handleError = require('./handleError')
 
-module.exports = authBiz => {
+module.exports = infoPagesBiz => {
   const router = express.Router({
     mergeParams: true
   })
 
-  router.route('/')
+  router.route('/:pageId')
     .get((req, res) =>
-      authBiz.read(req)
+      infoPagesBiz.read(req)
+        .then(res.send.bind(res))
+        .catch(handleError(res))
+    ).put((req, res) =>
+      infoPagesBiz.update(req)
         .then(res.send.bind(res))
         .catch(handleError(res))
     )

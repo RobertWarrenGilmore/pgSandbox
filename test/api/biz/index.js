@@ -12,7 +12,7 @@ describe('biz', function () {
   })
 
   // a list of all of the biz test modules to run
-  require('./user')
-  require('./blogPost')
-  require('./infoPage')
+  require('./users')
+  require('./blogPosts')
+  require('./infoPages')
 })

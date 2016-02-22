@@ -4,12 +4,12 @@ var assert = require('assert')
 var Promise = require('bluebird')
 var bcrypt = Promise.promisifyAll(require('bcrypt'))
 var knex = require('../../../api/database/knex')
-var InfoPage = require('../../../api/biz/infoPage')(knex)
+var InfoPage = require('../../../api/biz/infoPages')(knex)
 var AuthorisationError = require('../../../api/errors/authorisationError')
 var NoSuchResourceError = require('../../../api/errors/noSuchResourceError')
 
 
-describe('infoPage', function () {
+describe('info pages', function () {
   var ids = ['home']
   var badId = 'notARealPage'
   var body = 'This is the text of a page.'
