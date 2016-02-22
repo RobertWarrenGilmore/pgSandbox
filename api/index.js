@@ -1,6 +1,6 @@
 'use strict'
-var knex = require('./database/knex')
-var biz = require('./biz')
-var transport = require('./transport')
+const knex = require('./database/knex')
+const biz = require('./biz')
+const transport = require('./transport')
 
 module.exports = transport(biz(knex))

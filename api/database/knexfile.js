@@ -3,7 +3,7 @@
  * This file provides database configuration parameters for Knex.
  */
 
-var dbPassword = process.env.dbPassword
+const dbPassword = process.env.dbPassword
 
 module.exports = {
 

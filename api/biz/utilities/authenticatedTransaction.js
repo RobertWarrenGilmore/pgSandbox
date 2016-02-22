@@ -1,39 +1,38 @@
 'use strict'
-var Promise = require('bluebird')
-var AuthenticationError = require('../../errors/authenticationError')
-var bcrypt = Promise.promisifyAll(require('bcrypt'))
-var escapeForLike = require('./escapeForLike')
+const Promise = require('bluebird')
+const AuthenticationError = require('../../errors/authenticationError')
+const bcrypt = Promise.promisifyAll(require('bcrypt'))
+const escapeForLike = require('./escapeForLike')
 
-function authenticatedTransaction(knex, auth, callback) {
+function authenticatedTransaction (knex, auth, callback) {
 
-  return knex.transaction(function (trx) {
+  return knex.transaction(trx => {
 
-    var authPromise
+    let authPromise
     if (auth && auth.emailAddress && auth.password) {
       authPromise = trx
         .from('users')
         .select()
         .where('emailAddress', 'ilike', escapeForLike(auth.emailAddress))
-        .then(function (users) {
+        .then(users => {
           if (users.length === 0) {
             throw new AuthenticationError('There is no such user.')
           }
           return users[0]
-        }).tap(function (authUser) {
-          return bcrypt.compareAsync(auth.password, authUser.passwordHash)
-            .then(function (passwordGood) {
+        })
+        .tap(authUser =>
+          bcrypt.compareAsync(auth.password, authUser.passwordHash)
+            .then(passwordGood => {
               if (!passwordGood) {
                 throw new AuthenticationError('The password was incorrect.')
               }
             })
-        })
+        )
     } else {
       authPromise = Promise.resolve(null)
     }
 
-    return authPromise.then(function (authUser) {
-      return callback(trx, authUser)
-    })
+    return authPromise.then(authUser => callback(trx, authUser))
 
   })
 }
