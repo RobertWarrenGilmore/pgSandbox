@@ -14,11 +14,11 @@ const knex = require('./api/database/knex')
 const Promise = require('bluebird')
 const forever = require('forever')
 const commandLineArgs = require('command-line-args')
-const lex = require('letsencrypt-express')
+const LEX = require('letsencrypt-express')
 const emailer = require('./utilities/emailer')
-const app = express()
+let app = express()
 
-var allowedDomains = [appInfo.host, 'www.' + appInfo.host]
+const allowedDomains = [appInfo.host, 'www.' + appInfo.host]
 const insecurePort = 8000
 const securePort = 44300
 
@@ -140,8 +140,11 @@ Promise.join(clientScriptPromise, clientStylePromise,
   })
   .then(() => {
 
+    http.createServer(app).listen(insecurePort)
+
+    let sslOptions
     if (isProductionMode) {
-      lex.create({
+      const lex = LEX.create({
         configDir: path.join('.', 'ssl', 'letsencrypt'),
         onRequest: app,
         approveRegistration: function (hostName, cb) {
@@ -162,20 +165,18 @@ Promise.join(clientScriptPromise, clientStylePromise,
               '\n\n The certInfo was ' + certInfo + '.'
           )
         }
-      }).listen([insecurePort], [securePort], function onListening() {
-        var protocol = ('requestCert' in this) ? 'https': 'http'
-        console.log('Listening at ' + protocol + '://' + appInfo.host + ':' + this.address().port)
       })
+      sslOptions = lex.httpsOptions
+      app = LEX.createAcmeResponder(lex, app)
     } else {
       console.info('Getting the SSL key.')
-      const sslOptions = {
+      sslOptions = {
         key: fs.readFileSync(path.join('.', 'ssl', 'privkey.pem')),
         cert: fs.readFileSync(path.join('.', 'ssl', 'fullchain.pem'))
       }
-      http.createServer(app).listen(insecurePort)
-      https.createServer(sslOptions, app).listen(securePort)
-      console.info('Serving.')
     }
+    https.createServer(sslOptions, app).listen(securePort)
+    console.info('Serving.')
 
 
   })
