@@ -24,17 +24,13 @@ const cli = commandLineArgs([
 ])
 const options = cli.parse()
 
+const isProductionMode = process.env.NODE_ENV === 'production'
+
 app.set('x-powered-by', false)
 
 app.use(compression({
   level: 9
 }))
-
-console.info('Getting the SSL key.')
-const sslOptions = {
-  key: fs.readFileSync(path.join('.', 'ssl', 'privkey.pem')),
-  cert: fs.readFileSync(path.join('.', 'ssl', 'fullchain.pem'))
-}
 
 console.info('Enforcing protocol, domain, and port.')
 app.use(function enforceSsl(req, res, next) {
@@ -73,7 +69,7 @@ b.transform('babelify', {
   ],
   sourceMaps: (process.env.NODE_ENV !== 'production')
 })
-if (process.env.NODE_ENV === 'production') {
+if (isProductionMode) {
   b.transform('uglifyify', {
     global: true
   })
@@ -89,7 +85,7 @@ const sassRender = Promise.promisify(sass.render, {
 })
 const clientStylePromise = sassRender({
   file: './client/main.sass',
-  outputStyle: (process.env.NODE_ENV === 'production') ? 'compressed' : 'expanded'
+  outputStyle: (isProductionMode) ? 'compressed' : 'expanded'
 })
 
 
@@ -141,9 +137,43 @@ Promise.join(clientScriptPromise, clientStylePromise,
   })
   .then(() => {
 
-    http.createServer(app).listen(insecurePort)
-    https.createServer(sslOptions, app).listen(securePort)
-    console.info('Serving.')
+    if (isProductionMode) {
+      lex.create({
+        configDir: '/etc/letsencrypt',
+        onRequest: app,
+        approveRegistration: function (hostName, cb) {
+          if (allowedDomains.indexOf(hostName) !== -1) {
+            cb(null, {
+              domains: [hostName],
+              email: process.env.reportEmail,
+              agreeTos: true
+            })
+          }
+        }, handleRenewFailure: function (err, letsencrypt, hostname, certInfo) {
+          console.error(err.stack)
+          emailer(
+            process.env.reportEmail,
+            'Let\'s Encrypt renewal error on ' + appInfo.name,
+            'The error was as follows:\n' + err.stack +
+              '\n\n The hostname was ' + hostname + '.' +
+              '\n\n The certInfo was ' + certInfo + '.'
+          )
+        }
+      }).listen([insecurePort], [securePort], function onListening() {
+        var protocol = ('requestCert' in this) ? 'https': 'http'
+        console.log('Listening at ' + protocol + '://' + appInfo.host + ':' + this.address().port)
+      })
+    } else {
+      console.info('Getting the SSL key.')
+      const sslOptions = {
+        key: fs.readFileSync(path.join('.', 'ssl', 'privkey.pem')),
+        cert: fs.readFileSync(path.join('.', 'ssl', 'fullchain.pem'))
+      }
+      http.createServer(app).listen(insecurePort)
+      https.createServer(sslOptions, app).listen(securePort)
+      console.info('Serving.')
+    }
+
 
   })
   .catch(err => {
