@@ -1,9 +1,9 @@
 'use strict'
 require('dotenv').load()
 process.env.NODE_ENV = 'testing'
-var Promise = require('bluebird')
+const Promise = require('bluebird')
 
-before('Configure promises.', function () {
+before('Configure promises.', () => {
   Promise.config({
     cancellation: true
   })

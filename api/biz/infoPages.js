@@ -56,7 +56,7 @@ module.exports = knex => ({
           .select()
       ).then(pages => {
         if (!pages.length) {
-          var newPage = _.clone(args.body)
+          let newPage = _.clone(args.body)
           newPage.id = args.params.pageId
           return trx
             .into('infoPages')

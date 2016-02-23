@@ -1,28 +1,28 @@
 'use strict'
 require('dotenv').load()
-var appInfo = require('./appInfo')
-var fs = require('fs')
-var path = require('path')
-var express = require('express')
-var compression = require('compression')
-var https = require('https')
-var http = require('http')
-var api = require('./api')
-var browserify = require('browserify')
-var sass = require('node-sass')
-var knex = require('./api/database/knex')
-var Promise = require('bluebird')
-var forever = require('forever')
-var commandLineArgs = require('command-line-args')
-var app = express()
+const appInfo = require('./appInfo')
+const fs = require('fs')
+const path = require('path')
+const express = require('express')
+const compression = require('compression')
+const https = require('https')
+const http = require('http')
+const api = require('./api')
+const browserify = require('browserify')
+const sass = require('node-sass')
+const knex = require('./api/database/knex')
+const Promise = require('bluebird')
+const forever = require('forever')
+const commandLineArgs = require('command-line-args')
+const app = express()
 
 const insecurePort = 8000
 const securePort = 44300
 
-var cli = commandLineArgs([
+const cli = commandLineArgs([
   { name: 'replace', alias: 'r', type: String }
 ])
-var options = cli.parse()
+const options = cli.parse()
 
 app.set('x-powered-by', false)
 
@@ -31,7 +31,7 @@ app.use(compression({
 }))
 
 console.info('Getting the SSL key.')
-var sslOptions = {
+const sslOptions = {
   key: fs.readFileSync(path.join('.', 'ssl', 'privkey.pem')),
   cert: fs.readFileSync(path.join('.', 'ssl', 'fullchain.pem'))
 }
@@ -62,7 +62,7 @@ app.use(function (req, res, next) {
 })
 
 // Create Browserify promise.
-var b = browserify({
+const b = browserify({
   debug: (process.env.NODE_ENV !== 'production')
 })
 b.transform('babelify', {
@@ -79,15 +79,15 @@ if (process.env.NODE_ENV === 'production') {
   })
 }
 b.add('./client/main.jsx')
-var clientScriptPromise = Promise.promisify(b.bundle, {
+const clientScriptPromise = Promise.promisify(b.bundle, {
   context: b
 })()
 
 // Create Sass promise.
-var sassRender = Promise.promisify(sass.render, {
+const sassRender = Promise.promisify(sass.render, {
   context: sass
 })
-var clientStylePromise = sassRender({
+const clientStylePromise = sassRender({
   file: './client/main.sass',
   outputStyle: (process.env.NODE_ENV === 'production') ? 'compressed' : 'expanded'
 })
@@ -95,7 +95,7 @@ var clientStylePromise = sassRender({
 
 console.info('Bundling scripts and styles.')
 Promise.join(clientScriptPromise, clientStylePromise,
-  function (clientScript, clientStyle, migrate) {
+  (clientScript, clientStyle, migrate) => {
 
     // Link the three server-side layers together and serve them as the API.
     console.info('Routing the API.')
@@ -126,28 +126,27 @@ Promise.join(clientScriptPromise, clientStylePromise,
 
     // Stop the previous instance if the command line indicates to do so.
     if (options.replace) {
-      return new Promise(function (resolve, reject) {
-        var emitter = forever.stop(options.replace)
-        emitter.on('error', function (stopError) {
-          reject(stopError)
-        })
-        emitter.on('stop', function () {
-          resolve()
-        })
+      return new Promise((resolve, reject) => {
+        const emitter = forever.stop(options.replace)
+        emitter.on('error', stopError => reject(stopError))
+        emitter.on('stop', () => resolve())
       })
     }
-  }).then(function () {
+  })
+  .then(() => {
 
     // Migrate the database schema
     console.info('Migrating database schema.')
     return knex.migrate.latest()
-  }).then(function () {
+  })
+  .then(() => {
 
     http.createServer(app).listen(insecurePort)
     https.createServer(sslOptions, app).listen(securePort)
     console.info('Serving.')
 
-  }).catch(function (err) {
+  })
+  .catch(err => {
     console.error(err.stack)
     process.exit(err.status || 1)
   })

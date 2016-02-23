@@ -285,7 +285,7 @@ module.exports = knex => ({
           if (!posts.length) {
             throw new NoSuchResourceError()
           }
-          var post = posts[0]
+          const post = posts[0]
           if (authUser.id !== post.author && !authUser.admin) {
             throw new AuthorisationError('You are not authorised to update this blog post.')
           }

@@ -1,11 +1,8 @@
 'use strict'
-function AuthenticationError(message) {
-  Error.call(this)
-  this.name = this.constructor.name
-  this.message = message || 'Authentication failed.'
-  this.errorCode = 400
-  Error.captureStackTrace(this, this.constructor)
+const AbstractError = require('./abstractError')
+class AuthenticationError extends AbstractError {
+  constructor(message) {
+    super(message, 'Authentication failed.', 400)
+  }
 }
-AuthenticationError.prototype = Object.create(Error.prototype)
-AuthenticationError.prototype.constructor = AuthenticationError
 module.exports = AuthenticationError

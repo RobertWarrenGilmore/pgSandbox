@@ -1,15 +1,15 @@
 'use strict'
-var _ = require('lodash')
-var isComplete = require('./isComplete')
+const _ = require('lodash')
+const isComplete = require('./isComplete')
 
-var publicReadableAttributes = [
+const publicReadableAttributes = [
   'id',
   'givenName',
   'familyName',
   'active',
   'authorisedToBlog'
 ]
-var selfReadableAttributes = [
+const selfReadableAttributes = [
   'id',
   'givenName',
   'familyName',
@@ -17,7 +17,7 @@ var selfReadableAttributes = [
   'authorisedToBlog',
   'emailAddress'
 ]
-var adminReadableAttributes = [
+const adminReadableAttributes = [
   'id',
   'givenName',
   'familyName',
@@ -28,12 +28,12 @@ var adminReadableAttributes = [
 ]
 
 function transformOutput (users, authUser, when) {
-  var incompleteOmitted = _.filter(users, function (user) {
-    var authorisedToViewIncomplete = !!authUser && (!!authUser.admin || authUser.id === user.id)
+  const incompleteOmitted = _.filter(users, user => {
+    const authorisedToViewIncomplete = !!authUser && (!!authUser.admin || authUser.id === user.id)
     return authorisedToViewIncomplete || isComplete(user, when)
   })
-  return _.map(incompleteOmitted, function (user) {
-    var readableAttributes = publicReadableAttributes
+  return _.map(incompleteOmitted, user => {
+    let readableAttributes = publicReadableAttributes
     if (authUser) {
       if (authUser.admin) {
         readableAttributes = adminReadableAttributes

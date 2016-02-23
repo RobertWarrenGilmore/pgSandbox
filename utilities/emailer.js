@@ -1,14 +1,14 @@
 'use strict'
-var nodemailer = require('nodemailer')
-var sparkPostTransport = require('nodemailer-sparkpost-transport')
+const nodemailer = require('nodemailer')
+const sparkPostTransport = require('nodemailer-sparkpost-transport')
 
-var Promise = require('bluebird')
-var appInfo = require('../appInfo.json')
-var sparkPostApiKey = process.env.sparkPostApiKey
-var transporter = nodemailer.createTransport(sparkPostTransport({
+const Promise = require('bluebird')
+const appInfo = require('../appInfo.json')
+const sparkPostApiKey = process.env.sparkPostApiKey
+const transporter = nodemailer.createTransport(sparkPostTransport({
   sparkPostApiKey: sparkPostApiKey
 }))
-var send = Promise.promisify(transporter.sendMail, {
+const send = Promise.promisify(transporter.sendMail, {
   context: transporter
 })
 

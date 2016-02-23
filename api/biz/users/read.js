@@ -1,22 +1,21 @@
 'use strict'
-var _ = require('lodash')
-var authenticatedTransaction = require('../utilities/authenticatedTransaction')
-var validate = require('../../../utilities/validate')
-var vf = validate.funcs
-var ValidationError = validate.ValidationError
-var escapeForLike = require('../utilities/escapeForLike')
-var transformOutput = require('./transformOutput')
-var MalformedRequestError = require('../../errors/malformedRequestError')
-var NoSuchResourceError = require('../../errors/noSuchResourceError')
+const _ = require('lodash')
+const authenticatedTransaction = require('../utilities/authenticatedTransaction')
+const validate = require('../../../utilities/validate')
+const vf = validate.funcs
+const ValidationError = validate.ValidationError
+const escapeForLike = require('../utilities/escapeForLike')
+const transformOutput = require('./transformOutput')
+const MalformedRequestError = require('../../errors/malformedRequestError')
+const NoSuchResourceError = require('../../errors/noSuchResourceError')
 
-module.exports = function (knex) {
-  return function read (args) {
-    return authenticatedTransaction(knex, args.auth, function (trx, authUser) {
+module.exports = knex =>
+  args =>
+    authenticatedTransaction(knex, args.auth, (trx, authUser) => {
 
       if (args.params && Object.keys(args.params).length && args.query && Object.keys(args.query).length) {
         throw new MalformedRequestError('A read against a specific user cannot filter by any other parameters.')
       }
-
       if (args.params && args.params.userId) {
         // Read a specific user.
         return fetchUserById(args.params.userId, authUser, trx)
@@ -24,17 +23,15 @@ module.exports = function (knex) {
         // Query a list of users.
         return searchUsers(args.query, authUser, trx)
       }
-    }).then(function (result) {
-      return JSON.parse(JSON.stringify(result))
     })
-  }
-}
+    .then(result => JSON.parse(JSON.stringify(result)))
 
 function fetchUserById (userId, authUser, trx) {
   return trx
     .from('users')
     .where('id', userId)
-    .select().then(function (users) {
+    .select()
+    .then(users => {
       if (!users.length) {
         throw new NoSuchResourceError()
       }
@@ -45,7 +42,7 @@ function fetchUserById (userId, authUser, trx) {
 function searchUsers (queryParameters, authUser, trx) {
   return validate(queryParameters || {}, {
     emailAddress: [
-      function (val) {
+      val => {
         if (val !== undefined
           && val !== null
           && (!authUser || !authUser.admin)) {
@@ -59,11 +56,11 @@ function searchUsers (queryParameters, authUser, trx) {
       vf.boolean('The blog authorisation parameter must be a boolean.')
     ],
     sortBy: [
-      function (val) {
+      val => {
         if (val === undefined || val === null) {
           return
         }
-        var legalValues = [
+        const legalValues = [
           'emailAddress',
           'givenName',
           'familyName'
@@ -71,7 +68,7 @@ function searchUsers (queryParameters, authUser, trx) {
         if (legalValues.indexOf(val) === -1) {
           throw new ValidationError('Users cannot be sorted by ' + val + '.')
         }
-        var adminOnlyValues = [
+        const adminOnlyValues = [
           'emailAddress'
         ]
         if ((!authUser || !authUser.admin) && adminOnlyValues.indexOf(val) !== -1) {
@@ -80,8 +77,8 @@ function searchUsers (queryParameters, authUser, trx) {
       }
     ],
     sortOrder: [
-      function (val) {
-        var legalValues = [
+      val => {
+        const legalValues = [
           'ascending',
           'descending'
         ]
@@ -95,10 +92,11 @@ function searchUsers (queryParameters, authUser, trx) {
     offset: [
       vf.naturalNumber('The offset must be a natural number.')
     ]
-  }).then(function () {
+  })
+  .then(() => {
 
     // Create a query for a search.
-    var query = trx
+    let query = trx
       .from('users')
       .select()
       .limit(20)
@@ -106,11 +104,11 @@ function searchUsers (queryParameters, authUser, trx) {
     if (queryParameters) {
       // Add sorting.
       if (queryParameters.sortBy) {
-        var sortBy = queryParameters.sortBy
-        var sortOrder = 'asc'
-        if (queryParameters.sortOrder === 'descending') {
-          sortOrder = 'desc'
-        }
+        const sortBy = queryParameters.sortBy
+        const sortOrder =
+          (queryParameters.sortOrder === 'descending') ?
+          'desc' :
+          'asc'
         query = query.orderBy(sortBy, sortOrder)
       }
 
@@ -131,17 +129,12 @@ function searchUsers (queryParameters, authUser, trx) {
         query = query.where('emailAddress', 'ilike', escapeForLike(queryParameters.emailAddress) + '%')
       }
       // The remaining parameters can be used as they are.
-      var remainingParameters = _.pick(queryParameters, [
+      const remainingParameters = _.pick(queryParameters, [
         'authorisedToBlog'
       ]) || {}
       query = query.where(remainingParameters)
     }
-
-    query = query.then(function (users) {
-      return transformOutput(users, authUser, Date.now())
-    })
-
-    // The query is finished. Return it.
     return query
   })
+  .then(users => transformOutput(users, authUser, Date.now()))
 }

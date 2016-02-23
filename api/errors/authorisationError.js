@@ -1,11 +1,8 @@
 'use strict'
-function AuthorisationError(message) {
-  Error.call(this)
-  this.name = this.constructor.name
-  this.message = message || 'You are not authorised to do that.'
-  this.errorCode = 403
-  Error.captureStackTrace(this, this.constructor)
+const AbstractError = require('./abstractError')
+class AuthorisationError extends AbstractError {
+  constructor(message) {
+    super(message, 'You are not authorised to do that.', 403)
+  }
 }
-AuthorisationError.prototype = Object.create(Error.prototype)
-AuthorisationError.prototype.constructor = AuthorisationError
 module.exports = AuthorisationError

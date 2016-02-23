@@ -1,39 +1,35 @@
 'use strict'
-var Promise = require('bluebird')
-var bcrypt = Promise.promisifyAll(require('bcrypt'))
+const Promise = require('bluebird')
+const bcrypt = Promise.promisifyAll(require('bcrypt'))
 
-function hashPassword(password) {
-  var passwordHash = bcrypt.hashSync(password, 8)
-  return passwordHash
-}
+const hashPassword = password =>
+  bcrypt.hashSync(password, 8)
 
-function verifyPasswordResetKey(passwordResetKey, hash) {
-  var keyValid = bcrypt.compareSync(passwordResetKey, hash)
-  return keyValid
-}
+const verifyPasswordResetKey = (passwordResetKey, hash) =>
+  bcrypt.compareSync(passwordResetKey, hash)
 
 function generatePasswordResetKey() {
   // Generate a random alphanumeric key of length 30.
-  var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-  var length = 30
-  var key = []
-  for (var i = 0; i < length; ++i) {
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const length = 30
+  let key = []
+  for (let i = 0; i < length; ++i) {
     key.push(possible.charAt(Math.floor(Math.random() * possible.length)))
   }
   key = key.join('')
 
   // Store a hash of the key.
-  var hash = bcrypt.hashSync(key, 8)
+  const hash = hashPassword(key)
 
   // Return the key.
   return {
-    key: key,
-    hash: hash
+    key,
+    hash
   }
 }
 
 module.exports = {
-  hashPassword: hashPassword,
-  verifyPasswordResetKey: verifyPasswordResetKey,
-  generatePasswordResetKey: generatePasswordResetKey
+  hashPassword,
+  verifyPasswordResetKey,
+  generatePasswordResetKey
 }

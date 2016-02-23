@@ -1,12 +1,10 @@
 'use strict'
-var create = require('./create')
-var read = require('./read')
-var update = require('./update')
+const create = require('./create')
+const read = require('./read')
+const update = require('./update')
 
-module.exports = function (knex, emailer) {
-  return {
-    create: create(knex, emailer),
-    read: read(knex),
-    update: update(knex, emailer)
-  }
-}
+module.exports = (knex, emailer) => ({
+  create: create(knex, emailer),
+  read: read(knex),
+  update: update(knex, emailer)
+})
