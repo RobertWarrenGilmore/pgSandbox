@@ -2107,6 +2107,11 @@
       "from": "http-signature@>=1.1.0 <1.2.0",
       "resolved": "https://registry.npmjs.org/http-signature/-/http-signature-1.1.0.tgz"
     },
+    "http2": {
+      "version": "3.3.2",
+      "from": "http2@*",
+      "resolved": "https://registry.npmjs.org/http2/-/http2-3.3.2.tgz"
+    },
     "https-browserify": {
       "version": "0.0.1",
       "from": "https-browserify@>=0.0.0 <0.1.0",
