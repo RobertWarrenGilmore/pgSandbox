@@ -140,8 +140,6 @@ Promise.join(clientScriptPromise, clientStylePromise,
   })
   .then(() => {
 
-    http.createServer(app).listen(insecurePort)
-
     let sslOptions
     if (isProductionMode) {
       const lex = LEX.create({
@@ -175,9 +173,9 @@ Promise.join(clientScriptPromise, clientStylePromise,
         cert: fs.readFileSync(path.join('.', 'ssl', 'fullchain.pem'))
       }
     }
+    http.createServer(app).listen(insecurePort)
     https.createServer(sslOptions, app).listen(securePort)
     console.info('Serving.')
-
 
   })
   .catch(err => {
