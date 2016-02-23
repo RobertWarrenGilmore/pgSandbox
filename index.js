@@ -14,8 +14,11 @@ const knex = require('./api/database/knex')
 const Promise = require('bluebird')
 const forever = require('forever')
 const commandLineArgs = require('command-line-args')
+const lex = require('letsencrypt-express')
+const emailer = require('./utilities/emailer')
 const app = express()
 
+var allowedDomains = [appInfo.host, 'www.' + appInfo.host]
 const insecurePort = 8000
 const securePort = 44300
 
@@ -139,7 +142,7 @@ Promise.join(clientScriptPromise, clientStylePromise,
 
     if (isProductionMode) {
       lex.create({
-        configDir: '/etc/letsencrypt',
+        configDir: path.join('.', 'ssl', 'letsencrypt'),
         onRequest: app,
         approveRegistration: function (hostName, cb) {
           if (allowedDomains.indexOf(hostName) !== -1) {
