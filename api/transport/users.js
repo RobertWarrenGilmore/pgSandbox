@@ -26,7 +26,7 @@ module.exports = usersBiz => {
     )
 
   // a specific user
-  router.route('/:usersBizId')
+  router.route('/:userId')
     .get((req, res) =>
       usersBiz.read(req)
         .then(res.send.bind(res))
