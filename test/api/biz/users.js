@@ -102,7 +102,10 @@ describe('users', function () {
       }).then(function (users) {
         createdIds.push(users[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(MalformedRequestError, function () {})
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.active)
+      })
     })
 
     it('should fail when the email address is omitted', function () {
@@ -113,7 +116,10 @@ describe('users', function () {
       }).then(function (users) {
         createdIds.push(users[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(MalformedRequestError, function () {})
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.emailAddress)
+      })
     })
 
     it('should fail when the email address is not unique', function () {
@@ -140,7 +146,10 @@ describe('users', function () {
       }).then(function (user) {
         createdIds.push(user.id)
         assert(false, 'The creation succeeded.')
-      }).catch(MalformedRequestError, function () {})
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.emailAddress)
+      })
     })
 
     it('should fail with a failing emailer', function () {

@@ -3,12 +3,10 @@ const _ = require('lodash')
 const authenticatedTransaction = require('../utilities/authenticatedTransaction')
 const validate = require('../../../utilities/validate')
 const vf = validate.funcs
-const ValidationError = validate.ValidationError
 const escapeForLike = require('../utilities/escapeForLike')
 const crypto = require('./crypto')
 const sendPasswordResetEmail = require('./sendPasswordResetEmail')
 const ConflictingEditError = require('../../errors/conflictingEditError')
-const MalformedRequestError = require('../../errors/malformedRequestError')
 
 module.exports = (knex, emailer) =>
   args =>
@@ -63,7 +61,4 @@ module.exports = (knex, emailer) =>
             .select()
       )
       .then(() => null)
-      .catch(ValidationError, err => {
-        throw new MalformedRequestError(err.message)
-      })
     )
