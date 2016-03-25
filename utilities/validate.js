@@ -127,6 +127,10 @@ const commonValidations = {
     val === undefined ||
     val === null ||
     _.isString(val),
+  array: (a, val) =>
+    val === undefined ||
+    val === null ||
+    _.isArray(val),
   boolean: (a, val) =>
     val === undefined
     || val === null
