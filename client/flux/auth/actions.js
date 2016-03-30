@@ -3,6 +3,7 @@ const ajax = require('../../utilities/ajax')
 const store = require('../')
 const { createAction: createActionCreator } = require('redux-actions')
 const types = require('./types')
+const handleError = require('../handleError')
 
 // private action creators
 const setAuthBusy = createActionCreator(types.SET_AUTH_BUSY, (arg) => arg !== false)
@@ -49,7 +50,7 @@ const creators = {
             }))
             return body.id
           } else {
-            throw new Error(body.message || body)
+            handleError(body)
           }
         })
         // Cache the new user.

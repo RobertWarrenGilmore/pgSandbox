@@ -4,6 +4,7 @@ const store = require('../')
 const { createAction: createActionCreator } = require('redux-actions')
 const types = require('./types')
 const { search: searchUsers } = require('../users/actions')
+const handleError = require('../handleError')
 
 // private action creators
 const cachePosts = createActionCreator(types.CACHE_POSTS)
@@ -42,7 +43,7 @@ const creators = {
             [post.id]: null
           }))
         } else {
-          throw new Error(body.message || body)
+          handleError(body)
         }
       })
     }
@@ -65,7 +66,7 @@ const creators = {
             [id]: null
           }))
         } else {
-          throw new Error(body.message || body)
+          handleError(body)
         }
       })
     }
@@ -84,7 +85,7 @@ const creators = {
             [id]: null
           }))
         } else {
-          throw new Error(body.message || body)
+          handleError(body)
         }
       })
     }
@@ -109,7 +110,7 @@ const creators = {
           dispatch(cachePosts(postMap))
           return idList
         } else {
-          throw new Error(body.message || body)
+          handleError(body)
         }
       })
     }

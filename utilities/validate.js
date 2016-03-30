@@ -84,14 +84,14 @@ const transformMessageListMapToLines = messageListMap =>
 const transformMessageListMapToString = messageListMap =>
   '\n' + transformMessageListMapToLines(messageListMap).join('\n')
 
-function ValidationError(message) {
+function ValidationError(arg) {
   Error.call(this)
   this.name = this.constructor.name
-  if (_.isString(message)) {
-    this.message = message
-  } else if (_.isObject(message)) {
-    this.messages = message
-    this.message = transformMessageListMapToString(this.messages)
+  if (_.isString(arg)) {
+    this.message = arg
+  } else if (_.isObject(arg)) {
+    this.messages = arg.messages || arg
+    this.message = arg.message || transformMessageListMapToString(this.messages)
   } else {
     this.message = 'The request was malformed.'
   }

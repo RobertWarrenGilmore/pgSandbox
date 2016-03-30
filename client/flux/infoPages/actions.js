@@ -3,6 +3,7 @@ const ajax = require('../../utilities/ajax')
 const store = require('../')
 const { createAction: createActionCreator } = require('redux-actions')
 const types = require('./types')
+const handleError = require('../handleError')
 
 // private action creators
 const cachePages = createActionCreator(types.CACHE_PAGES)
@@ -29,7 +30,7 @@ const creators = {
             [id]: null
           }))
         } else {
-          throw new Error(body.message || body)
+          handleError(body)
         }
       })
     }
@@ -52,7 +53,7 @@ const creators = {
             [id]: null
           }))
         } else {
-          throw new Error(body.message || body)
+          handleError(body)
         }
       })
     }
