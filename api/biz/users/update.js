@@ -59,8 +59,9 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
           vf.emailAddress('The email address must be, well, an email address.'),
           // Check for case-insensitive uniqueness of email address.
           val =>
-            val === undefined
-              || trx
+            val === undefined ||
+            val === null ||
+              trx
                 .from('users')
                 .select(['id', 'emailAddress'])
                 .where('emailAddress', 'ilike', escapeForLike(val))
@@ -77,22 +78,14 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
           vf.maxLength('The password must not be longer than thirty characters.', 30)
         ],
         givenName: [
-          val => {
-            if (oldUser.givenName) {
-              vf.notNull('The first name cannot be removed.')(val)
-              vf.notEmpty('The first name cannot be removed.')(val)
-            }
-          },
+          vf.notEmpty('The first name cannot be removed.'),
+          vf.notNull('The first name cannot be removed.'),
           vf.string('The first name must be a string.'),
           vf.maxLength('The first name must not be longer than thirty characters.', 30)
         ],
         familyName: [
-          val => {
-            if (oldUser.familyName) {
-              vf.notNull('The last name cannot be removed.')(val)
-              vf.notEmpty('The last name cannot be removed.')(val)
-            }
-          },
+          vf.notEmpty('The last name cannot be removed.'),
+          vf.notNull('The last name cannot be removed.'),
           vf.string('The last name must be a string.'),
           vf.maxLength('The last name must not be longer than thirty characters.', 30)
         ],

@@ -35,6 +35,8 @@ class Register extends React.Component {
           </p>
           <form onSubmit={this._onSubmit}>
             <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={this.state.busy} required/>
+            <input type='text' ref='givenName' name='givenName' placeholder='first name' disabled={this.state.busy} required/>
+            <input type='text' ref='familyName' name='familyName' placeholder='last name' disabled={this.state.busy} required/>
             {this.state.error
               ? <p className='error'>
                   {this.state.error}
@@ -55,7 +57,9 @@ class Register extends React.Component {
       error: null
     })
     return this.props.createUser({
-      emailAddress: this.refs.emailAddress.value
+      emailAddress: this.refs.emailAddress.value,
+      givenName: this.refs.givenName.value,
+      familyName: this.refs.familyName.value
     }).then(() => this.setState({
       success: true
     })).catch(err => this.setState({
