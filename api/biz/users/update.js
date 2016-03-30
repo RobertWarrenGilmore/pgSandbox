@@ -13,29 +13,36 @@ const ValidationError = validate.ValidationError
 
 module.exports = (knex, emailer) =>
   args =>
-    authenticatedTransaction(knex, args.auth, (trx, authUser) => {
-      // normal, authenticated user update
-      if (authUser) {
-        return authenticatedUpdate(authUser, trx, args.params.userId, args.body)
-
-      // setting password using a password reset key
-      } else if (args.body.password) {
-        return anonymousPasswordUpdate(trx, args.params.userId, args.body)
-
-      // generating a new password reset key
-      } else if (args.body.passwordResetKey === null) {
-        return anonymousPasswordResetKeyUpdate(emailer, trx, args.body)
-
-      // Those are the only options. Otherwise, throw.
-      } else {
-        throw new AuthenticationError()
-      }
+    validate(args.params, {
+      userId: [
+        vf.naturalNumber('The user ID must be a natural number.')
+      ]
     })
-    .then(user => {
-      if (user instanceof Object) {
-        return JSON.parse(JSON.stringify(user))
-      }
-    })
+    .then(() =>
+      authenticatedTransaction(knex, args.auth, (trx, authUser) => {
+        // normal, authenticated user update
+        if (authUser) {
+          return authenticatedUpdate(authUser, trx, args.params.userId, args.body)
+
+        // setting password using a password reset key
+        } else if (args.body.password) {
+          return anonymousPasswordUpdate(trx, args.params.userId, args.body)
+
+        // generating a new password reset key
+        } else if (args.body.passwordResetKey === null) {
+          return anonymousPasswordResetKeyUpdate(emailer, trx, args.body)
+
+        // Those are the only options. Otherwise, throw.
+        } else {
+          throw new AuthenticationError()
+        }
+      })
+      .then(user => {
+        if (user instanceof Object) {
+          return JSON.parse(JSON.stringify(user))
+        }
+      })
+    )
 
 function authenticatedUpdate(authUser, trx, id, newUser) {
   // Reject unauthorised updates.

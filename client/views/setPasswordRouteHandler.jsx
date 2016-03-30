@@ -88,10 +88,9 @@ class SetPassword extends React.Component{
         error: null
       })
       return this.props.saveUser({
-        id,
         password,
         passwordResetKey
-      }).then(() => this.setState({
+      }, id).then(() => this.setState({
         success: true
       })).catch(err => this.setState({
         error: err.message || err
@@ -114,8 +113,8 @@ const wrapped = connect(
   },
   function mapDispatchToProps(dispatch) {
     return {
-      saveUser: ({ id, password, passwordResetKey }) =>
-        dispatch(saveUser({ id, password, passwordResetKey }))
+      saveUser: ({ password, passwordResetKey }, id) =>
+        dispatch(saveUser({ password, passwordResetKey }, id))
     }
   }
 )(SetPassword)
