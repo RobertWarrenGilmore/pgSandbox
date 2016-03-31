@@ -43,7 +43,7 @@ module.exports = (knex, emailer) =>
           vf.notUndefined('The last name is required.'),
           vf.string('The last name must be a string.'),
           vf.maxLength('The last name must not be longer than thirty characters.', 30)
-        ],
+        ]
       })
       .then(() => {
 

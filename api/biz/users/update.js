@@ -13,7 +13,7 @@ const ValidationError = validate.ValidationError
 
 module.exports = (knex, emailer) =>
   args =>
-    validate(args.params, {
+    validate(args.params || {}, {
       userId: [
         vf.naturalNumber('The user ID must be a natural number.')
       ]
