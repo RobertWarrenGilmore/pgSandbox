@@ -37,45 +37,47 @@ function logOut(nextState, replaceState) {
   flux.dispatch(authActions.logOut())
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  flux.dispatch(authActions.resume()).catch(err => {}).then(function () {
-    const router = (
-      <Provider store={flux}>
-        <Router history={createBrowserHistory()}>
-          <Route component={App} path='/'>
+document.addEventListener('DOMContentLoaded', () => {
+  flux.dispatch(authActions.resume())
+    .catch(err => {})
+    .then(() => {
+      const router = (
+        <Provider store={flux}>
+          <Router history={createBrowserHistory()}>
+            <Route component={App} path='/'>
 
-            <IndexRoute component={InfoPage}/>
+              <IndexRoute component={InfoPage}/>
 
-            <Route path='blog'>
-              <IndexRoute component={BlogSearch}/>
-              <Route component={BlogPost} path=':postId'/>
-            </Route>
-
-            <Route onEnter={requireNoAuth}>
-              <Route component={LogIn} path='logIn'/>
-              <Route component={Register} path='register'/>
-              <Route component={ForgotPassword} path='forgotPassword'/>
-            </Route>
-
-            <Route onEnter={requireAuth}>
-              <Route path='users'>
-                <IndexRoute component={UserSearch}/>
-                <Route component={UserPage} path=':userId'/>
+              <Route path='blog'>
+                <IndexRoute component={BlogSearch}/>
+                <Route component={BlogPost} path=':postId'/>
               </Route>
+
+              <Route onEnter={requireNoAuth}>
+                <Route component={LogIn} path='logIn'/>
+                <Route component={Register} path='register'/>
+                <Route component={ForgotPassword} path='forgotPassword'/>
+              </Route>
+
+              <Route onEnter={requireAuth}>
+                <Route path='users'>
+                  <IndexRoute component={UserSearch}/>
+                  <Route component={UserPage} path=':userId'/>
+                </Route>
+              </Route>
+
+              <Route onEnter={logOut}>
+                <Route component={SetPassword} path='users/:userId/setPassword'/>
+                <Redirect from='/logOut' to='/'/>
+              </Route>
+
+              <Route component={NotFound} path='*'/>
+
             </Route>
-
-            <Route onEnter={logOut}>
-              <Route component={SetPassword} path='users/:userId/setPassword'/>
-              <Redirect from='/logOut' to='/'/>
-            </Route>
-
-            <Route component={NotFound} path='*'/>
-
-          </Route>
-        </Router>
-      </Provider>
-    )
-    const element = document.getElementById('appContainer')
-    ReactDom.render(router, element)
-  })
+          </Router>
+        </Provider>
+      )
+      const element = document.getElementById('appContainer')
+      ReactDom.render(router, element)
+    })
 })
