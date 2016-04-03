@@ -314,7 +314,7 @@ const wrapped = connect(
   },
   function mapDispatchToProps(dispatch) {
     return {
-      searchUsers: (user, id) => dispatch(searchUsers(user, id))
+      searchUsers: query => dispatch(searchUsers(query))
     }
   }
 )(UserSearch)
