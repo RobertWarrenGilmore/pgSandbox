@@ -18,6 +18,7 @@ const UserPage = require('./views/users/userPageRouteHandler.jsx')
 const BlogPost = require('./views/blog/blogPostRouteHandler.jsx')
 const BlogSearch = require('./views/blog/blogSearchRouteHandler.jsx')
 const NotFound = require('./views/notFoundRouteHandler.jsx')
+const DragTest = require('./views/dragTest.jsx')
 
 function requireAuth(nextState, replaceState) {
   if (!flux.getState().auth.credentials) {
@@ -47,6 +48,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <Route component={App} path='/'>
 
               <IndexRoute component={InfoPage}/>
+
+              <Route component={DragTest} path='dragTest'/>
 
               <Route path='blog'>
                 <IndexRoute component={BlogSearch}/>
