@@ -67,6 +67,7 @@ class DragOrder extends React.Component {
 
   _onDragStart(index) {
     return event => {
+      event.stopPropagation()
       event.dataTransfer.effectAllowed = 'move'
       event.dataTransfer.setData('text/html', event.target) // Firefox
       this.props.onDragStart(index)
@@ -78,7 +79,7 @@ class DragOrder extends React.Component {
 
   _onDragEnter(index) {
     return event => {
-      event.preventDefault()
+      event.stopPropagation()
 
       if (index === this.state.draggingIndex)
         return
@@ -102,7 +103,7 @@ class DragOrder extends React.Component {
   }
 
   _onDragEnd(event) {
-    event.preventDefault()
+    event.stopPropagation()
     this.props.onDragEnd(
       this.state.draggingIndex,
       this.state.draggedOverIndex,
