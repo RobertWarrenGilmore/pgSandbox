@@ -57,6 +57,12 @@ body
       .actions
         > * ~ *
           margin-left: $small-padding
+      fieldset
+        padding: $medium-padding
+        padding-top: 0
+        margin: $medium-padding
+        legend
+          padding: $small-padding
     > footer
       position: relative
 
@@ -109,6 +115,9 @@ body > #appContainer
         text-align: right
         > *
           text-align: left
+      .checklist
+        > *
+          display: block
     > footer
       height: $footer-height
 
@@ -235,5 +244,12 @@ body > #appContainer
             display: flex
             align-items: center
             justify-content: flex-end
+          .checklist
+            display: flex
+            flex-flow: column wrap
+            align-items: stretch
+            justify-content: flex-start
+            > *
+              // display: block
         > footer
           flex: 0 0 $footer-height

@@ -124,7 +124,6 @@ class DragOrder extends React.Component {
       },
       props: {
         id,
-        className,
         children
       },
       _onDragStart: onDragStart,
@@ -160,7 +159,7 @@ class DragOrder extends React.Component {
     }
 
     return (
-      <ol id={id} className={`dragOrder ${className}`.trim()}>
+      <ol id={id} className='dragOrder'>
         {items}
       </ol>
     )
