@@ -1,5 +1,10 @@
 'use strict'
 require('babel-polyfill')
+
+if (!window.location.origin) {
+  window.location.origin = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '')
+}
+
 const React = require('react')
 const ReactDom = require('react-dom')
 const {Router, Route, IndexRoute, Redirect} = require('react-router')

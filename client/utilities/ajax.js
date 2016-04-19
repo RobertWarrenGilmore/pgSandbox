@@ -11,9 +11,6 @@ module.exports = function (options) {
       delete optionsClone.auth.emailAddress
     }
     if (_.startsWith(optionsClone.uri, '/')) {
-      if (!window.location.origin) {
-        window.location.origin = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '')
-      }
       optionsClone.uri = window.location.origin + optionsClone.uri
     }
     request(optionsClone, function (error, response, body) {

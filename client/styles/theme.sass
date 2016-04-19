@@ -119,6 +119,7 @@ body
         +message(rgb(212, 111, 111))
       button,
       .button
+        cursor: pointer
         display: inline-block
         text-decoration: initial
         +header-text
@@ -130,7 +131,8 @@ body
           color: lighten($body-colour, 20%)
         &.highlighted
           +themed
-          &:disabled
+          &:disabled,
+          &.disabled
             background-color: desaturate(lighten($theme-colour, 20%), 20%)
             color: desaturate(darken($theme-colour-contrast, 10%), 20%)
         padding: $small-padding
