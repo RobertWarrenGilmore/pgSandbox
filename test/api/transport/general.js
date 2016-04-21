@@ -23,12 +23,15 @@ const generalTransportTest = options => {
         return Promise.resolve(result)
       }
     }
-    const biz = {
-      create: sinon.spy(bizPromiseReturner),
-      read: sinon.spy(bizPromiseReturner),
-      update: sinon.spy(bizPromiseReturner),
-      delete: sinon.spy(bizPromiseReturner)
-    }
+    const biz = {}
+
+    options.routes.forEach(route => {
+      for (let actionName in route.actions) {
+        const bizModuleName = route.actions[actionName]
+        if (!biz[bizModuleName])
+          biz[bizModuleName] = sinon.spy(bizPromiseReturner)
+      }
+    })
 
     let server
 
@@ -58,10 +61,13 @@ const generalTransportTest = options => {
     })
 
     beforeEach('Reset the biz stubs.', function () {
-      biz.create.reset()
-      biz.read.reset()
-      biz.update.reset()
-      biz.delete.reset()
+      options.routes.forEach(route => {
+        for (let actionName in route.actions) {
+          const bizModuleName = route.actions[actionName]
+          if (biz[bizModuleName])
+            biz[bizModuleName].reset()
+        }
+      })
       bizQueue.length = 0
 
       responseBody = {
