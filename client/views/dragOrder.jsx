@@ -132,23 +132,21 @@ class DragOrder extends React.Component {
     } = this
 
     // let children = React.Children.toArray(this.props.children)
-    let items = React.Children.map(children, (child, index) => {
+    let items = React.Children.map(children, (child, index) =>
       // Wrap each child in a list item.
-      return (
-        <li
-          onDragStart={onDragStart(index)}
-          onDragEnter={onDragEnter(index)}
-          onDragEnd={onDragEnd}
-          key={index}
-        >
-          {child}
-          <div
-            className='dragHandle'
-            draggable={true}
-          />
-        </li>
-      )
-    })
+      <li
+        onDragStart={onDragStart(index)}
+        onDragEnter={onDragEnter(index)}
+        onDragEnd={onDragEnd}
+        key={child.key || index}
+      >
+        {child}
+        <div
+          className='dragHandle'
+          draggable={true}
+        />
+      </li>
+    )
 
     if (draggingIndex !== null && draggedOverIndex !== null) {
       // Move the dragged element to the dragging position.
