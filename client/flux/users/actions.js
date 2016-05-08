@@ -4,6 +4,7 @@ const store = require('../')
 const { createAction: createActionCreator } = require('redux-actions')
 const types = require('./types')
 const authTypes = require('../auth/types')
+const handleError = require('../handleError')
 
 const setAuthCredentials = createActionCreator(authTypes.SET_AUTH_CREDENTIALS)
 
@@ -21,7 +22,7 @@ const creators = {
         body: user
       }).then(({ statusCode, body }) => {
         if (statusCode !== 201) {
-          throw new Error(body.message || body)
+          handleError(body)
         }
       })
     }
@@ -70,7 +71,7 @@ const creators = {
             }))
           }
         } else {
-          throw new Error(body.message || body)
+          handleError(body)
         }
       })
     }
@@ -93,7 +94,7 @@ const creators = {
             [id]: null
           }))
         } else {
-          throw new Error(body.message || body)
+          handleError(body)
         }
       })
     }
@@ -118,7 +119,7 @@ const creators = {
           dispatch(cacheUsers(userMap))
           return idList
         } else {
-          throw new Error(body.message || body)
+          handleError(body)
         }
       })
     }

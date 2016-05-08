@@ -38,33 +38,54 @@ describe('users', function () {
     delete mockEmailer.err
   })
   afterEach('Delete any created test users.', function () {
-    return knex.from('users').where('id', 'in', createdIds).del().then(function () {
+    return knex.from('users').del().then(function () {
       createdIds.length = 0
     })
   })
 
   describe('create', function () {
-    var emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
-    var badEmailAddress = 'NotAValidEmailAddress.com'
+    const emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
+    const badEmailAddress = 'NotAValidEmailAddress.com'
+    const givenName = 'Victor'
+    const familyName = 'Frankenstein'
 
-    it('should work with a good email address', function () {
-      return User.create({
+    it('should work with the proper attributes', () =>
+      User.create({
         body: {
-          emailAddress: emailAddress
+          emailAddress,
+          givenName,
+          familyName
         }
-      }).then(function (user) {
-        return knex.select().from('users').where('emailAddress', emailAddress)
-      }).then(function (users) {
+      }).then(user =>
+        knex.select().from('users').where('emailAddress', emailAddress)
+      ).then(users => {
         createdIds.push(users[0].id)
         assert(users[0], 'No user was created.')
         assert(mockEmailer.withArgs(emailAddress).calledOnce, 'The emailer was not called.')
       })
-    })
+    )
+
+    it('should fail without a name', () =>
+      User.create({
+        body: {
+          emailAddress
+        }
+      })
+      .then(user => {
+        assert(false, 'The creation succeeded.')
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.givenName, 'wrong error')
+        assert(err.messages.familyName, 'wrong error')
+      })
+    )
 
     it('should send a correct password reset email', function () {
       return User.create({
         body: {
-          emailAddress: emailAddress
+          emailAddress,
+          givenName,
+          familyName
         }
       }).then(function (user) {
         return knex.select().from('users').where('emailAddress', emailAddress)
@@ -81,7 +102,9 @@ describe('users', function () {
     it('should make a user active by default', function () {
       return User.create({
         body: {
-          emailAddress: emailAddress
+          emailAddress,
+          givenName,
+          familyName
         }
       }).then(function (user) {
         return knex.select().from('users').where('emailAddress', emailAddress)
@@ -94,7 +117,9 @@ describe('users', function () {
     it('should reject non-creation attributes', function () {
       return User.create({
         body: {
-          emailAddress: emailAddress,
+          emailAddress,
+          givenName,
+          familyName,
           active: false
         }
       }).then(function (user) {
@@ -102,23 +127,62 @@ describe('users', function () {
       }).then(function (users) {
         createdIds.push(users[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(MalformedRequestError, function () {})
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.active)
+      })
     })
 
-    it('should fail when the email address is omitted', function () {
-      return User.create({
-        body: {}
-      }).then(function (user) {
-        return knex.select().from('users').where('emailAddress', emailAddress)
-      }).then(function (users) {
-        createdIds.push(users[0].id)
+    it('should fail when the email address is omitted', () =>
+      User.create({
+        body: {
+          givenName,
+          familyName
+        }
+      })
+      .then(user => {
         assert(false, 'The creation succeeded.')
-      }).catch(MalformedRequestError, function () {})
-    })
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.emailAddress)
+      })
+    )
+
+    it('should fail when the given name is omitted', () =>
+      User.create({
+        body: {
+          emailAddress,
+          familyName
+        }
+      })
+      .then(user => {
+        assert(false, 'The creation succeeded.')
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.givenName)
+      })
+    )
+
+    it('should fail when the family name is omitted', () =>
+      User.create({
+        body: {
+          emailAddress,
+          givenName
+        }
+      })
+      .then(user => {
+        assert(false, 'The creation succeeded.')
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.familyName)
+      })
+    )
 
     it('should fail when the email address is not unique', function () {
       return knex.into('users').insert({
-        emailAddress: emailAddress
+        emailAddress,
+        givenName,
+        familyName
       }).returning('id').then(function (ids) {
         createdIds.push(ids[0])
         return User.create({
@@ -126,7 +190,7 @@ describe('users', function () {
             emailAddress: emailAddress.toUpperCase()
           }
         })
-      }).then(function (user) {
+      }).then(user => {
         createdIds.push(user.id)
         assert(false, 'The creation succeeded.')
       }).catch(ConflictingEditError, function () {})
@@ -135,27 +199,34 @@ describe('users', function () {
     it('should fail with an invalid email address', function () {
       return User.create({
         body: {
-          emailAddress: badEmailAddress
+          emailAddress: badEmailAddress,
+          givenName,
+          familyName
         }
-      }).then(function (user) {
+      }).then(user => {
         createdIds.push(user.id)
         assert(false, 'The creation succeeded.')
-      }).catch(MalformedRequestError, function () {})
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.emailAddress)
+      })
     })
 
-    it('should fail with a failing emailer', function () {
+    it('should fail with a failing emailer', () => {
       mockEmailer.err = new EmailerError()
       return User.create({
         body: {
-          emailAddress: emailAddress
+          emailAddress,
+          givenName,
+          familyName
         }
-      }).then(function (user) {
-        return knex.select().from('users').where('emailAddress', emailAddress)
-      }).then(function (users) {
+      }).then(user =>
+        knex.select().from('users').where('emailAddress', emailAddress)
+      ).then(users => {
         createdIds.push(users[0].id)
         assert(!mockEmailer.called, 'The password setting email was sent.')
         assert(false, 'The creation did not fail.')
-      }).catch(EmailerError, function () {})
+      }).catch(EmailerError, err => {})
     })
 
   })
@@ -701,6 +772,132 @@ describe('users', function () {
         assert(false, 'The update succeeded.')
       }).catch(AuthenticationError, function () {})
     })
+
+    it('should fail to remove an email address', () =>
+      User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          userId: createdIds[0]
+        },
+        body: {
+          emailAddress: null
+        }
+      })
+      .then(() => {
+        assert(false, 'The update succeeded.')
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.emailAddress)
+      })
+    )
+
+    it('should fail to remove an email address', () =>
+      User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          userId: createdIds[0]
+        },
+        body: {
+          emailAddress: ''
+        }
+      })
+      .then(() => {
+        assert(false, 'The update succeeded.')
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.emailAddress)
+      })
+    )
+
+    it('should fail to remove a given name', () =>
+      User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          userId: createdIds[0]
+        },
+        body: {
+          givenName: null
+        }
+      })
+      .then(() => {
+        assert(false, 'The update succeeded.')
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.givenName)
+      })
+    )
+
+    it('should fail to remove a given name', () =>
+      User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          userId: createdIds[0]
+        },
+        body: {
+          givenName: ''
+        }
+      })
+      .then(() => {
+        assert(false, 'The update succeeded.')
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.givenName)
+      })
+    )
+
+    it('should fail to remove a family name', () =>
+      User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          userId: createdIds[0]
+        },
+        body: {
+          familyName: null
+        }
+      })
+      .then(() => {
+        assert(false, 'The update succeeded.')
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.familyName)
+      })
+    )
+
+    it('should fail to remove a family name', () =>
+      User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          userId: createdIds[0]
+        },
+        body: {
+          familyName: ''
+        }
+      })
+      .then(() => {
+        assert(false, 'The update succeeded.')
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.familyName)
+      })
+    )
 
     it('should be able to set inactive', function () {
       return User.update({

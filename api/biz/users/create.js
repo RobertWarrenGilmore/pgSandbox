@@ -3,12 +3,10 @@ const _ = require('lodash')
 const authenticatedTransaction = require('../utilities/authenticatedTransaction')
 const validate = require('../../../utilities/validate')
 const vf = validate.funcs
-const ValidationError = validate.ValidationError
 const escapeForLike = require('../utilities/escapeForLike')
 const crypto = require('./crypto')
 const sendPasswordResetEmail = require('./sendPasswordResetEmail')
 const ConflictingEditError = require('../../errors/conflictingEditError')
-const MalformedRequestError = require('../../errors/malformedRequestError')
 
 module.exports = (knex, emailer) =>
   args =>
@@ -20,8 +18,9 @@ module.exports = (knex, emailer) =>
           vf.emailAddress('The email address must be, well, an email address.'),
           // Check for case-insensitive uniqueness of email address.
           val =>
-            val === undefined
-              || trx
+            val === undefined ||
+            val === null ||
+              trx
                 .from('users')
                 .select(['id', 'emailAddress'])
                 .where('emailAddress', 'ilike', escapeForLike(val))
@@ -30,6 +29,20 @@ module.exports = (knex, emailer) =>
                     throw new ConflictingEditError('That email address is already in use by another user.')
                   }
                 })
+        ],
+        givenName: [
+          vf.notEmpty('The first name is required.'),
+          vf.notNull('The first name is required.'),
+          vf.notUndefined('The first name is required.'),
+          vf.string('The first name must be a string.'),
+          vf.maxLength('The first name must not be longer than thirty characters.', 30)
+        ],
+        familyName: [
+          vf.notEmpty('The last name is required.'),
+          vf.notNull('The last name is required.'),
+          vf.notUndefined('The last name is required.'),
+          vf.string('The last name must be a string.'),
+          vf.maxLength('The last name must not be longer than thirty characters.', 30)
         ]
       })
       .then(() => {
@@ -63,7 +76,4 @@ module.exports = (knex, emailer) =>
             .select()
       )
       .then(() => null)
-      .catch(ValidationError, err => {
-        throw new MalformedRequestError(err.message)
-      })
     )

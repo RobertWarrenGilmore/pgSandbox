@@ -1,0 +1,54 @@
+// common
+ol.dragOrder
+  margin-left: initial
+  margin-bottom: initial
+  li
+    border: 1px solid lighten($body-colour, 50%)
+    &.dragging
+      border-style: dashed
+    > .dragHandle
+      background-color: lighten($body-colour, 50%)
+      &:before
+        // TODO Use an icon.
+        content: '|||'
+
+// legacy layout
+ol.dragOrder
+  li
+    display: table
+    width: 100%
+    > *:first-child
+      display: table-cell
+    > .dragHandle
+      display: table-cell
+      width: 1em
+      vertical-align: middle
+      &:before
+
+
+// undo legacy layout
+ol.dragOrder
+  li
+    width: auto
+    > *:first-child
+    > .dragHandle
+      width: auto
+      vertical-align: inherit
+
+// flex layout
+ol.dragOrder
+  li
+    display: flex
+    flex-flow: row nowrap
+    align-items: stretch
+    justify-content: space-between
+    > *:first-child
+      flex: 1 1 auto
+    > .dragHandle
+      flex: 0 0 auto
+      display: flex
+      flex-flow: row nowrap
+      align-items: center
+      justify-content: flex-start
+      &:before
+        flex: 0 0 auto

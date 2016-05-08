@@ -1,7 +1,7 @@
-#appContainer > div > main > #userSearch
+#appContainer > div > main .search
   $filter-width: 250px
   // The tiny-media layout doesn't require any special flexbox stuff.
-  > #filter
+  > .filterControls
     > label
       display: inline-block
       margin: $small-padding
@@ -9,7 +9,7 @@
         display: block
       > input[type=checkbox]
         margin: $small-padding
-  > #userList
+  > .results
     > a
       display: block
       text-decoration: none
@@ -22,7 +22,7 @@
       padding: $small-padding
   @media (min-width: $app-max-width)
     // common
-    > #filter
+    > .filterControls
       border-right: thin solid grey
       > label
         display: block
@@ -30,10 +30,10 @@
           width: 100%
     // legacy layout
     margin-left: $filter-width
-    > #filter
+    > .filterControls
       margin-left: -1 * $filter-width
       width: $filter-width
-    > #userList
+    > .results
       width: 100%
     > *
       display: inline-block
@@ -42,10 +42,10 @@
     @supports (display: flex)
       // undo legacy layout
       margin-left: initial
-      > #filter
+      > .filterControls
         margin-left: initial
         width: initial
-      > #userList
+      > .results
         width: initial
       > *
         display: initial
@@ -56,7 +56,7 @@
       flex-direction: row
       align-items: stretch
       flex-wrap: nowrap
-      > #filter
+      > .filterControls
         flex: 0 1 $filter-width
-      > #userList
+      > .results
         flex: 1 1

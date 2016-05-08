@@ -23,22 +23,14 @@ class UserEditor extends React.Component {
         vf.emailAddress('The email address must be, well, an email address.')
       ],
       givenName: [
-        (val) => {
-          if (existingUser.givenName) {
-            vf.notNull('The first name cannot be removed.')(val)
-            vf.notEmpty('The first name cannot be removed.')(val)
-          }
-        },
+        vf.notNull('The first name cannot be removed.'),
+        vf.notEmpty('The first name cannot be removed.'),
         vf.string('The first name must be a string.'),
         vf.maxLength('The first name must not be longer than thirty characters.', 30)
       ],
       familyName: [
-        (val) => {
-          if (existingUser.familyName) {
-            vf.notNull('The last name cannot be removed.')(val)
-            vf.notEmpty('The last name cannot be removed.')(val)
-          }
-        },
+        vf.notNull('The last name cannot be removed.'),
+        vf.notEmpty('The last name cannot be removed.'),
         vf.string('The last name must be a string.'),
         vf.maxLength('The last name must not be longer than thirty characters.', 30)
       ],
@@ -182,14 +174,14 @@ class UserEditor extends React.Component {
               {error}
             </p>
           ) : null}
-        {disabled
-          ? (
-            <div>
-              <BusyIndicator/>
-              saving
-            </div>
-          ) : null}
         <div className='actions'>
+          {disabled
+            ? (
+              <div>
+                <BusyIndicator/>
+                saving
+              </div>
+            ) : null}
           <button
             id='save'
             disabled={disabled || !!this.props.fieldErrors}

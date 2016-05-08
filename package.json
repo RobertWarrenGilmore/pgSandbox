@@ -1,6 +1,6 @@
 {
   "name": "genericNodeReactApp",
-  "version": "0.7.0",
+  "version": "1.0.1",
   "description": "a simple web app with auth, info pages, a blog, and admins",
   "scripts": {
     "start": "node start.js",
@@ -9,7 +9,8 @@
     "openPorts": "sudo ./openPorts.sh",
     "dbSetup": "server/database/dbSetup.sh",
     "ssCert": "ssl/generateSelfSignedCertificate.sh",
-    "test": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha",
+    "test": "node_modules/.bin/mocha",
+    "testCoverage": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha",
     "lint": "node_modules/.bin/eslint --ignore-path .gitignore ."
   },
   "repository": {
@@ -54,8 +55,7 @@
     "express": "^4.13.3",
     "forever": "^0.15.1",
     "history": "^1.17.0",
-    "http2": "^3.3.2",
-    "knex": "^0.8.6",
+    "knex": "^0.10.0",
     "letsencrypt-express": "^1.1.2",
     "lodash": "^3.10.1",
     "marked": "^0.3.5",

@@ -84,14 +84,14 @@ const transformMessageListMapToLines = messageListMap =>
 const transformMessageListMapToString = messageListMap =>
   '\n' + transformMessageListMapToLines(messageListMap).join('\n')
 
-function ValidationError(message) {
+function ValidationError(arg) {
   Error.call(this)
   this.name = this.constructor.name
-  if (_.isString(message)) {
-    this.message = message
-  } else if (_.isObject(message)) {
-    this.messages = message
-    this.message = transformMessageListMapToString(this.messages)
+  if (_.isString(arg)) {
+    this.message = arg
+  } else if (_.isObject(arg)) {
+    this.messages = arg.messages || arg
+    this.message = arg.message || transformMessageListMapToString(this.messages)
   } else {
     this.message = 'The request was malformed.'
   }
@@ -127,6 +127,10 @@ const commonValidations = {
     val === undefined ||
     val === null ||
     _.isString(val),
+  array: (a, val) =>
+    val === undefined ||
+    val === null ||
+    _.isArray(val),
   boolean: (a, val) =>
     val === undefined
     || val === null
@@ -151,7 +155,38 @@ const commonValidations = {
   naturalNumber: (a, val) =>
     val === undefined
     || val === null
-    || commonValidations.matchesRegex(/^(0|[1-9][0-9]*)$/, '' + val)
+    || commonValidations.matchesRegex(/^(0|[1-9][0-9]*)$/, '' + val),
+  file: (a, val) => {
+    if (val === undefined || val === null)
+      return true
+    if (!_.isString(val))
+      return false
+
+    // Check that val is a base64 data URL and extract the type and the data.
+    const match = val.match(/^data:(.*);base64,([0-9a-zA-Z\+\/]*={0,2})$/)
+    if (match === null)
+      return false
+    const type = match[1]
+    const data = match[2]
+
+    // Check the type against the type or types provided in the options.
+    if (a.types && a.types.indexOf(type) === -1)
+      return false
+    else if (a.type && a.type !== type)
+      return false
+
+    // Check the size (in bytes) against the max size.
+    if (a.maxSize) {
+      let size = (data.length * 0.75)
+      if (data.slice(-2) === '==')
+        size -= 2
+      else if (data.slice(-1) === '=')
+        size -= 1
+      if (size > a.maxSize)
+        return false
+    }
+    return true
+  }
 }
 
 validate.funcs = _.mapValues(commonValidations,
