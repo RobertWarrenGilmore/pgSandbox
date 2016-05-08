@@ -56,7 +56,7 @@
     "forever": "^0.15.1",
     "history": "^1.17.0",
     "knex": "^0.10.0",
-    "letsencrypt-express": "^1.1.2",
+    "letsencrypt-express": "^1.1.5",
     "lodash": "^3.10.1",
     "marked": "^0.3.5",
     "node-sass": "^3.4.1",
