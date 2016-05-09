@@ -7,7 +7,7 @@
     "stop": "node node_modules/.bin/forever stop index.js",
     "deploy": "./deploy.sh",
     "openPorts": "sudo ./openPorts.sh",
-    "dbSetup": "server/database/dbSetup.sh",
+    "dbSetup": "api/database/dbSetup.sh",
     "ssCert": "ssl/generateSelfSignedCertificate.sh",
     "test": "node_modules/.bin/mocha",
     "testCoverage": "node_modules/.bin/istanbul cover node_modules/.bin/_mocha",
