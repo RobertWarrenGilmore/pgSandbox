@@ -52,12 +52,10 @@ app.use((req, res, next) => {
   const actualUrl = (req.secure ? 'https' : 'http') + '://' +
     req.headers.host +
     req.originalUrl
-  if (actualUrl === correctUrl) {
+  if (actualUrl === correctUrl)
     next()
-  } else {
-    console.log(actualUrl)
+  else
     res.redirect(correctUrl)
-  }
 })
 
 // Enforce future visits to HTTPS using the HSTS header.
