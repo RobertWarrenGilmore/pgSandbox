@@ -18,7 +18,12 @@ const LEX = require('letsencrypt-express')
 const emailer = require('./utilities/emailer')
 let app = express()
 
-const allowedDomains = [appInfo.host, 'www.' + appInfo.host]
+const allowedDomains = [appInfo.host]
+// Add the naked domain if the default subdomain is www.
+const wwwMatch = appInfo.host.match(/^www\.(.*)$/)
+if (wwwMatch)
+  allowedDomains.push(wwwMatch[1])
+
 const insecurePort = 8000
 const securePort = 44300
 
@@ -145,20 +150,16 @@ Promise.join(clientScriptPromise, clientStylePromise,
       const lex = LEX.create({
         configDir: path.join('.', 'ssl', 'letsencrypt'),
         onRequest: app,
-        approveRegistration: function (hostName, cb) {
-          const domains = [hostName]
-          const wwwMatch = hostName.match(/^www\.(.*)$/)
-          if (wwwMatch)
-            domains.push(wwwMatch[1])
-
+        approveRegistration: (hostName, cb) => {
           if (allowedDomains.indexOf(hostName) !== -1) {
             cb(null, {
-              domains,
+              domains: allowedDomains,
               email: process.env.reportEmail,
               agreeTos: true
             })
           }
-        }, handleRenewFailure: function (err, letsencrypt, hostname, certInfo) {
+        },
+        handleRenewFailure: (err, letsencrypt, hostname, certInfo) => {
           console.error(err.stack)
           emailer(
             process.env.reportEmail,
