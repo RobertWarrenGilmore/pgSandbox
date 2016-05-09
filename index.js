@@ -40,31 +40,6 @@ app.use(compression({
   level: 9
 }))
 
-console.info('Enforcing protocol, domain, and port.')
-app.use(function enforceSsl(req, res, next) {
-  const correctUrl = 'https://' +
-    appInfo.host + (
-      (process.env.NODE_ENV !== 'production') ?
-        (':' + securePort) :
-        ''
-    ) +
-    req.url
-  const actualUrl = (req.secure ? 'https' : 'http') + '://' +
-    req.headers.host +
-    req.originalUrl
-  if (actualUrl === correctUrl) {
-    next()
-  } else {
-    res.redirect(correctUrl)
-  }
-})
-
-// Enforce future visits to HTTPS using the HSTS header.
-app.use(function (req, res, next) {
-  res.set('Strict-Transport-Security', 'max-age=15552000 includeSubDomains preload') // HSTS expires after 180 days.
-  next()
-})
-
 // Create Browserify promise.
 const b = browserify({
   debug: (process.env.NODE_ENV !== 'production')
@@ -179,6 +154,32 @@ Promise.join(clientScriptPromise, clientStylePromise,
         cert: fs.readFileSync(path.join('.', 'ssl', 'fullchain.pem'))
       }
     }
+
+    console.info('Enforcing protocol, domain, and port.')
+    app.use((req, res, next) => {
+      const correctUrl = 'https://' +
+        appInfo.host + (
+          (process.env.NODE_ENV !== 'production') ?
+            (':' + securePort) :
+            ''
+        ) +
+        req.url
+      const actualUrl = (req.secure ? 'https' : 'http') + '://' +
+        req.headers.host +
+        req.originalUrl
+      if (actualUrl === correctUrl) {
+        next()
+      } else {
+        res.redirect(correctUrl)
+      }
+    })
+
+    // Enforce future visits to HTTPS using the HSTS header.
+    app.use((req, res, next) => {
+      res.set('Strict-Transport-Security', 'max-age=15552000 includeSubDomains preload') // HSTS expires after 180 days.
+      next()
+    })
+
     http.createServer(app).listen(insecurePort)
     https.createServer(sslOptions, app).listen(securePort)
     console.info('Serving.')
