@@ -22,7 +22,7 @@ const allowedDomains = [appInfo.host]
 // Add the naked domain if the default subdomain is www.
 const wwwMatch = appInfo.host.match(/^www\.(.*)$/)
 if (wwwMatch)
-  allowedDomains.push(wwwMatch[1])
+  allowedDomains.unshift(wwwMatch[1])
 
 const insecurePort = 8000
 const securePort = 44300
@@ -154,7 +154,7 @@ Promise.join(clientScriptPromise, clientStylePromise,
         approveRegistration: (hostName, cb) => {
           if (allowedDomains.indexOf(hostName) !== -1) {
             cb(null, {
-              domains: [hostName],
+              domains: allowedDomains,
               email: process.env.reportEmail,
               agreeTos: true
             })
