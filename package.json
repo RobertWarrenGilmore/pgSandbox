@@ -75,6 +75,7 @@
     "request": "^2.65.0",
     "sanitize-html": "^1.11.2",
     "seamless-immutable": "^5.0.1",
+    "spdy": "^3.3.2",
     "uglifyify": "^3.0.1"
   },
   "engines": {
