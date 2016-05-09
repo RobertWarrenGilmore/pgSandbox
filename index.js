@@ -55,6 +55,7 @@ app.use((req, res, next) => {
   if (actualUrl === correctUrl) {
     next()
   } else {
+    console.log(actualUrl)
     res.redirect(correctUrl)
   }
 })
