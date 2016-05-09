@@ -154,7 +154,7 @@ Promise.join(clientScriptPromise, clientStylePromise,
         approveRegistration: (hostName, cb) => {
           if (allowedDomains.indexOf(hostName) !== -1) {
             cb(null, {
-              domains: allowedDomains,
+              domains: [hostName],
               email: process.env.reportEmail,
               agreeTos: true
             })
