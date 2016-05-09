@@ -146,9 +146,14 @@ Promise.join(clientScriptPromise, clientStylePromise,
         configDir: path.join('.', 'ssl', 'letsencrypt'),
         onRequest: app,
         approveRegistration: function (hostName, cb) {
+          const domains = [hostName]
+          const wwwMatch = hostName.match(/^www\.(.*)$/)
+          if (wwwMatch)
+            domains.push(wwwMatch[1])
+
           if (allowedDomains.indexOf(hostName) !== -1) {
             cb(null, {
-              domains: [hostName],
+              domains,
               email: process.env.reportEmail,
               agreeTos: true
             })
