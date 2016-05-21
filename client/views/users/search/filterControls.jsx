@@ -29,6 +29,10 @@ class FilterControls extends React.Component {
     onApply: () => {},
     onRevert: () => {}
   };
+  constructor(props) {
+    super(props)
+    this._onChange = this._onChange.bind(this)
+  }
   _onChange() {
     const {
       props: {
