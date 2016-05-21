@@ -26,7 +26,8 @@ module.exports = biz => {
 
   // Parse the body.
   router.use(bodyParser.json({
-    type: 'application/json'
+    type: 'application/json',
+    limit: '200kB'
   }))
 
   // Assign the routers to routes.

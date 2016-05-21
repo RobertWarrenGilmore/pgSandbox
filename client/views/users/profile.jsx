@@ -1,6 +1,7 @@
 'use strict'
 const React = require('react')
 const classnames = require('classnames')
+const Avatar = require('./avatar.jsx')
 
 const UserProfile = props => {
   const { user, brief = false } = props
@@ -10,6 +11,7 @@ const UserProfile = props => {
       brief
     })}>
       <header>
+        <Avatar small={brief} id={user.id}/>
         <h1 className='name'>
           {user.givenName} {user.familyName}
         </h1>

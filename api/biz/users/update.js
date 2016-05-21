@@ -10,6 +10,9 @@ const NoSuchResourceError = require('../../errors/noSuchResourceError')
 const validate = require('../../../utilities/validate')
 const vf = validate.funcs
 const ValidationError = validate.ValidationError
+const filesUtil = require('../utilities/files')
+const dataUrlParts = filesUtil.dataUrlParts
+const Jimp = require('jimp')
 
 module.exports = (knex, emailer) =>
   args =>
@@ -117,6 +120,50 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
               vf.boolean('The user must be set either admin or not.')
             } else if (val !== undefined) {
               throw new ValidationError('You are not authorised to change a user\'s admin privileges.')
+            }
+          }
+        ],
+        avatar: [
+          val => {
+            vf.file('The avatar must be a PNG, JPEG, or BMP file no larger than 200 kB.', {
+              types: [
+                'image/png',
+                'image/jpeg',
+                'image/bmp'
+              ],
+              maxSize: 204800
+            })(val)
+            if (val) {
+              // Here we'll do some validations and mutate the avatar.
+              let originalBuffer
+              try {
+                originalBuffer = new Buffer(dataUrlParts(val).data, 'base64')
+              } catch (e) {
+                throw new ValidationError('The icon must be a valid PNG, JPEG, or BMP image.')
+              }
+              return Jimp.read(originalBuffer)
+                .then(image =>
+                  new Promise((resolve, reject) => {
+                    image
+                      .cover(200, 200)
+                      .quality(60)
+                      .getBuffer(Jimp.MIME_JPEG, (err, buffer) => {
+                        if (err)
+                          reject(err)
+                        else
+                          resolve(buffer)
+                      })
+                  })
+                )
+                .then(buffer => {
+                  newUser.avatar = '\\x' + buffer.toString('hex')
+                })
+                .catch(err => {
+                  if (err instanceof ValidationError)
+                    throw err
+                  else
+                    throw new ValidationError('The avatar must be a valid PNG, JPEG, or BMP image.')
+                })
             }
           }
         ]

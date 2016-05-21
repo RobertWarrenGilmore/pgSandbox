@@ -107,12 +107,12 @@ const wrapped = connect(
   function mapStateToProps(state) {
     state = state.asMutable({deep: true})
     let authUser
-    if (state.auth.id && state.users) {
-      authUser = state.users[state.auth.id]
+    if (state.auth.id && state.users.cache) {
+      authUser = state.users.cache[state.auth.id]
     }
     return {
       authUser,
-      users: state.users
+      users: state.users.cache
     }
   },
   function mapDispatchToProps(dispatch) {

@@ -5,6 +5,7 @@ const { Link, IndexLink } = require('react-router')
 const classnames = require('classnames')
 const { connect } = require('react-redux')
 const Helmet = require('react-helmet')
+const Avatar = require('./users/avatar.jsx')
 
 class App extends React.Component {
   constructor(props) {
@@ -74,7 +75,7 @@ class App extends React.Component {
           {this.props.authUser ? (
             <div id='authIndicator'>
               <Link to={'/users/' + this.props.authUser.id}>
-                <span className='icon-user'/>
+                <Avatar id={this.props.authUser.id}/>
                 &nbsp;
                 {this.props.authUser.givenName} {this.props.authUser.familyName}
               </Link>
@@ -99,8 +100,8 @@ App.defaultProps = {
 const wrapped = connect(
   function mapStateToProps(state) {
     let authUser
-    if (state.auth.id && state.users) {
-      authUser = state.users[state.auth.id]
+    if (state.auth.id && state.users.cache) {
+      authUser = state.users.cache[state.auth.id]
     }
     return {
       authUser

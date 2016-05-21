@@ -12,6 +12,9 @@ var mockEmailer = sinon.spy(function () {
   }
 })
 var User = require('../../../api/biz/users')(knex, mockEmailer)
+const Jimp = require('jimp')
+const fs = require('fs')
+const path = require('path')
 var MalformedRequestError = require('../../../api/errors/malformedRequestError')
 var ConflictingEditError = require('../../../api/errors/conflictingEditError')
 var AuthenticationError = require('../../../api/errors/authenticationError')
@@ -32,6 +35,63 @@ EmailerError.prototype.constructor = EmailerError
 
 describe('users', function () {
   var createdIds = []
+
+  let goodAvatar = 'data:image/jpeg;base64,'
+  let hexGoodAvatar
+  before('Create a good avatar.', () =>
+    new Promise((resolve, reject) => {
+      new Jimp(400, 1000).getBuffer(Jimp.MIME_JPEG, (err, buffer) => {
+        if (err)
+          reject(err)
+        else
+          resolve(buffer)
+      })
+    })
+    .then(buffer => {
+      goodAvatar += buffer.toString('base64')
+      hexGoodAvatar = buffer.toString('hex')
+    })
+  )
+  let defaultAvatar
+  before('Load the default avatar.', () => {
+    defaultAvatar = fs.readFileSync(path.join(
+      '.', 'client', 'assets', 'images', 'defaultAvatar.jpg'
+    ))
+  })
+  let processedAvatar = 'data:image/jpeg;base64,'
+  before('Create a processed avatar.', () =>
+    Jimp.read(new Buffer(goodAvatar.split(',')[1], 'base64'))
+      .then(image => new Promise((resolve, reject) => {
+        image
+          .cover(200, 200)
+          .quality(60)
+          .getBuffer(Jimp.MIME_JPEG, (err, buffer) => {
+            if (err)
+              reject(err)
+            else
+              resolve(buffer)
+          })
+      }))
+      .then(buffer => {
+        processedAvatar += buffer.toString('base64')
+      })
+  )
+  let tooLargeAvatar = 'data:image/jpeg;base64,'
+  before('Create a too large avatar.', () =>
+    new Promise((resolve, reject) => {
+      new Jimp(3000, 3000).getBuffer(Jimp.MIME_JPEG, (err, buffer) => {
+        if (err)
+          reject(err)
+        else
+          resolve(buffer)
+      })
+    })
+    .then(buffer => {
+      tooLargeAvatar += buffer.toString('base64')
+    })
+  )
+  const notAnImageAvatar = 'data:image/jpeg;base64,VGhpcyBmaWxlIGlzIG5vdCBhbiBpbWFnZS4K'
+
 
   beforeEach('Reset the mock emailer.', function () {
     mockEmailer.reset()
@@ -707,6 +767,138 @@ describe('users', function () {
       })
     })
 
+    it('should be able to upload an avatar', () =>
+      User
+        .update({
+          auth: {
+            emailAddress: emailAddress,
+            password: password
+          },
+          params: {
+            userId: createdIds[0]
+          },
+          body: {
+            avatar: goodAvatar
+          }
+        })
+        .then(() =>
+          knex
+            .from('users')
+            .select('avatar')
+            .where({
+              id: createdIds[0]
+            })
+        )
+        .then(rows => rows[0].avatar)
+        .then(avatar => {
+          let base64Data = new Buffer(avatar, 'hex').toString('base64')
+          let expectedData = processedAvatar.split(',')[1]
+          assert.strictEqual(base64Data, expectedData, 'The avatar was wrong.')
+        })
+    )
+
+    it('should be able to clear an avatar', () =>
+      User
+        .update({
+          auth: {
+            emailAddress: emailAddress,
+            password: password
+          },
+          params: {
+            userId: createdIds[0]
+          },
+          body: {
+            avatar: null
+          }
+        })
+        .then(() =>
+          knex
+            .from('users')
+            .select('avatar')
+            .where({
+              id: createdIds[0]
+            })
+        )
+        .then(rows => rows[0].avatar)
+        .then(avatar => {
+          assert.strictEqual(avatar, null, 'The avatar was wrong.')
+        })
+    )
+
+    it('should not change the contents of an already processed avatar', () =>
+      User
+        .update({
+          auth: {
+            emailAddress: emailAddress,
+            password: password
+          },
+          params: {
+            userId: createdIds[0]
+          },
+          body: {
+            avatar: processedAvatar
+          }
+        })
+        .then(() =>
+          knex
+            .from('users')
+            .select('avatar')
+            .where({
+              id: createdIds[0]
+            })
+        )
+        .then(rows => rows[0].avatar)
+        .then(avatar => {
+          let base64Data = new Buffer(avatar, 'hex').toString('base64')
+          let expectedData = processedAvatar.split(',')[1]
+          assert.strictEqual(base64Data, expectedData, 'The avatar was wrong.')
+        })
+    )
+
+    it('should fail to update with a too large avatar', () =>
+      User
+        .update({
+          auth: {
+            emailAddress: emailAddress,
+            password: password
+          },
+          params: {
+            userId: createdIds[0]
+          },
+          body: {
+            avatar: tooLargeAvatar
+          }
+        })
+        .then(() => {
+          assert(false, 'The update succeeded.')
+        })
+        .catch(ValidationError, err => {
+          assert(err.messages.avatar)
+        })
+    )
+
+    it('should fail to update with an avatar that is not convertible into a JPEG', () =>
+      User
+        .update({
+          auth: {
+            emailAddress: emailAddress,
+            password: password
+          },
+          params: {
+            userId: createdIds[0]
+          },
+          body: {
+            avatar: notAnImageAvatar
+          }
+        })
+        .then(() => {
+          assert(false, 'The update succeeded.')
+        })
+        .catch(ValidationError, err => {
+          assert(err.messages.avatar)
+        })
+    )
+
     it('should be able to set an email address', function () {
       return User.update({
         auth: {
@@ -1266,6 +1458,58 @@ describe('users', function () {
       })
 
     })
+
+  })
+
+  describe('serveAvatar', () => {
+
+    var emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
+    var password = 'taco tuesday'
+    var passwordHash = bcrypt.hashSync(password, 8)
+
+    beforeEach('Create a user with an avatar.', function () {
+      return knex.into('users').insert({
+        emailAddress: emailAddress,
+        passwordHash: passwordHash,
+        avatar: '\\x' + hexGoodAvatar
+      }).returning('id').then(function (ids) {
+        createdIds.push(ids[0])
+      })
+    })
+
+    it('should serve the proper avatar when one exists', () =>
+      User
+        .serveAvatar({
+          params: {
+            userId: createdIds[0]
+          }
+        })
+        .then(avatar => {
+          assert.strictEqual(avatar.toString('hex'), hexGoodAvatar, 'The wrong avatar was returned.')
+        })
+    )
+
+    it('should serve the default avatar when no avatar exists', () =>
+      knex
+        .into('users')
+        .where({
+          id: createdIds[0]
+        })
+        .update({
+          avatar: null
+        })
+        .then(() =>
+          User
+            .serveAvatar({
+              params: {
+                userId: createdIds[0]
+              }
+            })
+            .then(avatar => {
+              assert.strictEqual(Buffer.compare(avatar, defaultAvatar), 0, 'The wrong avatar was returned.')
+            })
+        )
+    )
 
   })
 

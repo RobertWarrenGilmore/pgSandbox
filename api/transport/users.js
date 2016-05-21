@@ -38,5 +38,13 @@ module.exports = usersBiz => {
         .catch(handleError(res))
     )
 
+  // the avatar for a user
+  router.route('/:userId/avatar.jpg')
+    .get((req, res) => {
+      usersBiz.serveAvatar(req)
+        .then(result => res.type('jpeg').send(result))
+        .catch(handleError(res))
+    })
+
   return router
 }

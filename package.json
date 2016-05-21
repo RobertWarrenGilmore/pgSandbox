@@ -1,6 +1,6 @@
 {
   "name": "genericNodeReactApp",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "a simple web app with auth, info pages, a blog, and admins",
   "scripts": {
     "start": "node start.js",
@@ -48,6 +48,7 @@
     "bluebird": "^3.0.1",
     "body-parser": "^1.14.1",
     "browserify": "^12.0.0",
+    "buffer": "^4.6.0",
     "classnames": "^2.2.0",
     "command-line-args": "^2.1.4",
     "compression": "^1.6.0",
@@ -55,6 +56,7 @@
     "express": "^4.13.3",
     "forever": "^0.15.1",
     "history": "^1.17.0",
+    "jimp": "^0.2.24",
     "knex": "^0.10.0",
     "letsencrypt-express": "^1.1.5",
     "lodash": "^3.10.1",

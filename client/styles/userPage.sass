@@ -1,6 +1,13 @@
 #appContainer > div > main
   > #userPage
-    >.userEditor
+    > .userProfile
+      > header
+        > .avatar
+          float: left
+          margin-right: $medium-padding
+        + *
+          clear: left
+    > .userEditor
       > *
         margin: $medium-padding
       label

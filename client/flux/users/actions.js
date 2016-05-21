@@ -10,6 +10,7 @@ const setAuthCredentials = createActionCreator(authTypes.SET_AUTH_CREDENTIALS)
 
 // private action creators
 const cacheUsers = createActionCreator(types.CACHE_USERS)
+const updateAvatar = createActionCreator(types.UPDATE_AVATAR)
 
 // public action creators
 const creators = {
@@ -54,6 +55,10 @@ const creators = {
             dispatch(cacheUsers({
               [id]: body
             }))
+            if (user.avatar !== undefined)
+              dispatch(updateAvatar({
+                id
+              }))
           }
           if (id == store.getState().auth.id) {
             dispatch(setAuthCredentials({

@@ -21,6 +21,12 @@ generalTransportTest({
         GET: 'read',
         PUT: 'update'
       }
+    },
+    {
+      path: '/:userId/avatar.jpg',
+      actions: {
+        GET: 'serveAvatar'
+      }
     }
   ]
 })

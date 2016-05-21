@@ -314,14 +314,14 @@ const wrapped = connect(
   function mapStateToProps(state) {
     state = state.asMutable({deep: true})
     let authUser
-    if (state.auth.id && state.users) {
-      authUser = state.users[state.auth.id]
+    if (state.auth.id && state.users.cache) {
+      authUser = state.users.cache[state.auth.id]
     }
-    let authors = state.blog.authorIds.map(id => state.users[id])
+    let authors = state.blog.authorIds.map(id => state.users.cache[id])
     return {
       authUser,
       posts: state.blog.posts,
-      users: state.users,
+      users: state.users.cache,
       authors
     }
   },

@@ -1,230 +1,193 @@
 'use strict'
 const _ = require('lodash')
 const React = require('react')
+const update = require('react-addons-update')
 const BusyIndicator = require('../busyIndicator.jsx')
 const ErrorMessage = require('../errorMessage.jsx')
-const validate = require('../../../utilities/validate')
-const vf = validate.funcs
-const ValidationError = validate.ValidationError
+const Avatar = require('./avatar.jsx')
+const FileInput = require('../fileInput.jsx')
 
-class UserEditor extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      fieldErrors: null
-    }
-    this._validateFields = this._validateFields.bind(this)
-    this._onChange = this._onChange.bind(this)
-  }
-  _validateFields() {
-    const { existingUser, editingUser } = this.props
-    return validate(editingUser, {
-      emailAddress: [
-        vf.emailAddress('The email address must be, well, an email address.')
-      ],
-      givenName: [
-        vf.notNull('The first name cannot be removed.'),
-        vf.notEmpty('The first name cannot be removed.'),
-        vf.string('The first name must be a string.'),
-        vf.maxLength('The first name must not be longer than thirty characters.', 30)
-      ],
-      familyName: [
-        vf.notNull('The last name cannot be removed.'),
-        vf.notEmpty('The last name cannot be removed.'),
-        vf.string('The last name must be a string.'),
-        vf.maxLength('The last name must not be longer than thirty characters.', 30)
-      ],
-      password: [
-        vf.minLength('The password must be at least eight characters long.', 8),
-        vf.maxLength('The password must be at most thirty characters long.', 30)
-      ],
-      repeatPassword: [
-        (val) => {
-          if (val !== editingUser.password) {
-            throw new ValidationError('The passwords must match.')
-          }
-        }
-      ],
-      admin: [
-        vf.boolean('The admin setting must be a boolean.')
-      ],
-      authorisedToBlog: [
-        vf.boolean('The blog authorisation setting must be a boolean.')
-      ]
-    }).then(() => this.setState({
-      fieldErrors: null
-    })).catch(err => this.setState({
-      fieldErrors: err.messages
+const UserEditor = props => {
+
+  const {
+    user,
+    dirty,
+    disabled,
+    adminMode,
+    onSave,
+    onRevert,
+    onChange,
+    fieldErrors,
+    error
+  } = props
+
+  const _onChangeText = fieldName => ({target: {value}}) =>
+    onChange(update(user, {
+      [fieldName]: value || undefined
     }))
-  }
-  _onChange() {
-    const userFromFields = {
-      emailAddress: this.refs.emailAddress.value,
-      givenName: this.refs.givenName.value,
-      familyName: this.refs.familyName.value,
-      password: this.refs.password.value || undefined,
-      repeatPassword: this.refs.repeatPassword.value || undefined,
-      authorisedToBlog: this.refs.authorisedToBlog ? this.refs.authorisedToBlog.checked : undefined,
-      admin: this.refs.admin ? this.refs.admin.checked : undefined
-    }
-    this.props.onChange(userFromFields)
-  }
-  componentDidMount() {
-    this._validateFields()
-  }
-  componentDidUpdate(prevProps, prevState) {
-    if (!_.isEqual(this.props.editingUser, prevProps.editingUser) ||
-      !_.isEqual(this.props.existingUser, prevProps.existingUser)) {
-      this._validateFields()
-    }
-  }
-  render() {
-    const { editingUser, disabled, onSave, onRevert, error } = this.props
-    const fieldErrorMessage = fieldName => {
-      const propFieldErrors = _.at(this.props.fieldErrors, fieldName)[0] || []
-      const stateFieldErrors = _.at(this.state.fieldErrors, fieldName)[0] || []
-      const allFieldErrors = propFieldErrors.concat(stateFieldErrors)
-      return <ErrorMessage error={allFieldErrors}/>
-    }
-    return (
-      <div className='userEditor'>
-        <header>
-          <label>
-            name
-            <div className='nameLine'>
-              <input
-                type='text'
-                ref='givenName'
-                value={editingUser.givenName}
-                placeholder='first name'
-                disabled={disabled}
-                onChange={this._onChange}/>
-              <input
-                type='text'
-                ref='familyName'
-                value={editingUser.familyName}
-                placeholder='last name'
-                disabled={disabled}
-                onChange={this._onChange}/>
-            </div>
-            {fieldErrorMessage('givenName')}
-            {fieldErrorMessage('familyName')}
+
+  const _onChangeCheckbox = fieldName => ({target: {checked}}) =>
+    onChange(update(user, {
+      [fieldName]: !!checked
+    }))
+
+  const _onChooseAvatar = filePromises =>
+    onChange(update(user, {
+      avatar: {$set: filePromises.length ? 'loading' : undefined}
+    }))
+
+  const _onLoadAvatar = files =>
+    onChange(update(user, {
+      avatar: {$set: files[0]}
+    }))
+
+  const _onClearAvatar = filePromises =>
+    onChange(update(user, {
+      avatar: {$set: null}
+    }))
+
+  const fieldErrorMessage = fieldName =>
+    <ErrorMessage error={_.at(fieldErrors, fieldName)[0] || []}/>
+
+  return (
+    <div className='userEditor'>
+      <header>
+        <section>
+          <label className='avatarChooser'>
+            <Avatar
+              id={user.id}
+              data={user.avatar}
+              />
+            <FileInput
+              onChoose={_onChooseAvatar}
+              onLoad={_onLoadAvatar}
+              disabled={disabled}
+              accept={'image/png,image/jpeg,image/bmp'}
+              />
+            <button
+              onClick={_onClearAvatar}
+              disabled={disabled || user.avatar === null}
+              >
+              <span className='icon-bin'/>
+              &nbsp;
+              clear
+            </button>
+            {fieldErrorMessage('avatar')}
           </label>
-        </header>
+        </section>
         <label>
-          email address
-          <input
-            type='email'
-            ref='emailAddress'
-            value={editingUser.emailAddress}
-            placeholder='name@example.com'
-            disabled={disabled}
-            onChange={this._onChange}/>
-          {fieldErrorMessage('emailAddress')}
-        </label>
-        <div className='passwordPair'>
-          <label>
-            password
+          name
+          <div className='nameLine'>
             <input
-              type='password'
-              ref='password'
-              value={editingUser.password}
+              type='text'
+              value={user.givenName}
+              placeholder='first name'
               disabled={disabled}
-              onChange={this._onChange}/>
-            {fieldErrorMessage('password')}
-          </label>
-          <label>
-            repeat password
+              onChange={_onChangeText('givenName')}
+              />
             <input
-              type='password'
-              ref='repeatPassword'
-              value={editingUser.repeatPassword}
+              type='text'
+              value={user.familyName}
+              placeholder='last name'
               disabled={disabled}
-              onChange={this._onChange}/>
-            {fieldErrorMessage('repeatPassword')}
-          </label>
-        </div>
-        {!!this.props.adminMode ? (
-            <div>
-            <label>
-              <input
-                type='checkbox'
-                ref='authorisedToBlog'
-                checked={editingUser.authorisedToBlog}
-                disabled={disabled}
-                onChange={this._onChange}/>
-              authorised to blog
-              {fieldErrorMessage('authorisedToBlog')}
-            </label>
-            <label>
-              <input
-                type='checkbox'
-                ref='admin'
-                checked={editingUser.admin}
-                disabled={disabled}
-                onChange={this._onChange}/>
-              administrator
-              {fieldErrorMessage('admin')}
-            </label>
+              onChange={_onChangeText('familyName')}
+              />
           </div>
-        ) : null}
-        {error
-          ? (
-            <p className='error'>
-              {error}
-            </p>
-          ) : null}
-        <div className='actions'>
-          {disabled
-            ? (
-              <div>
-                <BusyIndicator/>
-                saving
-              </div>
-            ) : null}
-          <button
-            id='save'
-            disabled={disabled || !!this.props.fieldErrors}
-            onClick={onSave}
-            className='highlighted'>
-            <span className='icon-floppy-disk'/>
-            &nbsp;
-            save
-          </button>
-          <button
-            id='revert'
+          {fieldErrorMessage('givenName')}
+          {fieldErrorMessage('familyName')}
+        </label>
+      </header>
+      <label>
+        email address
+        <input
+          type='email'
+          value={user.emailAddress}
+          placeholder='name@example.com'
+          disabled={disabled}
+          onChange={_onChangeText('emailAddress')}
+          />
+        {fieldErrorMessage('emailAddress')}
+      </label>
+      <div className='passwordPair'>
+        <label>
+          password
+          <input
+            type='password'
+            value={user.password}
             disabled={disabled}
-            onClick={onRevert}>
-            <span className='icon-undo2'/>
-            &nbsp;
-            revert
-          </button>
-        </div>
+            onChange={_onChangeText('password')}
+            />
+          {fieldErrorMessage('password')}
+        </label>
+        <label>
+          repeat password
+          <input
+            type='password'
+            value={user.repeatPassword}
+            disabled={disabled}
+            onChange={_onChangeText('repeatPassword')}
+            />
+          {fieldErrorMessage('repeatPassword')}
+        </label>
       </div>
-    )
-  }
-}
-UserEditor.propTypes = {
-  editingUser: React.PropTypes.object,
-  existingUser: React.PropTypes.object,
-  onChange: React.PropTypes.func,
-  onSave: React.PropTypes.func,
-  onRevert: React.PropTypes.func,
-  disabled: React.PropTypes.bool,
-  adminMode: React.PropTypes.bool,
-  fieldErrors: React.PropTypes.object,
-  error: React.PropTypes.string
-}
-UserEditor.defaultProps = {
-  editingUser: null,
-  existingUser: null,
-  onChange: () => {},
-  onSave: () => {},
-  onRevert: () => {},
-  disabled: false,
-  adminMode: false,
-  fieldErrors: null,
-  error: null
+      {adminMode ? (
+          <div>
+          <label>
+            <input
+              type='checkbox'
+              checked={user.authorisedToBlog}
+              disabled={disabled}
+              onChange={_onChangeCheckbox('authorisedToBlog')}
+              />
+            authorised to blog
+            {fieldErrorMessage('authorisedToBlog')}
+          </label>
+          <label>
+            <input
+              type='checkbox'
+              checked={user.admin}
+              disabled={disabled}
+              onChange={_onChangeCheckbox('admin')}
+              />
+            administrator
+            {fieldErrorMessage('admin')}
+          </label>
+        </div>
+      ) : null}
+      {error
+        ? (
+          <p className='error'>
+            {error}
+          </p>
+        ) : null}
+      <div className='actions'>
+        {disabled
+          ? (
+            <div>
+              <BusyIndicator/>
+              saving
+            </div>
+          ) : null}
+        <button
+          id='save'
+          disabled={disabled || !dirty || !!fieldErrors}
+          onClick={onSave}
+          className='highlighted'>
+          <span className='icon-floppy-disk'/>
+          &nbsp;
+          save
+        </button>
+        <button
+          id='revert'
+          disabled={disabled || !dirty}
+          onClick={onRevert}>
+          <span className='icon-undo2'/>
+          &nbsp;
+          revert
+        </button>
+      </div>
+    </div>
+  )
 }
 
 module.exports = UserEditor
