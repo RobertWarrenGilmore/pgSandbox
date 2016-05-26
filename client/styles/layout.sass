@@ -46,11 +46,16 @@ body
             display: inline-block
     > main
       position: relative
-      padding: $large-padding
+      padding: $medium-padding
+      @media (min-width: $tiny-media-width)
+        padding: $large-padding
       > #authIndicator
         text-align: right
-        margin-top: -1em
-        margin-bottom: 1em
+        margin-top: $small-padding - $medium-padding
+        margin-bottom: $medium-padding - $small-padding
+        @media (min-width: $tiny-media-width)
+          margin-top: $medium-padding - $large-padding
+          margin-bottom: $large-padding - $medium-padding
       > *:not(#authIndicator)
         width: 100%
         margin: auto
