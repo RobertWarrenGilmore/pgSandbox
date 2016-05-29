@@ -83,7 +83,8 @@ class GenericSearch extends React.Component {
         correctUrlQuery,
         history,
         location: {
-          pathname
+          pathname,
+          query: currentUrlQuery
         }
       },
       state: {
@@ -98,8 +99,8 @@ class GenericSearch extends React.Component {
         : 'pushState']
 
     const doRedirect = () => {
-      // If the valid query differs from the supplied query, redirect to it.
-      if (!_.isEqual(query, validQuery)) {
+      // If the valid query differs from the current query, redirect to it.
+      if (!_.isEqual(currentUrlQuery, validQuery)) {
         navigate(null, pathname, validQuery)
       }
       if (queryUpdateTimeout) {
