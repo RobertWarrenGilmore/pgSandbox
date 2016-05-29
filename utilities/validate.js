@@ -3,9 +3,9 @@ const _ = require('lodash')
 const Promise = require('bluebird')
 
 // a list of promises resolving to error messages for the given attribute
-const messagePromiseList = (value, validationList) =>
+const messagePromiseList = (valueMap, key, validationList) =>
   _.map(validationList, validation =>
-    Promise.try(() => validation(value))
+    Promise.try(() => validation(valueMap[key]))
     .then(() => null)
     .catch(ValidationError, err => {
       if (err.messages) {
@@ -38,10 +38,9 @@ const messageListPromiseMap = (valueMap, validationListMap) =>
       if (validationListMap[key] === undefined) {
         result[key] = Promise.resolve(['The attribute "' + key + '" was not expected.'])
       } else {
-        const value = valueMap[key]
         const validationList = validationListMap[key]
         result[key] = messageListPromise(
-          messagePromiseList(value, validationList)
+          messagePromiseList(valueMap, key, validationList)
         )
       }
     },
