@@ -320,8 +320,9 @@ class GenericSearch extends React.Component {
           onRevert: this._onRevert
         })}
         <div className='results'>
-          {_.map(results, result =>
+          {_.map(results, (result, index) =>
             React.cloneElement(renderResult(result), {
+              key: index,
               query: urlQuery
             }))
           }
