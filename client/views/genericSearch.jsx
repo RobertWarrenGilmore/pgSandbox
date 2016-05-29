@@ -140,12 +140,18 @@ class GenericSearch extends React.Component {
       endReached
     })
     return this._loadMoreResults(startingResults)
-      .catch(ValidationError, err => this.setState({
-        fieldErrors: err.messages
-      }))
-      .catch(err => this.setState({
-        error: err.message || err
-      }))
+      .catch(err => {
+        if (err instanceof ValidationError)
+          this.setState({
+            endReached: true,
+            fieldErrors: err.messages
+          })
+        else
+          this.setState({
+            endReached: true,
+            error: err.message || err
+          })
+      })
       .then(() => this.setState({
         busy: false
       }))
