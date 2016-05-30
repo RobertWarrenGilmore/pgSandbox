@@ -8,6 +8,7 @@ if (!window.location.origin) {
 const React = require('react')
 const ReactDom = require('react-dom')
 const {Router, Route, IndexRoute, Redirect} = require('react-router')
+const qs = require('qs')
 const { Provider } = require('react-redux')
 const createBrowserHistory = require('history/lib/createBrowserHistory')
 const flux = require('./flux')
@@ -49,7 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(() => {
       const router = (
         <Provider store={flux}>
-          <Router history={createBrowserHistory()}>
+          <Router
+            history={createBrowserHistory()}
+            stringifyQuery={qs.stringify}
+            parseQueryString={qs.parse}
+            >
             <Route component={App} path='/'>
 
               <IndexRoute component={InfoPage}/>
