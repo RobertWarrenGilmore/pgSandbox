@@ -1,9 +1,9 @@
 'use strict'
 const Promise = require('bluebird')
-const bcrypt = Promise.promisifyAll(require('bcrypt'))
+const bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
 
 const hashPassword = password =>
-  bcrypt.hashSync(password, 8)
+  bcrypt.hashSync(password, bcrypt.genSaltSync(8))
 
 const verifyPasswordResetKey = (passwordResetKey, hash) =>
   bcrypt.compareSync(passwordResetKey, hash)

@@ -13,7 +13,7 @@ const dataUrlParts = dataUrl => {
 
 const dataUrlToByteaInput = dataUrl => {
   const base64Data = dataUrlParts(dataUrl).data
-  const hexData = new Buffer(base64Data, 'base64').toString('hex')
+  const hexData = Buffer.from(base64Data, 'base64').toString('hex')
   return '\\x' + hexData
 }
 

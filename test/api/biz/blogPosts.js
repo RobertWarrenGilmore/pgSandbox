@@ -3,7 +3,7 @@ var assert = require('assert')
 var Promise = require('bluebird')
 var knex = require('../../../api/database/knex')
 var escapeForLike = require('../../../api/biz/utilities/escapeForLike')
-var bcrypt = Promise.promisifyAll(require('bcrypt'))
+var bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
 var BlogPost = require('../../../api/biz/blogPosts')(knex)
 var AuthenticationError = require('../../../api/errors/authenticationError')
 var AuthorisationError = require('../../../api/errors/authorisationError')
@@ -19,7 +19,7 @@ describe('blog posts', function () {
   var password = 'taco tuesday'
   var givenName = 'Victor'
   var familyName = 'Frankenstein'
-  var passwordHash = bcrypt.hashSync(password, 8)
+  var passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8))
 
   var createdIds = []
   var id = '2015-12-17_a_test_post_for_the_mocha_test_suite'

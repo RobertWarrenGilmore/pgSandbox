@@ -3,7 +3,7 @@ var knex = require('../../../api/database/knex')
 var assert = require('assert')
 var sinon = require('sinon')
 var Promise = require('bluebird')
-var bcrypt = Promise.promisifyAll(require('bcrypt'))
+var bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
 var mockEmailer = sinon.spy(function () {
   if (mockEmailer.err) {
     return Promise.reject(mockEmailer.err)
@@ -60,7 +60,7 @@ describe('users', function () {
   })
   let processedAvatar = 'data:image/jpeg;base64,'
   before('Create a processed avatar.', () =>
-    Jimp.read(new Buffer(goodAvatar.split(',')[1], 'base64'))
+    Jimp.read(Buffer.from(goodAvatar.split(',')[1], 'base64'))
       .then(image => new Promise((resolve, reject) => {
         image
           .cover(200, 200)
@@ -627,7 +627,7 @@ describe('users', function () {
       beforeEach(function () {
         return knex.into('users').insert({
           emailAddress: adminUser.emailAddress,
-          passwordHash: bcrypt.hashSync(adminUser.password, 8),
+          passwordHash: bcrypt.hashSync(adminUser.password, bcrypt.genSaltSync(8)),
           admin: true,
           active: true
         }).returning('id').then(function (ids) {
@@ -659,7 +659,7 @@ describe('users', function () {
     var password = 'taco tuesday'
     var givenName = 'Victor'
     var familyName = 'Frankenstein'
-    var passwordHash = bcrypt.hashSync(password, 8)
+    var passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8))
 
     beforeEach('Create a user to be updated.', function () {
       return knex.into('users').insert({
@@ -791,7 +791,7 @@ describe('users', function () {
         )
         .then(rows => rows[0].avatar)
         .then(avatar => {
-          let base64Data = new Buffer(avatar, 'hex').toString('base64')
+          let base64Data = Buffer.from(avatar, 'hex').toString('base64')
           let expectedData = processedAvatar.split(',')[1]
           assert.strictEqual(base64Data, expectedData, 'The avatar was wrong.')
         })
@@ -849,7 +849,7 @@ describe('users', function () {
         )
         .then(rows => rows[0].avatar)
         .then(avatar => {
-          let base64Data = new Buffer(avatar, 'hex').toString('base64')
+          let base64Data = Buffer.from(avatar, 'hex').toString('base64')
           let expectedData = processedAvatar.split(',')[1]
           assert.strictEqual(base64Data, expectedData, 'The avatar was wrong.')
         })
@@ -1203,7 +1203,7 @@ describe('users', function () {
       beforeEach(function () {
         return knex.into('users').insert({
           emailAddress: adminUser.emailAddress,
-          passwordHash: bcrypt.hashSync(adminUser.password, 8),
+          passwordHash: bcrypt.hashSync(adminUser.password, bcrypt.genSaltSync(8)),
           admin: true,
           active: true
         }).returning('id').then(function (ids) {
@@ -1268,7 +1268,7 @@ describe('users', function () {
       var passwordResetKey = {
         key: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd'
       }
-      passwordResetKey.hash = bcrypt.hashSync(passwordResetKey.key, 8)
+      passwordResetKey.hash = bcrypt.hashSync(passwordResetKey.key, bcrypt.genSaltSync(8))
 
       beforeEach('Set the password reset key.', function () {
         return knex.into('users').where('id', createdIds[0]).update({
@@ -1465,7 +1465,7 @@ describe('users', function () {
 
     var emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
     var password = 'taco tuesday'
-    var passwordHash = bcrypt.hashSync(password, 8)
+    var passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8))
 
     beforeEach('Create a user with an avatar.', function () {
       return knex.into('users').insert({

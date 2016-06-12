@@ -137,7 +137,7 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
               // Here we'll do some validations and mutate the avatar.
               let originalBuffer
               try {
-                originalBuffer = new Buffer(dataUrlParts(val).data, 'base64')
+                originalBuffer = Buffer.from(dataUrlParts(val).data, 'base64')
               } catch (e) {
                 throw new ValidationError('The icon must be a valid PNG, JPEG, or BMP image.')
               }

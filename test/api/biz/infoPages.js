@@ -2,7 +2,7 @@
 var _ = require('lodash')
 var assert = require('assert')
 var Promise = require('bluebird')
-var bcrypt = Promise.promisifyAll(require('bcrypt'))
+var bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
 var knex = require('../../../api/database/knex')
 var InfoPage = require('../../../api/biz/infoPages')(knex)
 var AuthorisationError = require('../../../api/errors/authorisationError')
@@ -17,12 +17,12 @@ describe('info pages', function () {
   var admin = {
     emailAddress: 'admin.mocha.test.email.address@not.a.real.domain.com',
     password: 'taco tuesday',
-    passwordHash: bcrypt.hashSync('taco tuesday', 8)
+    passwordHash: bcrypt.hashSync('taco tuesday', bcrypt.genSaltSync(8))
   }
   var notAdmin = {
     emailAddress: 'mocha.test.email.address@not.a.real.domain.com',
     password: 'taco tuesday',
-    passwordHash: bcrypt.hashSync('taco tuesday', 8)
+    passwordHash: bcrypt.hashSync('taco tuesday', bcrypt.genSaltSync(8))
   }
 
   beforeEach('Create info pages.', function () {
