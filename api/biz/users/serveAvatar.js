@@ -1,7 +1,7 @@
 'use strict'
 const authenticatedTransaction = require('../utilities/authenticatedTransaction')
 const validate = require('../../../utilities/validate')
-const vf = validate.funcs
+const { funcs: vf } = validate
 const NoSuchResourceError = require('../../errors/noSuchResourceError')
 const fs = require('fs')
 const path = require('path')

@@ -7,8 +7,7 @@ const ConflictingEditError = require('../errors/conflictingEditError')
 const escapeForLike = require('./utilities/escapeForLike')
 const authenticatedTransaction = require('./utilities/authenticatedTransaction')
 const validate = require('../../utilities/validate')
-const vf = validate.funcs
-const ValidationError = validate.ValidationError
+const { funcs: vf, ValidationError } = validate
 
 const transformAuthor = posts =>
   _.map(posts, post => ({
