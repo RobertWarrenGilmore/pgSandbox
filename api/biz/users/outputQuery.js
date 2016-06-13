@@ -1,6 +1,5 @@
 'use strict'
 const _ = require('lodash')
-const isComplete = require('./isComplete')
 
 const publicReadableAttributes = [
   'id',
@@ -27,12 +26,29 @@ const adminReadableAttributes = [
   'admin'
 ]
 
-function transformOutput (users, authUser, when) {
-  const incompleteOmitted = _.filter(users, user => {
-    const authorisedToViewIncomplete = !!authUser && (!!authUser.admin || authUser.id === user.id)
-    return authorisedToViewIncomplete || isComplete(user, when)
+module.exports = (authUser, trx, queryModifier) => trx
+  .from('users')
+  .select()
+  .modify(queryModifier)
+
+  // Filter the users to restrict the visibility of inactive and incomplete users to admins and the user himself.
+  .modify(qb => {
+    if (!authUser || !authUser.admin) {
+      qb.where(function () {
+        if (authUser) {
+          this.where('id', authUser.id)
+        }
+        qb.orWhere(function () {
+          this
+            .where('active', '=', true)
+            .whereNotNull('givenName')
+            .whereNotNull('familyName')
+        })
+      })
+    }
   })
-  return _.map(incompleteOmitted, user => {
+
+  .then(users => users.map(user => {
     let readableAttributes = publicReadableAttributes
     if (authUser) {
       if (authUser.admin) {
@@ -42,7 +58,4 @@ function transformOutput (users, authUser, when) {
       }
     }
     return _.pick(user, readableAttributes)
-  })
-}
-
-module.exports = transformOutput
+  }))

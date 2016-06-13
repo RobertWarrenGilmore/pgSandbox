@@ -2,7 +2,7 @@
 const authenticatedTransaction = require('../utilities/authenticatedTransaction')
 const escapeForLike = require('../utilities/escapeForLike')
 const crypto = require('./crypto')
-const transformOutput = require('./transformOutput')
+const outputQuery = require('./outputQuery')
 const sendPasswordResetEmail = require('./sendPasswordResetEmail')
 const AuthenticationError = require('../../errors/authenticationError')
 const AuthorisationError = require('../../errors/authorisationError')
@@ -185,12 +185,18 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
         .update(newUser)
     })
     .then(() =>
-      trx
-        .from('users')
-        .where('id', id)
-        .select()
+
+      // Return the changed user.
+      outputQuery(authUser, trx, qb => {
+        qb.where('id', id)
+      })
+      .then(users => {
+        if (!users.length) {
+          throw new NoSuchResourceError()
+        }
+        return users[0]
+      })
     )
-    .then(rows => transformOutput(rows, authUser, Date.now())[0])
 }
 
 function anonymousPasswordUpdate(trx, id, newUser) {
@@ -238,13 +244,6 @@ function anonymousPasswordUpdate(trx, id, newUser) {
           passwordResetKeyHash: null
         })
     })
-    .then(() =>
-      trx
-        .from('users')
-        .where('id', id)
-        .select()
-    )
-    .then(() => null)
 }
 
 function anonymousPasswordResetKeyUpdate(emailer, trx, body) {
@@ -298,10 +297,4 @@ function anonymousPasswordResetKeyUpdate(emailer, trx, body) {
     .tap(result =>
       sendPasswordResetEmail(emailer, body.emailAddress, result.id, result.key)
     )
-    .then(result =>
-      trx
-        .from('users')
-        .where('id', result.id)
-        .select()
-    ).then(() => null)
 }

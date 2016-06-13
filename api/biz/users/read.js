@@ -5,7 +5,7 @@ const validate = require('../../../utilities/validate')
 const vf = validate.funcs
 const ValidationError = validate.ValidationError
 const escapeForLike = require('../utilities/escapeForLike')
-const transformOutput = require('./transformOutput')
+const outputQuery = require('./outputQuery')
 const MalformedRequestError = require('../../errors/malformedRequestError')
 const NoSuchResourceError = require('../../errors/noSuchResourceError')
 
@@ -18,29 +18,27 @@ module.exports = knex =>
       }
       if (args.params && args.params.userId) {
         // Read a specific user.
-        return fetchUserById(args.params.userId, authUser, trx)
+        return fetchUserById(authUser, trx, args.params.userId)
       } else {
         // Query a list of users.
-        return searchUsers(args.query, authUser, trx)
+        return searchUsers(authUser, trx, args.query)
       }
     })
     .then(result => JSON.parse(JSON.stringify(result)))
 
-function fetchUserById (userId, authUser, trx) {
-  return trx
-    .from('users')
-    .where('id', userId)
-    .select()
-    .then(users => {
-      if (!users.length) {
-        throw new NoSuchResourceError()
-      }
-      return transformOutput(users, authUser, Date.now())[0]
-    })
-}
+const fetchUserById = (authUser, trx, userId) =>
+  outputQuery(authUser, trx, qb => {
+    qb.where('id', userId)
+  })
+  .then(users => {
+    if (!users.length) {
+      throw new NoSuchResourceError()
+    }
+    return users[0]
+  })
 
-function searchUsers (queryParameters, authUser, trx) {
-  return validate(queryParameters || {}, {
+const searchUsers = (authUser, trx, queryParameters) =>
+  validate(queryParameters || {}, {
     emailAddress: [
       val => {
         if (val !== undefined
@@ -93,48 +91,40 @@ function searchUsers (queryParameters, authUser, trx) {
       vf.naturalNumber('The offset must be a natural number.')
     ]
   })
-  .then(() => {
-
-    // Create a query for a search.
-    let query = trx
-      .from('users')
-      .select()
-      .limit(20)
-
+  // Create a query for a search.
+  .then(() => outputQuery(authUser, trx, qb => {
+    qb.limit(20)
     if (queryParameters) {
       // Add sorting.
       if (queryParameters.sortBy) {
         const sortBy = queryParameters.sortBy
         const sortOrder =
-          (queryParameters.sortOrder === 'descending') ?
-          'desc' :
-          'asc'
-        query = query.orderBy(sortBy, sortOrder)
+        (queryParameters.sortOrder === 'descending') ?
+        'desc' :
+        'asc'
+        qb.orderBy(sortBy, sortOrder)
       }
 
       // Add offset.
       if (queryParameters.offset !== undefined) {
-        query = query.offset(queryParameters.offset)
+        qb.offset(queryParameters.offset)
       }
 
       // Add search parameters.
       // Some of the parameters need special treatment.
       if (queryParameters.givenName) {
-        query = query.whereRaw('unaccent("givenName") ilike unaccent(?) || \'%\'', [escapeForLike(queryParameters.givenName)])
+        qb.whereRaw('unaccent("givenName") ilike unaccent(?) || \'%\'', [escapeForLike(queryParameters.givenName)])
       }
       if (queryParameters.familyName) {
-        query = query.whereRaw('unaccent("familyName") ilike unaccent(?)', [escapeForLike(queryParameters.familyName) + '%'])
+        qb.whereRaw('unaccent("familyName") ilike unaccent(?)', [escapeForLike(queryParameters.familyName) + '%'])
       }
       if (queryParameters.emailAddress) {
-        query = query.where('emailAddress', 'ilike', escapeForLike(queryParameters.emailAddress) + '%')
+        qb.where('emailAddress', 'ilike', escapeForLike(queryParameters.emailAddress) + '%')
       }
       // The remaining parameters can be used as they are.
       const remainingParameters = _.pick(queryParameters, [
         'authorisedToBlog'
       ]) || {}
-      query = query.where(remainingParameters)
+      qb.where(remainingParameters)
     }
-    return query
-  })
-  .then(users => transformOutput(users, authUser, Date.now()))
-}
+  }))
