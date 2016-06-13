@@ -2,7 +2,7 @@
 const _ = require('lodash')
 const authenticatedTransaction = require('../utilities/authenticatedTransaction')
 const validate = require('../../../utilities/validate')
-const vf = validate.funcs
+const { funcs: vf } = validate
 const escapeForLike = require('../utilities/escapeForLike')
 const crypto = require('./crypto')
 const sendPasswordResetEmail = require('./sendPasswordResetEmail')

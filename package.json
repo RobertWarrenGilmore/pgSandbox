@@ -44,7 +44,7 @@
     "babel-preset-stage-0": "^6.3.13",
     "babelify": "^7.2.0",
     "basic-auth": "^1.0.3",
-    "bcrypt": "^0.8.5",
+    "bcrypt-nodejs": "0.0.3",
     "bluebird": "^3.0.1",
     "body-parser": "^1.14.1",
     "browserify": "^12.0.0",
@@ -83,6 +83,6 @@
     "uglifyify": "^3.0.1"
   },
   "engines": {
-    "node": "5.0.0"
+    "node": "6.2.1"
   }
 }

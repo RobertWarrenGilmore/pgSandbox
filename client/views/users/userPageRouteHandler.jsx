@@ -164,7 +164,7 @@ class UserPage extends React.Component {
             // Here we'll do some validations and mutate the avatar.
             let originalBuffer
             try {
-              originalBuffer = new Buffer(val.split(',')[1], 'base64')
+              originalBuffer = Buffer.from(val.split(',')[1], 'base64')
             } catch (e) {
               throw new ValidationError('The icon must be a valid PNG, JPEG, or BMP image.')
             }

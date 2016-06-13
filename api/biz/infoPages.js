@@ -4,7 +4,8 @@ const authenticatedTransaction = require('./utilities/authenticatedTransaction')
 const AuthorisationError = require('../errors/authorisationError')
 const NoSuchResourceError = require('../errors/noSuchResourceError')
 const validate = require('../../utilities/validate')
-const vf = validate.funcs
+const { funcs: vf } = validate
+
 
 const legalIds = [
   'home'
