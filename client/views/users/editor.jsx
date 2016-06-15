@@ -23,12 +23,12 @@ const UserEditor = props => {
 
   const _onChangeText = fieldName => ({target: {value}}) =>
     onChange(update(user, {
-      [fieldName]: value || undefined
+      [fieldName]: {$set: value || undefined}
     }))
 
   const _onChangeCheckbox = fieldName => ({target: {checked}}) =>
     onChange(update(user, {
-      [fieldName]: !!checked
+      [fieldName]: {$set: !!checked}
     }))
 
   const _onChooseAvatar = filePromises =>
