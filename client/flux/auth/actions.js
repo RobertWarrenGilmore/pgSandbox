@@ -70,9 +70,9 @@ const creators = {
 
           // Set the time zone.
           if (store.getState().auth.credentials) {
-            setTimeZone(store.getState().users.cache[newId].timeZone)
+            dispatch(setTimeZone(store.getState().users.cache[newId].timeZone))
           } else {
-            setTimeZone(null)
+            dispatch(setTimeZone(null))
           }
 
           dispatch(setAuthBusy(false))

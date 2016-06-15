@@ -77,11 +77,8 @@ const DateTimePicker = props => {
   if (showDays)
     dateFormat = 'YYYY-MM-DD'
   let timeFormat = false
-  if (showTime) {
+  if (showTime)
     timeFormat = 'HH:mm'
-    if (timeZone !== appTimeZone)
-      timeFormat = `${timeFormat} z ([GMT]Z)`
-  }
 
   const _onChange = (newValue) => {
     const m = moment(value).tz(timeZone)
