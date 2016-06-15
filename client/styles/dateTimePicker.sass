@@ -1,0 +1,52 @@
+#appContainer > div > main
+  .dateTimePicker
+    .rdt
+      &:not(.rdtStatic) .rdtPicker
+        position: absolute
+        margin-top: $small-padding
+      &:not(.rdtOpen) .rdtPicker
+        display: none
+      .rdtPicker
+        +no-select
+        display: inline-block
+        padding: $small-padding
+        border: 1px solid $body-colour
+        background-color: white
+        table
+          width: 100%
+          td, th
+            text-align: center
+            padding: $small-padding
+        .rdtDays
+          td
+            border: 1px solid $body-colour
+            &.rdtToday
+              font-style: italic
+            &.rdtWeekend
+              background-color: lighten($body-colour, 80%)
+            &.rdtNew, &.rdtOld
+              color: lighten($body-colour, 20%)
+              background-color: lighten($body-colour, 70%)
+            &.rdtActive
+              font-weight: bold
+              border-width: 3px
+        .rdtMonths
+          td
+            &.rdtCurrentMonth
+              font-style: italic
+            &.rdtActive
+              font-weight: bold
+              border-width: 3px
+        .rdtYears
+          td
+            &.rdtCurrentYear
+              font-style: italic
+            &.rdtActive
+              font-weight: bold
+              border-width: 3px
+        .rdtTime
+          .rdtCounters
+            > *
+              display: inline-block
+              vertical-align: middle
+              padding: 5px

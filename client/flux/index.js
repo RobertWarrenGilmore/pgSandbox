@@ -6,12 +6,14 @@ const { createStore, applyMiddleware, combineReducers } = require('redux')
 
 // Get the reducers.
 const auth = require('./auth/reducer')
+const timeZone = require('./timeZone/reducer')
 const users = require('./users/reducer')
 const blog = require('./blog/reducer')
 const infoPages = require('./infoPages/reducer')
 
 const rootReducer = combineReducers({
   auth,
+  timeZone,
   users,
   blog,
   infoPages

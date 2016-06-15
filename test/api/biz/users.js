@@ -298,26 +298,31 @@ describe('users', function () {
     var givenName2 = 'Paula'
     var familyName1 = 'Deen'
     var familyName2 = 'Poundstone'
+    const timeZone = 'Europe/Moscow'
     var searchableUsers = [{
       emailAddress: '0' + emailAddress,
       givenName: givenName1,
       familyName: familyName1,
-      authorisedToBlog: false
+      authorisedToBlog: false,
+      timeZone
     }, {
       emailAddress: '1' + emailAddress,
       givenName: givenName2,
       familyName: familyName2,
-      authorisedToBlog: true
+      authorisedToBlog: true,
+      timeZone
     }, {
       emailAddress: '2' + emailAddress,
       givenName: givenName2,
       familyName: familyName1,
-      authorisedToBlog: true
+      authorisedToBlog: true,
+      timeZone
     }, {
       emailAddress: '3' + emailAddress,
       givenName: givenName1,
       familyName: familyName2,
-      authorisedToBlog: false
+      authorisedToBlog: false,
+      timeZone
     }]
 
     beforeEach('Create the searchable users.', function () {
@@ -338,6 +343,7 @@ describe('users', function () {
           id: createdIds[0],
           givenName: searchableUsers[0].givenName,
           familyName: searchableUsers[0].familyName,
+          timeZone: searchableUsers[0].timeZone,
           active: true,
           authorisedToBlog: false
         }, 'The returned user was incorrect.')
@@ -660,6 +666,7 @@ describe('users', function () {
     var givenName = 'Victor'
     var familyName = 'Frankenstein'
     var passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8))
+    const timeZone = 'Europe/Moscow'
 
     beforeEach('Create a user to be updated.', function () {
       return knex.into('users').insert({
@@ -1028,7 +1035,7 @@ describe('users', function () {
       })
     )
 
-    it('should fail to remove a given name', () =>
+    it('should fail to set an empty given name', () =>
       User.update({
         auth: {
           emailAddress: emailAddress,
@@ -1070,7 +1077,7 @@ describe('users', function () {
       })
     )
 
-    it('should fail to remove a family name', () =>
+    it('should fail to set an empty family name', () =>
       User.update({
         auth: {
           emailAddress: emailAddress,
@@ -1135,11 +1142,71 @@ describe('users', function () {
           userId: createdIds[0]
         },
         body: {
-          givenName: givenName,
+          givenName,
           familyName: familyName
         }
       })
     })
+
+    it('should be able to set a time zone', function () {
+      return User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          userId: createdIds[0]
+        },
+        body: {
+          timeZone
+        }
+      })
+      .then(result => {
+        assert.strictEqual(result.timeZone, timeZone, 'The time zone was not set correctly.')
+      })
+    })
+
+    it('should fail to remove a time zone', () =>
+      User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          userId: createdIds[0]
+        },
+        body: {
+          timeZone: null
+        }
+      })
+      .then(() => {
+        assert(false, 'The update succeeded.')
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.timeZone)
+      })
+    )
+
+    it('should fail to set an empty time zone', () =>
+      User.update({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          userId: createdIds[0]
+        },
+        body: {
+          timeZone: ''
+        }
+      })
+      .then(() => {
+        assert(false, 'The update succeeded.')
+      })
+      .catch(ValidationError, err => {
+        assert(err.messages.timeZone)
+      })
+    )
 
     it('should be able to send a password reset email', function () {
       return User.update({

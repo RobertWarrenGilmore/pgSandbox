@@ -60,7 +60,8 @@ class LogIn extends React.Component {
     this.props.logIn({
       emailAddress: this.refs.emailAddress.value,
       password: this.refs.password.value
-    }).catch(err => this.setState({
+    })
+    .catch(err => this.setState({
       error: err.message || err
     }))
   }

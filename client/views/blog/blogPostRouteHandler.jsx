@@ -10,14 +10,34 @@ const blogActions = require('../../flux/blog/actions')
 const Helmet = require('react-helmet')
 
 class BlogPost extends React.Component {
+  static propTypes = {
+    authUser: React.PropTypes.object,
+    posts: React.PropTypes.object,
+    users: React.PropTypes.object,
+    authors: React.PropTypes.array,
+    savePost: React.PropTypes.func,
+    loadPost: React.PropTypes.func,
+    deletePost: React.PropTypes.func,
+    loadAuthors: React.PropTypes.func
+  };
+  static defaultProps = {
+    authUser: null,
+    posts: null,
+    users: null,
+    authors: [],
+    savePost: null,
+    loadPost: null,
+    deletePost: null,
+    loadAuthors: null
+  };
+  state = {
+    busy: false,
+    editingPost: null,
+    authorIds: null, // a list of all users that can be set as authors of a post
+    error: null
+  };
   constructor(props) {
     super(props)
-    this.state = {
-      busy: false,
-      editingPost: null,
-      authorIds: null, // a list of all users that can be set as authors of a post
-      error: null
-    }
     this._loadPost = this._loadPost.bind(this)
     this._onEditorSave = this._onEditorSave.bind(this)
     this._onEditorRevert = this._onEditorRevert.bind(this)
@@ -54,6 +74,7 @@ class BlogPost extends React.Component {
       preview: this.state.editingPost.preview,
       body: this.state.editingPost.body,
       postedTime: this.state.editingPost.postedTime,
+      timeZone: this.state.editingPost.timeZone,
       active: this.state.editingPost.active
     }
     let existingId = this.props.params.postId
@@ -104,7 +125,7 @@ class BlogPost extends React.Component {
     let editingPost = this.props.posts[this.props.params.postId] || {
       id: this.props.params.postId,
       title: '',
-      postedTime: new Date().toISOString(),
+      postedTime: new Date().getTime(),
       preview: null,
       body: '',
       author: {
@@ -217,7 +238,9 @@ class BlogPost extends React.Component {
             onDelete={this._onEditorDelete}
             onSave={this._onEditorSave}
             onRevert={this._onEditorRevert}
-            authors={this.props.authors}/>
+            authors={this.props.authors}
+            timeZone={this.props.timeZone}
+            />
           <Post post={this.state.editingPost} showPreview={true}/>
         </div>
       )
@@ -289,26 +312,6 @@ class BlogPost extends React.Component {
   }
 
 }
-BlogPost.propTypes = {
-  authUser: React.PropTypes.object,
-  posts: React.PropTypes.object,
-  users: React.PropTypes.object,
-  authors: React.PropTypes.array,
-  savePost: React.PropTypes.func,
-  loadPost: React.PropTypes.func,
-  deletePost: React.PropTypes.func,
-  loadAuthors: React.PropTypes.func
-}
-BlogPost.defaultProps = {
-  authUser: null,
-  posts: null,
-  users: null,
-  authors: [],
-  savePost: null,
-  loadPost: null,
-  deletePost: null,
-  loadAuthors: null
-}
 
 const wrapped = connect(
   function mapStateToProps(state) {
@@ -322,7 +325,8 @@ const wrapped = connect(
       authUser,
       posts: state.blog.posts,
       users: state.users.cache,
-      authors
+      authors,
+      timeZone: state.timeZone
     }
   },
   function mapDispatchToProps(dispatch) {

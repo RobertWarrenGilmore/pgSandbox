@@ -2,8 +2,16 @@
 const React = require('react')
 const { Link } = require('react-router')
 const processUserHtml = require('../../utilities/processUserHtml')
+const moment = require('moment-timezone')
+const DateTime = require('../dateTime.jsx')
 
-const BlogPost = ({ post, linkAuthor = true, showPreview = false, showBody = true }) => {
+const BlogPost = props => {
+  const {
+    post,
+    linkAuthor = true,
+    showPreview = false,
+    showBody = true
+  } = props
 
   let preview = post.preview
   let previewIsFromBody = !preview
@@ -47,9 +55,10 @@ const BlogPost = ({ post, linkAuthor = true, showPreview = false, showBody = tru
         {byLine}
 
         <p className='postedTime'>
-          <time dateTime={post.postedTime}>
-            {post.postedTime.substring(0, 10)}
-          </time>
+          <DateTime
+            date={post.postedTime}
+            timeZone={post.timeZone}
+            />
         </p>
 
       </header>

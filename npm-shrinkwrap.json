@@ -3012,6 +3012,16 @@
       "from": "module-deps@>=4.0.2 <5.0.0",
       "resolved": "https://registry.npmjs.org/module-deps/-/module-deps-4.0.7.tgz"
     },
+    "moment": {
+      "version": "2.13.0",
+      "from": "moment@>=2.6.0",
+      "resolved": "https://registry.npmjs.org/moment/-/moment-2.13.0.tgz"
+    },
+    "moment-timezone": {
+      "version": "0.5.4",
+      "from": "moment-timezone@latest",
+      "resolved": "https://registry.npmjs.org/moment-timezone/-/moment-timezone-0.5.4.tgz"
+    },
     "ms": {
       "version": "0.7.1",
       "from": "ms@0.7.1",
@@ -3586,6 +3596,18 @@
       "from": "react-addons-update@>=15.0.1 <16.0.0",
       "resolved": "https://registry.npmjs.org/react-addons-update/-/react-addons-update-15.1.0.tgz"
     },
+    "react-datetime": {
+      "version": "2.3.1",
+      "from": "react-datetime@latest",
+      "resolved": "https://registry.npmjs.org/react-datetime/-/react-datetime-2.3.1.tgz",
+      "dependencies": {
+        "object-assign": {
+          "version": "3.0.0",
+          "from": "object-assign@>=3.0.0 <4.0.0",
+          "resolved": "https://registry.npmjs.org/object-assign/-/object-assign-3.0.0.tgz"
+        }
+      }
+    },
     "react-dom": {
       "version": "15.1.0",
       "from": "react-dom@>=15.0.1 <16.0.0",
@@ -3607,6 +3629,11 @@
           "resolved": "https://registry.npmjs.org/invariant/-/invariant-2.2.0.tgz"
         }
       }
+    },
+    "react-onclickoutside": {
+      "version": "4.9.0",
+      "from": "react-onclickoutside@>=4.1.0 <5.0.0",
+      "resolved": "https://registry.npmjs.org/react-onclickoutside/-/react-onclickoutside-4.9.0.tgz"
     },
     "react-redux": {
       "version": "4.4.5",

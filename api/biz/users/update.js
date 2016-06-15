@@ -1,4 +1,5 @@
 'use strict'
+const moment = require('moment-timezone')
 const authenticatedTransaction = require('../utilities/authenticatedTransaction')
 const escapeForLike = require('../utilities/escapeForLike')
 const crypto = require('./crypto')
@@ -163,6 +164,15 @@ function authenticatedUpdate(authUser, trx, id, newUser) {
                   else
                     throw new ValidationError('The avatar must be a valid PNG, JPEG, or BMP image.')
                 })
+            }
+          }
+        ],
+        timeZone: [
+          val => {
+            if (val !== undefined) {
+              vf.notNull('The time zone is required.')(val)
+              if (moment.tz.zone(val) === null)
+                throw new ValidationError('The time zone was invalid.')
             }
           }
         ]

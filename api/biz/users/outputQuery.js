@@ -5,6 +5,7 @@ const publicReadableAttributes = [
   'id',
   'givenName',
   'familyName',
+  'timeZone',
   'active',
   'authorisedToBlog'
 ]
@@ -12,6 +13,7 @@ const selfReadableAttributes = [
   'id',
   'givenName',
   'familyName',
+  'timeZone',
   'active',
   'authorisedToBlog',
   'emailAddress'
@@ -20,6 +22,7 @@ const adminReadableAttributes = [
   'id',
   'givenName',
   'familyName',
+  'timeZone',
   'active',
   'authorisedToBlog',
   'emailAddress',
