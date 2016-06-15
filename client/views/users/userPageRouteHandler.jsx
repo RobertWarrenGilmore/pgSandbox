@@ -14,6 +14,7 @@ const vf = validate.funcs
 const ValidationError = validate.ValidationError
 const Jimp = require('jimp')
 const Buffer = require('buffer/').Buffer
+const moment = require('moment-timezone')
 
 
 class UserPage extends React.Component {
@@ -150,6 +151,14 @@ class UserPage extends React.Component {
           if (val !== user.password) {
             throw new ValidationError('The passwords must match.')
           }
+        }
+      ],
+      timeZone: [
+        val => {
+          vf.notUndefined('The time zone is required.')(val)
+          vf.notNull('The time zone is required.')(val)
+          if (moment.tz.zone(val) === null)
+            throw new ValidationError('The time zone was invalid.')
         }
       ],
       admin: [

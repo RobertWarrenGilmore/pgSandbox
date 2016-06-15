@@ -6,6 +6,7 @@ const BusyIndicator = require('../busyIndicator.jsx')
 const ErrorMessage = require('../errorMessage.jsx')
 const Avatar = require('./avatar.jsx')
 const FileInput = require('../fileInput.jsx')
+const TimeZonePicker = require('../timeZonePicker.jsx')
 
 const UserEditor = props => {
 
@@ -130,6 +131,14 @@ const UserEditor = props => {
           {fieldErrorMessage('repeatPassword')}
         </label>
       </div>
+      <label>
+        time zone
+        <TimeZonePicker
+          value={user.timeZone}
+          onChange={value => _onChangeText('timeZone')({target: {value}})}
+          />
+        {fieldErrorMessage('timeZone')}
+      </label>
       {adminMode ? (
           <div>
           <label>
