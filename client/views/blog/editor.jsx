@@ -3,38 +3,36 @@ const React = require('react')
 const Modal = require('../modal.jsx')
 const BusyIndicator = require('../busyIndicator.jsx')
 const appInfo = require('../../../appInfo.json')
+const update = require('react-addons-update')
+const DateTimePicker = require('../dateTimePicker.jsx')
 
 class BlogEditor extends React.Component {
+  static defaultProps = {
+    post: null,
+    error: null,
+    exists: true,
+    disabled: false,
+    onChange: () => {},
+    onDelete: () => {},
+    onSave: () => {},
+    onRevert: () => {},
+    authors: null,
+    appTimeZone: null
+  }
+  state = {
+    confirmingDelete: false
+  };
   constructor(props) {
     super(props)
-    this.state = {
-      confirmingDelete: false
-    }
-    this._onChange = this._onChange.bind(this)
+    this._onChangeField = this._onChangeField.bind(this)
     this._onConfirmDelete = this._onConfirmDelete.bind(this)
     this._onCancelDelete = this._onCancelDelete.bind(this)
     this._onDelete = this._onDelete.bind(this)
   }
-  _onChange() {
-    let author
-    for (let i in this.props.authors) {
-      if (this.props.authors[i].id == this.refs.author.value) {
-        author = this.props.authors[i]
-        break
-      }
-    }
-    if (!author) {
-      author = this.props.post.author
-    }
-    this.props.onChange({
-      id: this.refs.id.value,
-      title: this.refs.title.value,
-      preview: this.refs.preview.value ? this.refs.preview.value : null,
-      body: this.refs.body.value || '',
-      active: this.refs.active.checked,
-      postedTime: this.refs.postedTime.value,
-      author
-    })
+  _onChangeField(fieldName) {
+    return value => this.props.onChange(update(this.props.post, {
+      [fieldName]: {$set: value}
+    }))
   }
   _onConfirmDelete() {
     this.setState({
@@ -53,11 +51,30 @@ class BlogEditor extends React.Component {
     this.props.onDelete()
   }
   render() {
-    const post = this.props.post
+    const {
+      props: {
+        post,
+        disabled,
+        authors,
+        error,
+        busy,
+        exists,
+        timeZone,
+        onSave,
+        onRevert
+      },
+      state: {
+        confirmingDelete
+      },
+      _onDelete,
+      _onCancelDelete,
+      _onConfirmDelete,
+      _onChangeField
+    } = this
     const previewFromBody = post.body.split(/(\r?\n){2,}/)[0].trim()
     return (
       <div className='editor'>
-        {this.state.confirmingDelete ? (
+        {confirmingDelete ? (
           <Modal>
             <p>
               Are you sure that you want to delete the post?
@@ -65,15 +82,15 @@ class BlogEditor extends React.Component {
             <div className='actions'>
               <button
                 className='highlighted'
-                disabled={this.props.disabled}
-                onClick={this._onDelete}>
+                disabled={disabled}
+                onClick={_onDelete}>
                 <span className='icon-bin'/>
                 &nbsp;
                 delete
               </button>
               <button
-                disabled={this.props.disabled}
-                onClick={this._onCancelDelete}>
+                disabled={disabled}
+                onClick={_onCancelDelete}>
                 <span className='icon-cancel-circle'/>
                 &nbsp;
                 cancel
@@ -89,19 +106,19 @@ class BlogEditor extends React.Component {
             <input
               type='text'
               className='id'
-              ref='id'
               value={post.id}
-              disabled={this.props.disabled}
-              onChange={this._onChange}/>
+              disabled={disabled}
+              onChange={({target: value}) => _onChangeField('id')(value)}
+              />
           </div>
         </label>
         <label title='An unpublished post is visible only to admins and its author. A published post is visible to the public.'>
           <input
             type='checkbox'
-            ref='active'
             checked={post.active}
-            disabled={this.props.disabled}
-            onChange={this._onChange}/>
+            disabled={disabled}
+            onChange={({target: checked}) => _onChangeField('active')(checked)}
+            />
           published
         </label>
         <p className='info'>
@@ -112,21 +129,21 @@ class BlogEditor extends React.Component {
           <h1>
             <input
               type='text'
-              ref='title'
               value={post.title}
-              disabled={this.props.disabled}
-              onChange={this._onChange}/>
+              disabled={disabled}
+              onChange={({target: value}) => _onChangeField('title')(value)}
+              />
           </h1>
         </label>
-        {this.props.authors ? (
+        {authors ? (
           <label>
             author
             <select
-              ref='author'
               value={post.author.id}
-              disabled={this.props.disabled}
-              onChange={this._onChange}>
-              {this.props.authors.map((author) => (
+              disabled={disabled}
+              onChange={({target: value}) => _onChangeField('author')({id: value})}
+              >
+              {authors.map((author) => (
                 <option value={author.id} key={'author_option_' + author.id}>
                     {((author.givenName || '') + ' ' + (author.familyName || '')).trim()}
                 </option>
@@ -135,24 +152,28 @@ class BlogEditor extends React.Component {
           </label>
         ) : null}
         <label>
-          date (yyyy-mm-dd)
-          <input
-            type='text'
-            ref='postedTime'
-            value={post.postedTime.substring(0,10)}
-            disabled={this.props.disabled}
-            onChange={this._onChange}/>
+          date and time
+          <DateTimePicker
+            value={post.postedTime}
+            timeZone={timeZone}
+            disabled={disabled}
+            precision='minute'
+            onChange={(value) => {
+              _onChangeField('timeZone')(timeZone)
+              _onChangeField('postedTime')(value)
+            }}
+            />
         </label>
         <label>
           preview
           <textarea
             className='preview'
-            ref='preview'
             placeholder={'The preview is shown instead of the body when the post is in a list of posts. It defaults to the first paragraph of the body:\n\n'
               + previewFromBody}
             value={post.preview}
-            disabled={this.props.disabled}
-            onChange={this._onChange}/>
+            disabled={disabled}
+            onChange={({target: value}) => _onChangeField('preview')(value)}
+            />
         </label>
         <label>
           body
@@ -160,16 +181,17 @@ class BlogEditor extends React.Component {
             className='body'
             ref='body'
             value={post.body}
-            disabled={this.props.disabled}
-            onChange={this._onChange}/>
+            disabled={disabled}
+            onChange={({target: value}) => _onChangeField('body')(value)}
+            />
         </label>
-        {this.props.error
+        {error
           ? (
             <p className='error'>
-              {this.props.error}
+              {error}
             </p>
           ) : null}
-        {this.props.busy
+        {busy
           ? (
             <div>
               <BusyIndicator/>
@@ -179,20 +201,22 @@ class BlogEditor extends React.Component {
         <div className='actions'>
           <button
             id='save'
-            disabled={this.props.disabled}
-            onClick={this.props.onSave}
-            className='highlighted'>
+            disabled={disabled}
+            onClick={onSave}
+            className='highlighted'
+            >
             <span className='icon-floppy-disk'/>
             &nbsp;
             save
           </button>
           {
-            this.props.exists ? [
+            exists ? [
               <button
                 id='revert'
                 key='revert'
-                disabled={this.props.disabled}
-                onClick={this.props.onRevert}>
+                disabled={disabled}
+                onClick={onRevert}
+                >
                 <span className='icon-undo2'/>
                 &nbsp;
                 revert
@@ -200,8 +224,9 @@ class BlogEditor extends React.Component {
               <button
                 id='delete'
                 key='delete'
-                disabled={this.props.disabled}
-                onClick={this._onConfirmDelete}>
+                disabled={disabled}
+                onClick={_onConfirmDelete}
+                >
                 <span className='icon-bin'/>
                 &nbsp;
                 delete
@@ -212,17 +237,6 @@ class BlogEditor extends React.Component {
       </div>
     )
   }
-}
-BlogEditor.defaultProps = {
-  post: null,
-  error: null,
-  exists: true,
-  disabled: false,
-  onChange: () => {},
-  onDelete: () => {},
-  onSave: () => {},
-  onRevert: () => {},
-  authors: null
 }
 
 module.exports = BlogEditor

@@ -1,4 +1,5 @@
 'use strict'
+const moment = require('moment-timezone')
 const { handleActions } = require('redux-actions')
 const types = require('./types')
 
@@ -14,7 +15,7 @@ const reducer = handleActions({
     } = action.payload
     return state.merge({
       avatarUpdatedTimes: state.avatarUpdatedTimes.merge({
-        [id]: new Date().getTime()
+        [id]: moment().valueOf()
       })
     })
   },

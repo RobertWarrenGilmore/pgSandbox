@@ -12,6 +12,7 @@ var ConflictingEditError = require('../../../api/errors/conflictingEditError')
 var NoSuchResourceError = require('../../../api/errors/noSuchResourceError')
 var validate = require('../../../utilities/validate')
 var ValidationError = validate.ValidationError
+const moment = require('moment-timezone')
 
 describe('blog posts', function () {
   var emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
@@ -30,7 +31,8 @@ describe('blog posts', function () {
     'Pellentesque in risus quis mi egestas tempus. Vestibulum ex mi, aliquet sit amet dui eu, viverra tristique libero. Aliquam erat volutpat. Donec pharetra semper ex, in finibus nisi lobortis vitae. Nam quis arcu mi. Donec gravida iaculis ultricies. Ut vitae enim sit amet velit ornare consectetur sit amet eget mi. Sed eleifend, nunc rhoncus lacinia placerat, ante enim convallis magna, eu vehicula erat dolor posuere dui.\n\n' +
     'Nullam rhoncus justo quis tellus pulvinar, vel interdum nibh rhoncus. Cras ultrices tempor purus vel mollis. Fusce eget massa aliquam, feugiat orci eget, facilisis tellus. Aenean vel ligula odio. Praesent vel nunc ac purus auctor dapibus vel et ligula. Morbi tristique libero et est cursus suscipit. Ut facilisis sapien neque, et ultrices eros luctus nec. Curabitur placerat dolor eget nibh gravida commodo. Phasellus et blandit sem.'
   var preview = 'This is a very short preview for a long post.'
-  var postedTime = new Date()
+  var postedTime = moment()
+  const timeZone = 'Europe/Moscow'
 
   beforeEach('Create an author.', function () {
     return knex.into('users').insert({
@@ -74,9 +76,10 @@ describe('blog posts', function () {
           postId: id
         },
         body: {
-          title: title,
-          body: body,
-          postedTime: postedTime,
+          title,
+          body,
+          postedTime,
+          timeZone,
           author: {
             id: authorId
           }
@@ -99,10 +102,12 @@ describe('blog posts', function () {
           postId: id
         },
         body: {
-          title: title,
-          body: body,
-          preview: preview,
-          postedTime: postedTime,
+          title,
+          body,
+          preview,
+          postedTime,
+          timeZone,
+          active: true,
           author: {
             id: authorId
           }
@@ -112,6 +117,47 @@ describe('blog posts', function () {
       }).then(function (posts) {
         createdIds.push(id)
         assert(posts[0], 'No post was created.')
+      })
+    })
+
+    it('should return the proper contents', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: id
+        },
+        body: {
+          title,
+          body,
+          preview,
+          postedTime: postedTime.valueOf(),
+          timeZone,
+          active: true,
+          author: {
+            id: authorId
+          }
+        }
+      }).then(function (post) {
+        createdIds.push(id)
+        assert(!(post instanceof Array), 'An array was returned instead of a single post.')
+        assert.deepStrictEqual(post, {
+          id,
+          title,
+          body,
+          postedTime: postedTime.valueOf(),
+          timeZone,
+          author: {
+            id: authorId,
+            givenName: givenName,
+            familyName: familyName,
+            active: true
+          },
+          active: true,
+          preview: preview
+        }, 'The returned post was incorrect.')
       })
     })
 
@@ -125,9 +171,10 @@ describe('blog posts', function () {
           postId: id
         },
         body: {
-          title: title,
-          body: body,
-          postedTime: postedTime,
+          title,
+          body,
+          postedTime,
+          timeZone,
           author: {
             id: authorId
           }
@@ -146,9 +193,10 @@ describe('blog posts', function () {
           postId: id
         },
         body: {
-          title: title,
-          body: body,
-          postedTime: postedTime,
+          title,
+          body,
+          postedTime,
+          timeZone,
           author: {
             id: authorId
           }
@@ -171,9 +219,10 @@ describe('blog posts', function () {
           postId: 'This_id_does_not_start_with_a_date'
         },
         body: {
-          title: title,
-          body: body,
-          postedTime: postedTime,
+          title,
+          body,
+          postedTime,
+          timeZone,
           author: {
             id: authorId
           }
@@ -202,9 +251,10 @@ describe('blog posts', function () {
           postId: id
         },
         body: {
-          title: title,
-          body: body,
-          postedTime: new Date('the third of October in the year twenty fifteen'),
+          title,
+          body,
+          postedTime: 'the third of October in the year twenty fifteen',
+          timeZone,
           author: {
             id: authorId
           }
@@ -223,6 +273,38 @@ describe('blog posts', function () {
       })
     })
 
+    it('should fail with a poorly formatted time zone', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: id
+        },
+        body: {
+          title,
+          body,
+          postedTime,
+          timeZone: 'over yonder past the river',
+          author: {
+            id: authorId
+          }
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
+      }).then(function (posts) {
+        createdIds.push(posts[0].id)
+        assert(false, 'The creation succeeded.')
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.timeZone
+          || err.messages.timeZone.length !== 1) {
+          throw err
+        }
+      })
+    })
+
     it('should reject silly attributes', function () {
       return BlogPost.create({
         auth: {
@@ -233,9 +315,10 @@ describe('blog posts', function () {
           postId: id
         },
         body: {
-          title: title,
-          body: body,
-          postedTime: postedTime,
+          title,
+          body,
+          postedTime,
+          timeZone,
           author: {
             id: authorId
           },
@@ -273,9 +356,10 @@ describe('blog posts', function () {
             postId: id
           },
           body: {
-            title: title,
-            body: body,
-            postedTime: postedTime,
+            title,
+            body,
+            postedTime,
+            timeZone,
             author: {
               id: authorId
             }
@@ -296,9 +380,10 @@ describe('blog posts', function () {
           password: password
         },
         body: {
-          title: title,
-          body: body,
-          postedTime: postedTime,
+          title,
+          body,
+          postedTime,
+          timeZone,
           author: {
             id: authorId
           }
@@ -327,8 +412,9 @@ describe('blog posts', function () {
           postId: id
         },
         body: {
-          title: title,
-          postedTime: postedTime,
+          title,
+          postedTime,
+          timeZone,
           author: {
             id: authorId
           }
@@ -357,8 +443,9 @@ describe('blog posts', function () {
           postId: id
         },
         body: {
-          body: body,
-          postedTime: postedTime,
+          body,
+          postedTime,
+          timeZone,
           author: {
             id: authorId
           }
@@ -387,8 +474,9 @@ describe('blog posts', function () {
           postId: id
         },
         body: {
-          title: title,
-          body: body,
+          title,
+          body,
+          timeZone,
           author: {
             id: authorId
           }
@@ -407,6 +495,37 @@ describe('blog posts', function () {
       })
     })
 
+    it('should fail if the timeZone is omitted', function () {
+      return BlogPost.create({
+        auth: {
+          emailAddress: emailAddress,
+          password: password
+        },
+        params: {
+          postId: id
+        },
+        body: {
+          title: title,
+          body: body,
+          postedTime,
+          author: {
+            id: authorId
+          }
+        }
+      }).then(function (post) {
+        return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
+      }).then(function (posts) {
+        createdIds.push(posts[0].id)
+        assert(false, 'The creation succeeded.')
+      }).catch(ValidationError, function (err) {
+        if (Object.keys(err.messages).length !== 1
+          || !err.messages.timeZone
+          || err.messages.timeZone.length !== 1) {
+          throw err
+        }
+      })
+    })
+
     it('should fail if the author is omitted', function () {
       return BlogPost.create({
         auth: {
@@ -419,7 +538,8 @@ describe('blog posts', function () {
         body: {
           title: title,
           body: body,
-          postedTime: postedTime
+          postedTime: postedTime,
+          timeZone
         }
       }).then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
@@ -448,6 +568,7 @@ describe('blog posts', function () {
           title: title,
           body: body,
           postedTime: postedTime,
+          timeZone,
           author: {}
         }
       }).then(function (post) {
@@ -478,6 +599,7 @@ describe('blog posts', function () {
           title: title,
           body: body,
           postedTime: postedTime,
+          timeZone,
           author: {
             id: authorId,
             givenName: 'George'
@@ -511,6 +633,7 @@ describe('blog posts', function () {
           title: title,
           body: body,
           postedTime: postedTime,
+          timeZone,
           author: {
             id: authorId + 1
           }
@@ -524,7 +647,7 @@ describe('blog posts', function () {
         if (Object.keys(err.messages).length !== 1
           || !err.messages.author
           || Object.keys(err.messages.author).length !== 1
-          || err.messages.author.id.length !== 2) {
+          || err.messages.author.id.length !== 1) {
           throw err
         }
       })
@@ -555,6 +678,7 @@ describe('blog posts', function () {
               title: title,
               body: body,
               postedTime: postedTime,
+              timeZone,
               author: {
                 id: otherAuthorId
               }
@@ -619,27 +743,31 @@ describe('blog posts', function () {
     beforeEach('Create the searchable posts.', function () {
       searchablePosts = [{
         id: id + 'a',
-        title: title,
-        body: body,
-        postedTime: new Date(postedTime.getTime()+(4*1000*60*60*24)),
+        title,
+        body,
+        postedTime: postedTime.clone().add(4, 'days'),
+        timeZone,
         author: authorId
       }, {
         id: id + 'b',
-        title: title,
-        body: body,
-        postedTime: new Date(postedTime.getTime()+(3*1000*60*60*24)),
+        title,
+        body,
+        postedTime: postedTime.clone().add(3, 'days'),
+        timeZone,
         author: authorId
       }, {
         id: id + 'c',
-        title: title,
-        body: body,
-        postedTime: new Date(postedTime.getTime()+(2*1000*60*60*24)),
+        title,
+        body,
+        postedTime: postedTime.clone().add(2, 'days'),
+        timeZone,
         author: authorId
       }, {
         id: id + 'd',
-        title: title,
-        body: body,
-        postedTime: new Date(postedTime.getTime()+(1*1000*60*60*24)),
+        title,
+        body,
+        postedTime: postedTime.clone().add(1, 'days'),
+        timeZone,
         author: authorId
       }]
       return knex.into('blogPosts').insert(searchablePosts).returning('id')
@@ -671,7 +799,8 @@ describe('blog posts', function () {
           id: exp.id,
           title: exp.title,
           body: exp.body,
-          postedTime: exp.postedTime.toISOString(),
+          postedTime: exp.postedTime.valueOf(),
+          timeZone,
           author: {
             id: authorId,
             givenName: givenName,
@@ -784,7 +913,7 @@ describe('blog posts', function () {
           assert(!(post instanceof Array), 'An array was returned instead of a single post.')
           assert.strictEqual(post.title, searchablePosts[0].title, 'The wrong title was returned.')
           assert.strictEqual(post.body, searchablePosts[0].body, 'The wrong body was returned.')
-          assert.strictEqual(post.postedTime, searchablePosts[0].postedTime.toISOString(), 'The wrong posted time was returned.')
+          assert(searchablePosts[0].postedTime.isSame(post.postedTime), 'The wrong posted time was returned.')
           assert.strictEqual(post.active, false, 'The post was active.')
           assert.strictEqual(post.author.id, searchablePosts[0].author, 'The post did not have the right author.')
         })
@@ -830,7 +959,7 @@ describe('blog posts', function () {
           assert(!(post instanceof Array), 'An array was returned instead of a single post.')
           assert.strictEqual(post.title, searchablePosts[0].title, 'The wrong title was returned.')
           assert.strictEqual(post.body, searchablePosts[0].body, 'The wrong body was returned.')
-          assert.strictEqual(post.postedTime, searchablePosts[0].postedTime.toISOString(), 'The wrong posted time was returned.')
+          assert(searchablePosts[0].postedTime.isSame(post.postedTime), 'The wrong posted time was returned.')
           assert.strictEqual(post.active, false, 'The post was active.')
           assert.strictEqual(post.author.id, searchablePosts[0].author, 'The post did not have the right author.')
         }).finally(function () {
@@ -861,7 +990,8 @@ describe('blog posts', function () {
             id: exp.id,
             title: exp.title,
             body: exp.body,
-            postedTime: exp.postedTime.toISOString(),
+            postedTime: exp.postedTime.valueOf(),
+            timeZone,
             author: {
               id: authorId,
               givenName: givenName,
@@ -1301,7 +1431,7 @@ describe('blog posts', function () {
     })
 
     it('should be able to change the posted time', function () {
-      var modifiedPostedTime = new Date(postedTime.getTime() + (1000 * 60 * 60 * 24)) // add one day
+      var modifiedPostedTime = postedTime.clone().add(1, 'day')
       return BlogPost.update({
         auth: {
           emailAddress: emailAddress,
@@ -1314,12 +1444,12 @@ describe('blog posts', function () {
           postedTime: modifiedPostedTime
         }
       }).then(function (post) {
-        assert.strictEqual(post.postedTime.getTime(), modifiedPostedTime.getTime(), 'The posted time was not modified correctly.')
+        assert(modifiedPostedTime.isSame(post.postedTime), 'The wrong posted time was returned.')
       })
     })
 
-    it('should be able to set the posted time to a string representing a good date', function () {
-      var dateString = postedTime.toISOString()
+    it('should be able to set the posted time to a number string', function () {
+      var modifiedPostedTime = postedTime.clone().add(1, 'day')
       return BlogPost.update({
         auth: {
           emailAddress: emailAddress,
@@ -1329,10 +1459,10 @@ describe('blog posts', function () {
           postId: createdIds[0]
         },
         body: {
-          postedTime: dateString
+          postedTime: modifiedPostedTime
         }
       }).then(function (post) {
-        assert.strictEqual(post.postedTime.getTime(), postedTime.getTime(), 'The posted time was not modified correctly.')
+        assert(modifiedPostedTime.isSame(post.postedTime), 'The wrong posted time was returned.')
       })
     })
 
@@ -1359,7 +1489,8 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail to set the posted time to a nonsense string', function () {
+    it('should fail to set the posted time to a formatted date string', function () {
+      var dateString = postedTime.toString()
       return BlogPost.update({
         auth: {
           emailAddress: emailAddress,
@@ -1369,7 +1500,7 @@ describe('blog posts', function () {
           postId: createdIds[0]
         },
         body: {
-          postedTime: 'This string is not a date.'
+          postedTime: dateString
         }
       }).then(function (post) {
         assert(false, 'The postedTime was set to ' + post.postedTime + '.')

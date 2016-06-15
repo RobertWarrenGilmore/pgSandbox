@@ -7,6 +7,7 @@ const authTypes = require('../auth/types')
 const handleError = require('../handleError')
 
 const setAuthCredentials = createActionCreator(authTypes.SET_AUTH_CREDENTIALS)
+const { setTimeZone } = require('../timeZone/actions')
 
 // private action creators
 const cacheUsers = createActionCreator(types.CACHE_USERS)
@@ -31,6 +32,7 @@ const creators = {
   save(user, id) {
     return dispatch => {
       const authCredentials = store.getState().auth.credentials
+      const authUserId = store.getState().auth.id
       if (typeof user.passwordResetKey === 'string') {
         user = {
           password: user.password,
@@ -59,6 +61,8 @@ const creators = {
               dispatch(updateAvatar({
                 id
               }))
+            if (user.timeZone && id == authUserId)
+              dispatch(setTimeZone(user.timeZone.toString()))
           }
           if (id == store.getState().auth.id) {
             dispatch(setAuthCredentials({

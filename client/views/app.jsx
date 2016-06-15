@@ -6,13 +6,25 @@ const classnames = require('classnames')
 const { connect } = require('react-redux')
 const Helmet = require('react-helmet')
 const Avatar = require('./users/avatar.jsx')
+const TimeZonePicker = require('./timeZonePicker.jsx')
+const { setTimeZone: setTimeZoneAction } = require('../flux/timeZone/actions')
 
 class App extends React.Component {
+  static propTypes = {
+    authUser: React.PropTypes.object,
+    timeZone: React.PropTypes.string.isRequired,
+    setTimeZone: React.PropTypes.func.isRequired
+  };
+  static defaultProps = {
+    authUser: undefined,
+    timeZone: undefined,
+    setTimeZone: undefined
+  };
+  state = {
+    hamburgerExpanded: false
+  };
   constructor(props) {
     super(props)
-    this.state = {
-      hamburgerExpanded: false
-    }
     this._onHamburgerClick = this._onHamburgerClick.bind(this)
     this._onNavClick = this._onNavClick.bind(this)
   }
@@ -27,14 +39,28 @@ class App extends React.Component {
     })
   }
   render() {
+    const {
+      props: {
+        authUser,
+        timeZone,
+        setTimeZone,
+        children
+      },
+      state: {
+        hamburgerExpanded
+      },
+      _onHamburgerClick,
+      _onNavClick
+    } = this
     let headerNavClasses = classnames({
-      hamburgerExpanded: this.state.hamburgerExpanded
+      hamburgerExpanded
     })
     let result = (
       <div>
         <Helmet
           title='home'
-          titleTemplate={appInfo.name + ' - %s'}/>
+          titleTemplate={appInfo.name + ' - %s'}
+          />
         <header>
           <Link to='/'>
             <h1>
@@ -42,22 +68,22 @@ class App extends React.Component {
             </h1>
           </Link>
           <nav className={headerNavClasses}>
-            <div className='hamburgerButton' onClick={this._onHamburgerClick}>
+            <div className='hamburgerButton' onClick={_onHamburgerClick}>
               ≡
             </div>
-            <IndexLink activeClassName='active' to='/' onClick={this._onNavClick}>
+            <IndexLink activeClassName='active' to='/' onClick={_onNavClick}>
               home
             </IndexLink>
-            <Link activeClassName='active' to='/users' onClick={this._onNavClick}>
+            <Link activeClassName='active' to='/users' onClick={_onNavClick}>
               users
             </Link>
-            <Link activeClassName='active' to='/blog' onClick={this._onNavClick}>
+            <Link activeClassName='active' to='/blog' onClick={_onNavClick}>
               blog
             </Link>
             <div className='spacer'></div>
             {this.props.authUser
               ? (
-                <Link activeClassName='active' to='/logOut' onClick={this._onNavClick}>
+                <Link activeClassName='active' to='/logOut' onClick={_onNavClick}>
                   log out
                 </Link>
               )
@@ -72,16 +98,23 @@ class App extends React.Component {
           </nav>
         </header>
         <main>
-          {this.props.authUser ? (
+          {authUser ? (
             <div id='authIndicator'>
-              <Link to={'/users/' + this.props.authUser.id}>
-                <Avatar id={this.props.authUser.id}/>
+              {(authUser && authUser.admin) ? (
+                <TimeZonePicker
+                  value={timeZone}
+                  onChange={setTimeZone}
+                  title='admin time zone view'
+                  />
+              ) : null}
+              <Link to={'/users/' + authUser.id}>
+                <Avatar id={authUser.id}/>
                 &nbsp;
-                {this.props.authUser.givenName} {this.props.authUser.familyName}
+                {authUser.givenName} {authUser.familyName}
               </Link>
             </div>
           ) : null}
-          {this.props.children}
+          {children}
         </main>
         <footer>
         </footer>
@@ -90,24 +123,24 @@ class App extends React.Component {
     return result
   }
 }
-App.propTypes = {
-  authUser: React.PropTypes.object
-}
-App.defaultProps = {
-  authUser: null
-}
 
 const wrapped = connect(
   function mapStateToProps(state) {
+    state = state.asMutable({deep: true})
     let authUser
     if (state.auth.id && state.users.cache) {
       authUser = state.users.cache[state.auth.id]
     }
     return {
-      authUser
+      authUser,
+      timeZone: state.timeZone
     }
   },
-  null
+  function mapDispatchToProps(dispatch) {
+    return {
+      setTimeZone: (timeZone) => dispatch(setTimeZoneAction(timeZone))
+    }
+  }
 )(App)
 
 module.exports = wrapped

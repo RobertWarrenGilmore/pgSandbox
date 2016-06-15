@@ -1,7 +1,6 @@
 'use strict'
 const authenticatedTransaction = require('./utilities/authenticatedTransaction')
 const AuthenticationError = require('../errors/authenticationError')
-const Promise = require('bluebird')
 
 module.exports = knex => ({
 

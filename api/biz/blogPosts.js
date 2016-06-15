@@ -1,5 +1,6 @@
 'use strict'
 const _ = require('lodash')
+const moment = require('moment-timezone')
 const AuthorisationError = require('../errors/authorisationError')
 const NoSuchResourceError = require('../errors/noSuchResourceError')
 const MalformedRequestError = require('../errors/malformedRequestError')
@@ -9,11 +10,12 @@ const authenticatedTransaction = require('./utilities/authenticatedTransaction')
 const validate = require('../../utilities/validate')
 const { funcs: vf, ValidationError } = validate
 
-const transformAuthor = posts =>
+const transformOutput = posts =>
   _.map(posts, post => ({
     id: post.id,
     title: post.title,
-    postedTime: post.postedTime,
+    postedTime: post.postedTime.getTime(),
+    timeZone: post.timeZone,
     body: post.body,
     preview: post.preview,
     active: post.active,
@@ -65,7 +67,7 @@ module.exports = knex => ({
             }
             // Check that the ID starts with an ISO date.
             if (!val.substring(0, 10).match(/^\d\d\d\d\-\d\d\-\d\d$/)
-              || isNaN(new Date(val.substring(0, 10)).getTime())) {
+              || !moment(val.substring(0, 10)).isValid()) {
               throw new ValidationError('The id must begin with a date in the format yyyy-mm-dd.')
             }
           }
@@ -97,11 +99,11 @@ module.exports = knex => ({
                 vf.notUndefined('The author\'s id is required.'),
                 vf.notNull('The author\'s id is required.'),
                 vf.naturalNumber('The author\'s id must be a natural number.'),
-                // Check for existence of the author.
                 val => {
                   if (val === undefined || val === null) {
                     return
                   }
+                  // Check for existence of the author.
                   return trx
                     .from('users')
                     .select(['id'])
@@ -111,15 +113,15 @@ module.exports = knex => ({
                         throw new ValidationError('The given author does not exist.')
                       }
                     })
-                },
-                // Check that the author is the authenticated user or that the authenticated user is an admin.
-                val => {
-                  if (val === undefined || val === null) {
-                    return
-                  }
-                  if (val !== authUser.id && !authUser.admin) {
-                    throw new ValidationError('You cannot set the ownership of a post to someone else.')
-                  }
+                  // Check that the author is the authenticated user or that the authenticated user is an admin.
+                    .then(() => {
+                      if (val !== authUser.id && !authUser.admin) {
+                        throw new ValidationError('You cannot set the ownership of a post to someone else.')
+                      }
+                  // Mutate the author.
+                      args.body.author = val
+                    })
+
                 }
               ]
             })
@@ -131,29 +133,39 @@ module.exports = knex => ({
               if (val === undefined || val === null) {
                 return
               }
-              if (isNaN(new Date(val).getTime())) {
+              vf.naturalNumber('The date must be a dateTime.')(val)
+              if (typeof val === 'string')
+                val = Number.parseInt(val)
+              val = moment(val)
+              if (!val.isValid()) {
                 throw new ValidationError('The date must be a dateTime.')
               }
+              args.body.postedTime = val
+            }
+          ],
+          timeZone: [
+            val => {
+              vf.notUndefined('The time zone is required.')(val)
+              vf.notNull('The time zone is required.')(val)
+              if (moment.tz.zone(val) === null)
+                throw new ValidationError('The time zone was invalid.')
             }
           ],
           active: [
             vf.boolean('The post must be set active or inactive.')
           ]
         })
-      ).then(() => ({
-        id: args.params.postId,
-        title: args.body.title,
-        body: args.body.body,
-        preview: args.body.preview,
-        postedTime: new Date(args.body.postedTime),
-        author: args.body.author.id
-      })).then(newPost =>
-          // Do the insertion.
-        trx
+      )
+      .then(() => {
+        args.body.id = args.params.postId
+
+        // Do the insertion.
+        return trx
           .into('blogPosts')
-          .insert(newPost)
+          .insert(args.body)
           .returning('id')
-      ).then(ids =>
+      })
+      .then(ids =>
         trx
           .from('blogPosts')
           .leftJoin('users', 'users.id', 'blogPosts.author')
@@ -162,6 +174,7 @@ module.exports = knex => ({
             'blogPosts.id',
             'blogPosts.title',
             'blogPosts.postedTime',
+            'blogPosts.timeZone',
             'blogPosts.body',
             'blogPosts.preview',
             'blogPosts.active',
@@ -170,7 +183,7 @@ module.exports = knex => ({
             'users.familyName as authorFamilyName',
             'users.active as authorActive'
           ])
-      ).then(transformAuthor)
+      ).then(transformOutput)
       // Respond with the newly created post.
       .then(rows => rows[0])
 
@@ -190,6 +203,7 @@ module.exports = knex => ({
           'blogPosts.id',
           'blogPosts.title',
           'blogPosts.postedTime',
+          'blogPosts.timeZone',
           'blogPosts.body',
           'blogPosts.preview',
           'blogPosts.active',
@@ -212,7 +226,7 @@ module.exports = knex => ({
         // Read a specific post.
         return query
           .where('blogPosts.id', 'ilike', escapeForLike(args.params.postId))
-          .then(transformAuthor)
+          .then(transformOutput)
           .then(posts => {
             if (!posts.length) {
               throw new NoSuchResourceError()
@@ -248,7 +262,7 @@ module.exports = knex => ({
 
           // The query is finished.
           return query
-        }).then(transformAuthor)
+        }).then(transformOutput)
         // Remove the contents of inactive posts that don't belong to the authenticated user.
         .then(posts =>
           _.map(posts, post => {
@@ -318,7 +332,7 @@ module.exports = knex => ({
                 }
                 // Check that the ID starts with an ISO date.
                 if (!val.substring(0, 10).match(/^\d\d\d\d\-\d\d\-\d\d$/)
-                  || isNaN(new Date(val.substring(0, 10)).getTime())) {
+                  || !moment(val.substring(0, 10), 'YYYY-MM-DD').isValid()) {
                   throw new MalformedRequestError('The id must begin with a date in the format yyyy-mm-dd.')
                 }
               }
@@ -339,17 +353,17 @@ module.exports = knex => ({
               vf.maxLength('The preview must be at most 5,000 characters long', 5000)
             ],
             author: [
-              vf.notNull('The author is cannot be unset.'),
+              vf.notNull('The author cannot be unset.'),
               vf.object('The author must be an object.', {
                 id: [
                   vf.notUndefined('The author\'s id is required.'),
                   vf.notNull('The author\'s id is required.'),
                   vf.naturalNumber('The author\'s id must be a natural number.'),
-                  // Check for existence of the author.
                   val => {
                     if (val === undefined || val === null) {
                       return
                     }
+                    // Check for existence of the author.
                     return trx
                       .from('users')
                       .select(['id'])
@@ -359,15 +373,15 @@ module.exports = knex => ({
                           throw new ValidationError('The given author does not exist.')
                         }
                       })
-                  },
-                  // Check that the author is the authenticated user or that the authenticated user is an admin.
-                  val => {
-                    if (val === undefined || val === null) {
-                      return
-                    }
-                    if (val !== authUser.id && !authUser.admin) {
-                      throw new ValidationError('You cannot change the ownership of a post to someone else.')
-                    }
+                    // Check that the author is the authenticated user or that the authenticated user is an admin.
+                      .then(() => {
+                        if (val !== authUser.id && !authUser.admin) {
+                          throw new ValidationError('You cannot change the ownership of a post to someone else.')
+                        }
+                    // Mutate the author.
+                        args.body.author = val
+                      })
+
                   }
                 ]
               })
@@ -378,8 +392,22 @@ module.exports = knex => ({
                 if (val === undefined || val === null) {
                   return
                 }
-                if (isNaN(new Date(val).getTime())) {
+                vf.naturalNumber('The date must be a dateTime.')(val)
+                if (typeof val === 'string')
+                  val = Number.parseInt(val)
+                val = moment(val)
+                if (!val.isValid()) {
                   throw new ValidationError('The date must be a dateTime.')
+                }
+                args.body.postedTime = val
+              }
+            ],
+            timeZone: [
+              val => {
+                if (val !== undefined) {
+                  vf.notNull('The time zone cannot be unset.')(val)
+                  if (moment.tz.zone(val) === null)
+                    throw new ValidationError('The time zone was invalid.')
                 }
               }
             ],
@@ -388,24 +416,17 @@ module.exports = knex => ({
               vf.boolean('The post must be set active or inactive.')
             ]
           })
-        }).then(() => {
-          let result = _.cloneDeep(args.body)
-          if (result.postedTime) {
-            result.postedTime = new Date(result.postedTime)
-          }
-          if (result.author && result.author.id) {
-            result.author = result.author.id
-          }
-          return result
+        })
+        .then(() => {
 
         // Do the insertion.
-        }).then(newPost =>
-          trx
+          return trx
             .into('blogPosts')
             .where('id', 'ilike', escapeForLike(args.params.postId))
-            .update(newPost)
+            .update(args.body)
             .returning('id')
-        ).then(ids =>
+        })
+        .then(ids =>
           trx
             .from('blogPosts')
             .leftJoin('users', 'users.id', 'blogPosts.author')
@@ -414,6 +435,7 @@ module.exports = knex => ({
               'blogPosts.id',
               'blogPosts.title',
               'blogPosts.postedTime',
+              'blogPosts.timeZone',
               'blogPosts.body',
               'blogPosts.preview',
               'blogPosts.active',
@@ -422,7 +444,7 @@ module.exports = knex => ({
               'users.familyName as authorFamilyName',
               'users.active as authorActive'
             ])
-        ).then(transformAuthor)
+        ).then(transformOutput)
         // Respond with the updated post.
         .then(posts => posts[0])
     }),

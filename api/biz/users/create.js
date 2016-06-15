@@ -1,8 +1,9 @@
 'use strict'
 const _ = require('lodash')
+const moment = require('moment-timezone')
 const authenticatedTransaction = require('../utilities/authenticatedTransaction')
 const validate = require('../../../utilities/validate')
-const { funcs: vf } = validate
+const { funcs: vf, ValidationError } = validate
 const escapeForLike = require('../utilities/escapeForLike')
 const crypto = require('./crypto')
 const sendPasswordResetEmail = require('./sendPasswordResetEmail')
@@ -43,6 +44,15 @@ module.exports = (knex, emailer) =>
           vf.notUndefined('The last name is required.'),
           vf.string('The last name must be a string.'),
           vf.maxLength('The last name must not be longer than thirty characters.', 30)
+        ],
+        timeZone: [
+          val => {
+            if (val !== undefined) {
+              vf.notNull('The time zone is required.')(val)
+              if (moment.tz.zone(val) === null)
+                throw new ValidationError('The time zone was invalid.')
+            }
+          }
         ]
       })
       .then(() => {

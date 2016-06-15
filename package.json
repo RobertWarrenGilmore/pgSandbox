@@ -1,6 +1,6 @@
 {
   "name": "genericNodeReactApp",
-  "version": "3.0.1",
+  "version": "3.1.0",
   "description": "a simple web app with auth, info pages, a blog, and admins",
   "scripts": {
     "start": "node start.js",
@@ -61,6 +61,7 @@
     "letsencrypt-express": "^1.1.5",
     "lodash": "^3.10.1",
     "marked": "^0.3.5",
+    "moment-timezone": "^0.5.4",
     "node-sass": "^3.4.1",
     "nodemailer": "^1.8.0",
     "nodemailer-sparkpost-transport": "^0.1.0",
@@ -68,6 +69,7 @@
     "qs": "^6.2.0",
     "react": "^15.0.1",
     "react-addons-update": "^15.0.1",
+    "react-datetime": "^2.3.1",
     "react-dom": "^15.0.1",
     "react-helmet": "^2.3.1",
     "react-redux": "^4.1.2",
