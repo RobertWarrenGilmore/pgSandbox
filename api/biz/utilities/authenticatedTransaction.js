@@ -1,7 +1,7 @@
 'use strict'
 const Promise = require('bluebird')
 const AuthenticationError = require('../../errors/authenticationError')
-const bcrypt = Promise.promisifyAll(require('bcrypt-nodejs'))
+const bcrypt = Promise.promisifyAll(require('bcryptjs'))
 const escapeForLike = require('./escapeForLike')
 
 function authenticatedTransaction (knex, auth, callback) {

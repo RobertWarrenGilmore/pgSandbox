@@ -777,10 +777,10 @@
       "from": "basic-auth@>=1.0.3 <2.0.0",
       "resolved": "https://registry.npmjs.org/basic-auth/-/basic-auth-1.0.4.tgz"
     },
-    "bcrypt-nodejs": {
-      "version": "0.0.3",
-      "from": "bcrypt-nodejs@0.0.3",
-      "resolved": "https://registry.npmjs.org/bcrypt-nodejs/-/bcrypt-nodejs-0.0.3.tgz"
+    "bcryptjs": {
+      "version": "2.3.0",
+      "from": "bcryptjs@latest",
+      "resolved": "https://registry.npmjs.org/bcryptjs/-/bcryptjs-2.3.0.tgz"
     },
     "bignumber.js": {
       "version": "2.3.0",
