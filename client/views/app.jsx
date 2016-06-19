@@ -74,27 +74,29 @@ class App extends React.Component {
             <IndexLink activeClassName='active' to='/' onClick={_onNavClick}>
               home
             </IndexLink>
-            <Link activeClassName='active' to='/users' onClick={_onNavClick}>
-              users
-            </Link>
+            {this.props.authUser ? (
+              <Link activeClassName='active' to='/users' onClick={_onNavClick}>
+                users
+              </Link>
+            ) : (
+              null
+            )}
             <Link activeClassName='active' to='/blog' onClick={_onNavClick}>
               blog
             </Link>
             <div className='spacer'></div>
-            {this.props.authUser
-              ? (
-                <Link activeClassName='active' to='/logOut' onClick={_onNavClick}>
-                  log out
-                </Link>
-              )
-              : ([
-                <Link activeClassName='active' key='navLogIn' to='/logIn' onClick={this._onNavClick}>
-                  log in
-                </Link>,
-                <Link activeClassName='active' key='navRegister' to='/register' onClick={this._onNavClick}>
-                  register
-                </Link>
-              ])}
+            {this.props.authUser ? (
+              <Link activeClassName='active' to='/logOut' onClick={_onNavClick}>
+                log out
+              </Link>
+            ) : ([
+              <Link activeClassName='active' key='navLogIn' to='/logIn' onClick={this._onNavClick}>
+                log in
+              </Link>,
+              <Link activeClassName='active' key='navRegister' to='/register' onClick={this._onNavClick}>
+                register
+              </Link>
+            ])}
           </nav>
         </header>
         <main>
