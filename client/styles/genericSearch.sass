@@ -6,7 +6,7 @@
       display: inline-block
       margin: $small-padding
       margin-top: $medium-padding
-      > input:not([type=checkbox]), > select
+      input:not([type=checkbox]):not([type=radio]), select
         display: block
   > .results
     > a
@@ -25,7 +25,8 @@
       border-right: thin solid grey
       > label
         display: block
-        > input:not([type=checkbox]), > select
+
+        input:not([type=checkbox]):not([type=radio]), select
           width: 100%
     // legacy layout
     margin-left: $filter-width
