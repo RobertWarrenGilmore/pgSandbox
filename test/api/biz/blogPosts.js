@@ -1,37 +1,37 @@
 'use strict'
-var assert = require('assert')
-var Promise = require('bluebird')
-var knex = require('../../../api/database/knex')
-var escapeForLike = require('../../../api/biz/utilities/escapeForLike')
-var bcrypt = Promise.promisifyAll(require('bcryptjs'))
-var BlogPost = require('../../../api/biz/blogPosts')(knex)
-var AuthenticationError = require('../../../api/errors/authenticationError')
-var AuthorisationError = require('../../../api/errors/authorisationError')
-var MalformedRequestError = require('../../../api/errors/malformedRequestError')
-var ConflictingEditError = require('../../../api/errors/conflictingEditError')
-var NoSuchResourceError = require('../../../api/errors/noSuchResourceError')
-var validate = require('../../../utilities/validate')
-var ValidationError = validate.ValidationError
+const assert = require('assert')
+const Promise = require('bluebird')
+const knex = require('../../../api/database/knex')
+const escapeForLike = require('../../../api/biz/utilities/escapeForLike')
+const bcrypt = Promise.promisifyAll(require('bcryptjs'))
+const BlogPost = require('../../../api/biz/blogPosts')(knex)
+const AuthenticationError = require('../../../api/errors/authenticationError')
+const AuthorisationError = require('../../../api/errors/authorisationError')
+const MalformedRequestError = require('../../../api/errors/malformedRequestError')
+const ConflictingEditError = require('../../../api/errors/conflictingEditError')
+const NoSuchResourceError = require('../../../api/errors/noSuchResourceError')
+const validate = require('../../../utilities/validate')
+const { ValidationError } = validate
 const moment = require('moment-timezone')
 
 describe('blog posts', function () {
-  var emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
-  var authorId
-  var password = 'taco tuesday'
-  var givenName = 'Victor'
-  var familyName = 'Frankenstein'
-  var passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8))
+  const emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
+  let authorId
+  const password = 'taco tuesday'
+  const givenName = 'Victor'
+  const familyName = 'Frankenstein'
+  const passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8))
 
-  var createdIds = []
-  var id = '2015-12-17_a_test_post_for_the_mocha_test_suite'
-  var title = 'A Test Post for the Mocha Test Suite'
-  var body = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ipsum erat, porttitor vitae bibendum eu, interdum at metus. Etiam fermentum lectus eu leo semper suscipit. Nam pharetra nisl quis nisi ullamcorper viverra. Donec vehicula ac neque a euismod. Duis venenatis, massa ut porttitor gravida, velit arcu porttitor erat, vitae fringilla sapien velit vel urna. Duis vel orci eget ante feugiat molestie eu a felis. Aenean sollicitudin interdum eros, vitae euismod ligula suscipit ac. Proin nec libero lacus. Aenean libero justo, placerat sed nisl vel, sollicitudin pellentesque erat. Morbi rhoncus risus et dolor auctor posuere. Nam aliquam, eros in vulputate euismod, purus odio mollis velit, ut tincidunt eros elit eu ex. Donec libero lorem, suscipit non augue nec, vulputate sodales dui. Sed semper felis a augue imperdiet eleifend. Proin semper viverra eleifend. Morbi vehicula pretium eros, sit amet hendrerit enim posuere sed. Nam venenatis malesuada purus ut pulvinar.\n\n' +
+  const createdIds = []
+  const id = '2015-12-17_a_test_post_for_the_mocha_test_suite'
+  const title = 'A Test Post for the Mocha Test Suite'
+  const body = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque ipsum erat, porttitor vitae bibendum eu, interdum at metus. Etiam fermentum lectus eu leo semper suscipit. Nam pharetra nisl quis nisi ullamcorper viverra. Donec vehicula ac neque a euismod. Duis venenatis, massa ut porttitor gravida, velit arcu porttitor erat, vitae fringilla sapien velit vel urna. Duis vel orci eget ante feugiat molestie eu a felis. Aenean sollicitudin interdum eros, vitae euismod ligula suscipit ac. Proin nec libero lacus. Aenean libero justo, placerat sed nisl vel, sollicitudin pellentesque erat. Morbi rhoncus risus et dolor auctor posuere. Nam aliquam, eros in vulputate euismod, purus odio mollis velit, ut tincidunt eros elit eu ex. Donec libero lorem, suscipit non augue nec, vulputate sodales dui. Sed semper felis a augue imperdiet eleifend. Proin semper viverra eleifend. Morbi vehicula pretium eros, sit amet hendrerit enim posuere sed. Nam venenatis malesuada purus ut pulvinar.\n\n' +
     'Nulla eu odio accumsan, efficitur mauris vitae, placerat nulla. Mauris nec ornare orci, a pretium orci. Vivamus mollis lorem non diam sagittis, nec rutrum dui tempor. Sed sed convallis libero. Proin mattis quam vel justo ultricies efficitur. Etiam aliquet vitae ex non gravida. Cras eget molestie ipsum. Praesent viverra cursus tempus. Nulla diam tortor, dictum ac ullamcorper id, blandit a odio. Sed fermentum purus eu ipsum suscipit, quis egestas mauris porta. In hac habitasse platea dictumst. Maecenas pharetra nisl ut justo accumsan ornare. Vestibulum massa mi, semper eu ex vel, hendrerit auctor velit.\n\n' +
     'Nulla tempus nisi varius, lacinia tortor id, dapibus quam. Phasellus venenatis eu dolor et dapibus. Nunc placerat porta enim sed fringilla. Suspendisse vel mi quam. Morbi facilisis gravida eros, nec dapibus nulla efficitur vel. Ut quam turpis, volutpat ac egestas in, ullamcorper eu velit. Fusce laoreet, elit mattis congue pellentesque, lacus dolor lobortis leo, id malesuada turpis ante id elit. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos.\n\n' +
     'Pellentesque in risus quis mi egestas tempus. Vestibulum ex mi, aliquet sit amet dui eu, viverra tristique libero. Aliquam erat volutpat. Donec pharetra semper ex, in finibus nisi lobortis vitae. Nam quis arcu mi. Donec gravida iaculis ultricies. Ut vitae enim sit amet velit ornare consectetur sit amet eget mi. Sed eleifend, nunc rhoncus lacinia placerat, ante enim convallis magna, eu vehicula erat dolor posuere dui.\n\n' +
     'Nullam rhoncus justo quis tellus pulvinar, vel interdum nibh rhoncus. Cras ultrices tempor purus vel mollis. Fusce eget massa aliquam, feugiat orci eget, facilisis tellus. Aenean vel ligula odio. Praesent vel nunc ac purus auctor dapibus vel et ligula. Morbi tristique libero et est cursus suscipit. Ut facilisis sapien neque, et ultrices eros luctus nec. Curabitur placerat dolor eget nibh gravida commodo. Phasellus et blandit sem.'
-  var preview = 'This is a very short preview for a long post.'
-  var postedTime = moment()
+  const preview = 'This is a very short preview for a long post.'
+  const postedTime = moment()
   const timeZone = 'Europe/Moscow'
 
   beforeEach('Create an author.', function () {
@@ -654,8 +654,8 @@ describe('blog posts', function () {
     })
 
     it('should fail if the author is not the authenticated user', function () {
-      var otherAuthorId
-      var otherAuthorEmailAddress = 'a' + emailAddress
+      let otherAuthorId
+      const otherAuthorEmailAddress = 'a' + emailAddress
       return knex.into('users')
         .insert({
           emailAddress: otherAuthorEmailAddress,
@@ -738,7 +738,7 @@ describe('blog posts', function () {
 
   describe('read', function () {
 
-    var searchablePosts
+    let searchablePosts
 
     beforeEach('Create the searchable posts.', function () {
       searchablePosts = [{
@@ -794,7 +794,7 @@ describe('blog posts', function () {
         }
       }).then(function (post) {
         assert(!(post instanceof Array), 'An array was returned instead of a single post.')
-        var exp = searchablePosts[0]
+        const exp = searchablePosts[0]
         assert.deepStrictEqual(post, {
           id: exp.id,
           title: exp.title,
@@ -846,8 +846,8 @@ describe('blog posts', function () {
     it('should fail to look up the contents of an inactive post that belongs to someone else', function () {
 
       // Create the other author.
-      var otherAuthorId
-      var otherAuthorEmailAddress = 'a' + emailAddress
+      let otherAuthorId
+      const otherAuthorEmailAddress = 'a' + emailAddress
       return knex.into('users')
         .insert({
           emailAddress: otherAuthorEmailAddress,
@@ -922,8 +922,8 @@ describe('blog posts', function () {
     it('should be able to look up the contents of an inactive post of another user as an admin', function () {
 
       // Create the other author.
-      var otherAuthorId
-      var otherAuthorEmailAddress = 'a' + emailAddress
+      let otherAuthorId
+      const otherAuthorEmailAddress = 'a' + emailAddress
       return knex.into('users')
         .insert({
           emailAddress: otherAuthorEmailAddress,
@@ -985,7 +985,7 @@ describe('blog posts', function () {
       it('should return the proper contents', function () {
         return BlogPost.read({}).then(function (posts) {
           assert((posts instanceof Array), 'The result was not an array.')
-          var exp = searchablePosts[0]
+          const exp = searchablePosts[0]
           assert.deepStrictEqual(posts[0], {
             id: exp.id,
             title: exp.title,
@@ -1006,8 +1006,8 @@ describe('blog posts', function () {
 
       it('should see a post list that omits the contents of the inactive posts of others', function () {
         // Create the other author.
-        var otherAuthorId
-        var otherAuthorEmailAddress = 'a' + emailAddress
+        let otherAuthorId
+        const otherAuthorEmailAddress = 'a' + emailAddress
         return knex.into('users')
           .insert({
             emailAddress: otherAuthorEmailAddress,
@@ -1037,9 +1037,9 @@ describe('blog posts', function () {
           // Assert stuff.
           }).then(function (posts) {
             assert.strictEqual(posts.length, searchablePosts.length, 'The list contains the wrong number of posts.')
-            var activeCount = 0
-            for (var i in posts) {
-              var post = posts[i]
+            let activeCount = 0
+            for (let i in posts) {
+              const post = posts[i]
               if (post.active) {
                 ++activeCount
               } else if (post.author.id !== otherAuthorId) {
@@ -1079,9 +1079,9 @@ describe('blog posts', function () {
           // Assert stuff.
           }).then(function (posts) {
             assert.strictEqual(posts.length, searchablePosts.length, 'The list contains the wrong number of posts.')
-            var inactivePostEncountered = false
-            for (var i in posts) {
-              var post = posts[i]
+            let inactivePostEncountered = false
+            for (let i in posts) {
+              const post = posts[i]
               assert.strictEqual(post.author.id, authorId, 'The list contains posts by the wrong author.')
               if (!post.active) {
                 if (post.id === createdIds[0]) {
@@ -1099,8 +1099,8 @@ describe('blog posts', function () {
 
       it('should see a post list that includes the contents of the inactive posts of others as an admin', function () {
         // Create the other author.
-        var otherAuthorId
-        var otherAuthorEmailAddress = 'a' + emailAddress
+        let otherAuthorId
+        const otherAuthorEmailAddress = 'a' + emailAddress
         return knex.into('users')
           .insert({
             emailAddress: otherAuthorEmailAddress,
@@ -1131,9 +1131,9 @@ describe('blog posts', function () {
           // Assert stuff.
           }).then(function (posts) {
             assert.strictEqual(posts.length, searchablePosts.length, 'The list contains the wrong number of posts.')
-            var inactivePostEncountered = false
-            for (var i in posts) {
-              var post = posts[i]
+            let inactivePostEncountered = false
+            for (let i in posts) {
+              const post = posts[i]
               assert.strictEqual(post.author.id, authorId, 'The list contains posts by the wrong author.')
               if (!post.active) {
                 if (post.id === createdIds[0]) {
@@ -1431,7 +1431,7 @@ describe('blog posts', function () {
     })
 
     it('should be able to change the posted time', function () {
-      var modifiedPostedTime = postedTime.clone().add(1, 'day')
+      const modifiedPostedTime = postedTime.clone().add(1, 'day')
       return BlogPost.update({
         auth: {
           emailAddress: emailAddress,
@@ -1449,7 +1449,7 @@ describe('blog posts', function () {
     })
 
     it('should be able to set the posted time to a number string', function () {
-      var modifiedPostedTime = postedTime.clone().add(1, 'day')
+      const modifiedPostedTime = postedTime.clone().add(1, 'day')
       return BlogPost.update({
         auth: {
           emailAddress: emailAddress,
@@ -1490,7 +1490,7 @@ describe('blog posts', function () {
     })
 
     it('should fail to set the posted time to a formatted date string', function () {
-      var dateString = postedTime.toString()
+      const dateString = postedTime.toString()
       return BlogPost.update({
         auth: {
           emailAddress: emailAddress,
@@ -1556,7 +1556,7 @@ describe('blog posts', function () {
     })
 
     it('should fail to set the author to someone else', function () {
-      var otherAuthorId
+      let otherAuthorId
       return knex
         .into('users')
         .insert({
@@ -1619,7 +1619,7 @@ describe('blog posts', function () {
     })
 
     it('should be able to set the author to someone else as an admin', function () {
-      var otherAuthorId
+      let otherAuthorId
       return knex
         .into('users')
         .insert({
@@ -1689,7 +1689,7 @@ describe('blog posts', function () {
     })
 
     it('should fail with someone else\'s auth', function () {
-      var otherAuthorId
+      let otherAuthorId
       return knex
         .into('users')
         .insert({
@@ -1779,7 +1779,7 @@ describe('blog posts', function () {
     })
 
     it('should fail with someone else\'s auth', function () {
-      var otherAuthorId
+      let otherAuthorId
       return knex
         .into('users')
         .insert({
