@@ -19,7 +19,7 @@ class Register extends React.Component {
       return (
         <div className='message'>
           <p>
-            Congratulations! You registered. You'll recieve a confirmation email soon.
+            {`Congratulations! You registered. You'll recieve a confirmation email soon.`}
           </p>
         </div>
       )
