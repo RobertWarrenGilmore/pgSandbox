@@ -30,7 +30,7 @@ function requireAuth(nextState, replaceState) {
   if (!flux.getState().auth.credentials) {
     replaceState({
       nextLocation: nextState.location
-    }, '/login')
+    }, '/logIn')
   }
 }
 
