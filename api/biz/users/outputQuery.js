@@ -39,13 +39,18 @@ module.exports = (authUser, trx, queryModifier) => trx
     if (!authUser || !authUser.admin) {
       qb.where(function () {
         if (authUser) {
+          // Show self even if the following filters hide self.
           this.where('id', authUser.id)
         }
         qb.orWhere(function () {
           this
+            // Hide inactive.
             .where('active', '=', true)
+            // Hide incomplete.
             .whereNotNull('givenName')
             .whereNotNull('familyName')
+            // Hide non-bloggers.
+            .where('authorisedToBlog', '=', true)
         })
       })
     }
