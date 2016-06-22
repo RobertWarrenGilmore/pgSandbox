@@ -1,6 +1,6 @@
 {
   "name": "genericNodeReactApp",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "a simple web app with auth, info pages, a blog, and admins",
   "scripts": {
     "start": "node start.js",
