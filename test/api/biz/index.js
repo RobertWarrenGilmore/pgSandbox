@@ -1,15 +1,15 @@
 'use strict'
-var knex = require('../../../api/database/knex')
+const knex = require('../../../api/database/knex')
 
-describe('biz', function () {
+describe('biz', () => {
 
-  before('Migrate the database to the latest schema.', function () {
-    return knex.migrate.latest()
-  })
+  before('Migrate the database to the latest schema.', () =>
+    knex.migrate.latest()
+  )
 
-  after('Roll back the database.', function () {
-    return knex.migrate.rollback()
-  })
+  after('Roll back the database.', () =>
+    knex.migrate.rollback()
+  )
 
   // a list of all of the biz test modules to run
   require('./users')

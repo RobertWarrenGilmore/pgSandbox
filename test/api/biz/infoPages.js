@@ -1,44 +1,41 @@
 'use strict'
-var _ = require('lodash')
-var assert = require('assert')
-var Promise = require('bluebird')
-var bcrypt = Promise.promisifyAll(require('bcryptjs'))
-var knex = require('../../../api/database/knex')
-var InfoPage = require('../../../api/biz/infoPages')(knex)
-var AuthorisationError = require('../../../api/errors/authorisationError')
-var NoSuchResourceError = require('../../../api/errors/noSuchResourceError')
+const _ = require('lodash')
+const assert = require('assert')
+const Promise = require('bluebird')
+const bcrypt = Promise.promisifyAll(require('bcryptjs'))
+const knex = require('../../../api/database/knex')
+const InfoPage = require('../../../api/biz/infoPages')(knex)
+const AuthorisationError = require('../../../api/errors/authorisationError')
+const NoSuchResourceError = require('../../../api/errors/noSuchResourceError')
 
 
-describe('info pages', function () {
-  var ids = ['home']
-  var badId = 'notARealPage'
-  var body = 'This is the text of a page.'
-  var otherBody = 'This is another bit of text.'
-  var admin = {
+describe('info pages', () => {
+  const ids = ['home']
+  const badId = 'notARealPage'
+  const body = 'This is the text of a page.'
+  const otherBody = 'This is another bit of text.'
+  const admin = {
     emailAddress: 'admin.mocha.test.email.address@not.a.real.domain.com',
     password: 'taco tuesday',
     passwordHash: bcrypt.hashSync('taco tuesday', bcrypt.genSaltSync(8))
   }
-  var notAdmin = {
+  const notAdmin = {
     emailAddress: 'mocha.test.email.address@not.a.real.domain.com',
     password: 'taco tuesday',
     passwordHash: bcrypt.hashSync('taco tuesday', bcrypt.genSaltSync(8))
   }
 
-  beforeEach('Create info pages.', function () {
-    var pages = _.map(ids, function (id) {
-      return {
-        id: id,
-        body: body
-      }
-    })
-    return knex
+  beforeEach('Create info pages.', () =>
+    knex
       .into('infoPages')
-      .insert(pages)
-  })
+      .insert(_.map(ids, id => ({
+        id,
+        body
+      })))
+  )
 
-  beforeEach('Create the users.', function () {
-    return knex
+  beforeEach('Create the users.', () =>
+    knex
       .into('users')
       .insert([
         {
@@ -55,26 +52,26 @@ describe('info pages', function () {
         admin.id = returnedIds[0]
         notAdmin.id = returnedIds[1]
       })
-  })
+  )
 
-  afterEach('Delete the users.', function () {
-    return knex
+  afterEach('Delete the users.', () =>
+    knex
       .from('users')
       .where('id', 'in', [admin.id, notAdmin.id])
       .del()
-  })
+  )
 
-  afterEach('Delete info pages.', function () {
-    return knex
+  afterEach('Delete info pages.', () =>
+    knex
       .from('infoPages')
       .where('id', 'in', ids)
       .del()
-  })
+  )
 
-  describe('read', function () {
+  describe('read', () => {
 
-    it('should be able to read a page anonymously', function () {
-      return InfoPage.read({
+    it('should be able to read a page anonymously', () =>
+      InfoPage.read({
         params: {
           pageId: ids[0]
         }
@@ -84,10 +81,10 @@ describe('info pages', function () {
           body: body
         }, 'The returned page was wrong.')
       })
-    })
+    )
 
-    it('should be able to read a page as an admin user', function () {
-      return InfoPage.read({
+    it('should be able to read a page as an admin user', () =>
+      InfoPage.read({
         params: {
           pageId: ids[0]
         },
@@ -101,10 +98,10 @@ describe('info pages', function () {
           body: body
         }, 'The returned page was wrong.')
       })
-    })
+    )
 
-    it('should be able to read a page as a not admin user', function () {
-      return InfoPage.read({
+    it('should be able to read a page as a not admin user', () =>
+      InfoPage.read({
         params: {
           pageId: ids[0]
         },
@@ -118,24 +115,24 @@ describe('info pages', function () {
           body: body
         }, 'The returned page was wrong.')
       })
-    })
+    )
 
-    it('should fail to read a non-existent page', function () {
-      return InfoPage.read({
+    it('should fail to read a non-existent page', () =>
+      InfoPage.read({
         params: {
           pageId: badId
         }
       }).then(function (page) {
         assert(false, 'The read succeeded.')
       }).catch(NoSuchResourceError, function () {})
-    })
+    )
 
   })
 
-  describe('update', function () {
+  describe('update', () => {
 
-    it('should fail to update a page anonymously', function () {
-      return InfoPage.update({
+    it('should fail to update a page anonymously', () =>
+      InfoPage.update({
         params: {
           pageId: ids[0]
         },
@@ -145,10 +142,10 @@ describe('info pages', function () {
       }).then(function (page) {
         assert(false, 'The update succeeded.')
       }).catch(AuthorisationError, function () {})
-    })
+    )
 
-    it('should be able to update a page as an admin user', function () {
-      return InfoPage.update({
+    it('should be able to update a page as an admin user', () =>
+      InfoPage.update({
         params: {
           pageId: ids[0]
         },
@@ -165,11 +162,11 @@ describe('info pages', function () {
           body: otherBody
         }, 'The returned page was wrong.')
       })
-    })
+    )
 
-    it('should be able to update a page that does not yet exist', function () {
-      return knex.from('infoPages').where('id', ids[0]).del().then(function () {
-        return InfoPage.update({
+    it('should be able to update a page that does not yet exist', () =>
+      knex.from('infoPages').where('id', ids[0]).del().then(() =>
+        InfoPage.update({
           params: {
             pageId: ids[0]
           },
@@ -181,16 +178,16 @@ describe('info pages', function () {
             body: otherBody
           }
         })
-      }).then(function (page) {
+      ).then(function (page) {
         assert.deepEqual(page, {
           title: '',
           body: otherBody
         }, 'The returned page was wrong.')
       })
-    })
+    )
 
-    it('should fail to update a page as a not admin user', function () {
-      return InfoPage.update({
+    it('should fail to update a page as a not admin user', () =>
+      InfoPage.update({
         params: {
           pageId: ids[0]
         },
@@ -201,13 +198,13 @@ describe('info pages', function () {
         body: {
           body: otherBody
         }
-      }).then(function (page) {
+      }).then(page => {
         assert(false, 'The update succeeded.')
-      }).catch(AuthorisationError, function () {})
-    })
+      }).catch(AuthorisationError, () => {})
+    )
 
-    it('should fail to update a non-existent page', function () {
-      return InfoPage.update({
+    it('should fail to update a non-existent page', () =>
+      InfoPage.update({
         params: {
           pageId: badId
         },
@@ -218,10 +215,10 @@ describe('info pages', function () {
         body: {
           body: otherBody
         }
-      }).then(function (page) {
+      }).then(page => {
         assert(false, 'The update succeeded.')
-      }).catch(NoSuchResourceError, function () {})
-    })
+      }).catch(NoSuchResourceError, () => {})
+    )
 
   })
 

@@ -1,27 +1,27 @@
 'use strict'
-var knex = require('../../../api/database/knex')
-var assert = require('assert')
-var sinon = require('sinon')
-var Promise = require('bluebird')
-var bcrypt = Promise.promisifyAll(require('bcryptjs'))
-var mockEmailer = sinon.spy(function () {
+const knex = require('../../../api/database/knex')
+const assert = require('assert')
+const sinon = require('sinon')
+const Promise = require('bluebird')
+const bcrypt = Promise.promisifyAll(require('bcryptjs'))
+const mockEmailer = sinon.spy(function () {
   if (mockEmailer.err) {
     return Promise.reject(mockEmailer.err)
   } else {
     return Promise.resolve()
   }
 })
-var User = require('../../../api/biz/users')(knex, mockEmailer)
+const User = require('../../../api/biz/users')(knex, mockEmailer)
 const Jimp = require('jimp')
 const fs = require('fs')
 const path = require('path')
-var MalformedRequestError = require('../../../api/errors/malformedRequestError')
-var ConflictingEditError = require('../../../api/errors/conflictingEditError')
-var AuthenticationError = require('../../../api/errors/authenticationError')
-var AuthorisationError = require('../../../api/errors/authorisationError')
-var NoSuchResourceError = require('../../../api/errors/noSuchResourceError')
-var validate = require('../../../utilities/validate')
-var ValidationError = validate.ValidationError
+const MalformedRequestError = require('../../../api/errors/malformedRequestError')
+const ConflictingEditError = require('../../../api/errors/conflictingEditError')
+const AuthenticationError = require('../../../api/errors/authenticationError')
+const AuthorisationError = require('../../../api/errors/authorisationError')
+const NoSuchResourceError = require('../../../api/errors/noSuchResourceError')
+const validate = require('../../../utilities/validate')
+const { ValidationError } = validate
 
 function EmailerError(message) {
   Error.call(this)
@@ -34,7 +34,7 @@ EmailerError.prototype = Object.create(Error.prototype)
 EmailerError.prototype.constructor = EmailerError
 
 describe('users', function () {
-  var createdIds = []
+  const createdIds = []
 
   let goodAvatar = 'data:image/jpeg;base64,'
   let hexGoodAvatar
@@ -150,11 +150,11 @@ describe('users', function () {
       }).then(function (user) {
         return knex.select().from('users').where('emailAddress', emailAddress)
       }).then(function (users) {
-        var user = users[0]
+        const user = users[0]
         assert(user, 'No user was created.')
         createdIds.push(user.id)
         assert(mockEmailer.withArgs(emailAddress).calledOnce, 'The emailer was not called.')
-        var passwordResetKey = mockEmailer.getCall(0).args[2].match(/(?:setPassword\?key=)([A-Za-z\d]{30})/)[1]
+        const passwordResetKey = mockEmailer.getCall(0).args[2].match(/(?:setPassword\?key=)([A-Za-z\d]{30})/)[1]
         assert(bcrypt.compareSync(passwordResetKey, user.passwordResetKeyHash), 'The email contained the wrong password reset key.')
       })
     })
@@ -292,14 +292,14 @@ describe('users', function () {
   })
 
   describe('read', function () {
-    var emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
-    var password = 'taco tuesday'
-    var givenName1 = 'James'
-    var givenName2 = 'Paula'
-    var familyName1 = 'Deen'
-    var familyName2 = 'Poundstone'
+    const emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
+    const password = 'taco tuesday'
+    const givenName1 = 'James'
+    const givenName2 = 'Paula'
+    const familyName1 = 'Deen'
+    const familyName2 = 'Poundstone'
     const timeZone = 'Europe/Moscow'
-    var searchableUsers = [{
+    const searchableUsers = [{
       emailAddress: '0' + emailAddress,
       givenName: givenName1,
       familyName: familyName1,
@@ -352,7 +352,7 @@ describe('users', function () {
 
     it('should fail to look up a non-existent user.', function () {
       //Create a user, store his ID, then delete the user.
-      var badId
+      let badId
       return knex.into('users').insert({
         emailAddress: 'different' + emailAddress
       }).returning('id').then(function (ids) {
@@ -402,7 +402,7 @@ describe('users', function () {
     describe('search', function () {
 
       it('should be able to list all users', function () {
-        var count
+        let count
         return knex.from('users').count('id')
           .then(function (result) {
             count = Number.parseInt(result[0].count)
@@ -418,7 +418,7 @@ describe('users', function () {
       })
 
       it('should be able to sort the list by family name, descending', function () {
-        var count
+        let count
         return knex.from('users').count('id')
           .then(function (result) {
             count = Number.parseInt(result[0].count)
@@ -432,16 +432,16 @@ describe('users', function () {
             })
           }).then(function (users) {
             assert.strictEqual(users.length, count, 'The wrong number of users was returned.')
-            for (var i = 0; i < users.length - 1; ++i) {
-              var inOrder = (users[i].familyName >= users[i + 1].familyName)
-              var notNull = (users[i].familyName && users[i + 1].familyName)
+            for (let i = 0; i < users.length - 1; ++i) {
+              const inOrder = (users[i].familyName >= users[i + 1].familyName)
+              const notNull = (users[i].familyName && users[i + 1].familyName)
               assert((!notNull) || inOrder, 'The returned users were in the wrong order.')
             }
           })
       })
 
       it('should be able to sort the list by family name, ascending', function () {
-        var count
+        let count
         return knex.from('users').count('id')
           .then(function (result) {
             count = Number.parseInt(result[0].count)
@@ -455,9 +455,9 @@ describe('users', function () {
             })
           }).then(function (users) {
             assert.strictEqual(users.length, count, 'The wrong number of users was returned.')
-            for (var i = 0; i < users.length - 1; ++i) {
-              var inOrder = (users[i].familyName <= users[i + 1].familyName)
-              var notNull = (users[i].familyName && users[i + 1].familyName)
+            for (let i = 0; i < users.length - 1; ++i) {
+              const inOrder = (users[i].familyName <= users[i + 1].familyName)
+              const notNull = (users[i].familyName && users[i + 1].familyName)
               assert((!notNull) || inOrder, 'The returned users were in the wrong order.')
             }
           })
@@ -487,7 +487,7 @@ describe('users', function () {
           }
         }).then(function (users) {
           assert.strictEqual(users.length, 2, 'The wrong number of users was returned.')
-          for (var i in users) {
+          for (let i in users) {
             assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.')
           }
         })
@@ -500,7 +500,7 @@ describe('users', function () {
           }
         }).then(function (users) {
           assert.strictEqual(users.length, 2, 'The wrong number of users was returned.')
-          for (var i in users) {
+          for (let i in users) {
             assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.')
           }
         })
@@ -538,7 +538,7 @@ describe('users', function () {
           }
         }).then(function (users) {
           assert.strictEqual(users.length, 2, 'The wrong number of users was returned.')
-          for (var i in users) {
+          for (let i in users) {
             assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.')
           }
           assert.strictEqual(users[0].givenName, givenName2, 'The wrong user was first.')
@@ -554,7 +554,7 @@ describe('users', function () {
           }
         }).then(function (users) {
           assert.strictEqual(users.length, 2, 'The wrong number of users was returned.')
-          for (var i in users) {
+          for (let i in users) {
             assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.')
           }
           assert.strictEqual(users[0].givenName, givenName1, 'The wrong user was first.')
@@ -570,7 +570,7 @@ describe('users', function () {
           }
         }).then(function (users) {
           assert.strictEqual(users.length, 2, 'The wrong number of users was returned.')
-          for (var i in users) {
+          for (let i in users) {
             assert(users[i].authorisedToBlog, 'The wrong users were returned.')
           }
           assert.strictEqual(users[0].familyName, familyName1, 'The wrong user was first.')
@@ -625,7 +625,7 @@ describe('users', function () {
     })
 
     context('as an admin', function () {
-      var adminUser = {
+      const adminUser = {
         emailAddress: 'mocha.test.admin@example.com',
         password: 'I do what I want.'
       }
@@ -649,7 +649,7 @@ describe('users', function () {
           auth: adminUser
         }).then(function (users) {
           assert.strictEqual(users.length, 1, 'The wrong number of users was returned.')
-          for (var i in users) {
+          for (let i in users) {
             assert.strictEqual(users[i].emailAddress, searchableUsers[0].emailAddress, 'The wrong users were returned.')
           }
         })
@@ -660,12 +660,12 @@ describe('users', function () {
   })
 
   describe('update', function () {
-    var emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
-    var badEmailAddress = 'NotAValidEmailAddress.com'
-    var password = 'taco tuesday'
-    var givenName = 'Victor'
-    var familyName = 'Frankenstein'
-    var passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8))
+    const emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
+    const badEmailAddress = 'NotAValidEmailAddress.com'
+    const password = 'taco tuesday'
+    const givenName = 'Victor'
+    const familyName = 'Frankenstein'
+    const passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8))
     const timeZone = 'Europe/Moscow'
 
     beforeEach('Create a user to be updated.', function () {
@@ -1262,7 +1262,7 @@ describe('users', function () {
     })
 
     context('as an admin', function () {
-      var adminUser = {
+      const adminUser = {
         emailAddress: 'mocha.test.admin@example.com',
         password: 'I do what I want.'
       }
@@ -1332,7 +1332,7 @@ describe('users', function () {
     })
 
     context('after password reset email', function () {
-      var passwordResetKey = {
+      const passwordResetKey = {
         key: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd'
       }
       passwordResetKey.hash = bcrypt.hashSync(passwordResetKey.key, bcrypt.genSaltSync(8))
@@ -1356,7 +1356,7 @@ describe('users', function () {
       })
 
       it('should not be able to resuse the password reset key', function () {
-        var completedFirstUpdate = false
+        let completedFirstUpdate = false
         return User.update({
           params: {
             userId: createdIds[0]
@@ -1421,7 +1421,7 @@ describe('users', function () {
     })
 
     context('while authenticated as someone else', function () {
-      var otherEmailAddress = 'somethingElse' + emailAddress
+      const otherEmailAddress = 'somethingElse' + emailAddress
 
       beforeEach('Create the other user to edit.', function () {
         return knex.into('users').insert({
@@ -1468,8 +1468,8 @@ describe('users', function () {
     })
 
     context('when the user does not exist', function () {
-      var otherEmailAddress = 'somethingElse' + emailAddress
-      var badId
+      const otherEmailAddress = 'somethingElse' + emailAddress
+      let badId
 
       beforeEach('Get an unassigned ID.', function () {
         //Create a user, store his ID, then delete the user.
@@ -1530,9 +1530,9 @@ describe('users', function () {
 
   describe('serveAvatar', () => {
 
-    var emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
-    var password = 'taco tuesday'
-    var passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8))
+    const emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
+    const password = 'taco tuesday'
+    const passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8))
 
     beforeEach('Create a user with an avatar.', function () {
       return knex.into('users').insert({
