@@ -147,15 +147,19 @@ describe('users', function () {
           givenName,
           familyName
         }
-      }).then(function (user) {
-        return knex.select().from('users').where('emailAddress', emailAddress)
-      }).then(function (users) {
+      })
+      .then(user =>
+        knex.select().from('users').where('emailAddress', emailAddress)
+      )
+      .then(users => {
         const user = users[0]
         assert(user, 'No user was created.')
         createdIds.push(user.id)
         assert(mockEmailer.withArgs(emailAddress).calledOnce, 'The emailer was not called.')
-        const passwordResetKey = mockEmailer.getCall(0).args[2].match(/(?:setPassword\?key=)([A-Za-z\d]{30})/)[1]
+        const passwordResetKey = mockEmailer.getCall(0).args[2].match(/(?:setPassword\?emailAddress=.*&key=)([A-Za-z\d]{30})/)[1]
+        const emailAddressFromEmail = mockEmailer.getCall(0).args[2].match(/(?:setPassword\?emailAddress=)(.*)(&key=[A-Za-z\d]{30})/)[1]
         assert(bcrypt.compareSync(passwordResetKey, user.passwordResetKeyHash), 'The email contained the wrong password reset key.')
+        assert.strictEqual(emailAddressFromEmail, emailAddress, 'The email contained the wrong email address parameter.')
       })
     })
 
@@ -1208,58 +1212,6 @@ describe('users', function () {
       })
     )
 
-    it('should be able to send a password reset email', function () {
-      return User.update({
-        body: {
-          emailAddress: emailAddress,
-          passwordResetKey: null
-        }
-      }).then(function () {
-        assert(mockEmailer.calledOnce, 'The emailer was not called.')
-      })
-    })
-
-    it('should be able to send a password reset email with an all-caps email address', function () {
-      return User.update({
-        body: {
-          emailAddress: emailAddress.toUpperCase(),
-          passwordResetKey: null
-        }
-      }).then(function () {
-        assert(mockEmailer.calledOnce, 'The emailer was not called.')
-      })
-    })
-
-    it('should fail to send a password reset email with a failing emailer', function () {
-      mockEmailer.err = new EmailerError()
-      return User.update({
-        body: {
-          emailAddress: emailAddress,
-          passwordResetKey: null
-        }
-      }).then(function (user) {
-        assert(false, 'The email was sent.')
-      }).catch(EmailerError, function () {})
-    })
-
-    it('should fail to send a password reset email with extra attributes', function () {
-      return User.update({
-        body: {
-          emailAddress: emailAddress,
-          passwordResetKey: null,
-          familyName: familyName
-        }
-      }).then(function () {
-        assert(!mockEmailer.called, 'The emailer was called.')
-        assert(false, 'The update did not fail.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.familyName
-          || err.messages.familyName.length !== 1) {
-          throw err
-        }
-      })
-    })
 
     context('as an admin', function () {
       const adminUser = {
@@ -1326,95 +1278,6 @@ describe('users', function () {
           }
         }).then(function (user) {
           assert(user.authorisedToBlog, 'The edit failed.')
-        })
-      })
-
-    })
-
-    context('after password reset email', function () {
-      const passwordResetKey = {
-        key: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd'
-      }
-      passwordResetKey.hash = bcrypt.hashSync(passwordResetKey.key, bcrypt.genSaltSync(8))
-
-      beforeEach('Set the password reset key.', function () {
-        return knex.into('users').where('id', createdIds[0]).update({
-          passwordResetKeyHash: passwordResetKey.hash
-        })
-      })
-
-      it('should be able to set a password anonymously with a key', function () {
-        return User.update({
-          params: {
-            userId: createdIds[0]
-          },
-          body: {
-            passwordResetKey: passwordResetKey.key,
-            password: password
-          }
-        })
-      })
-
-      it('should not be able to resuse the password reset key', function () {
-        let completedFirstUpdate = false
-        return User.update({
-          params: {
-            userId: createdIds[0]
-          },
-          body: {
-            passwordResetKey: passwordResetKey.key,
-            password: password
-          }
-        }).then(function () {
-          completedFirstUpdate = true
-          return User.update({
-            params: {
-              userId: createdIds[0]
-            },
-            body: {
-              passwordResetKey: passwordResetKey.key,
-              password: password
-            }
-          })
-        }).then(function () {
-          assert(false, 'The update succeeded.')
-        }).catch(AuthenticationError, function () {
-          assert(completedFirstUpdate, 'The first update failed.')
-        })
-      })
-
-      it('should fail to set a password with an incorrect key', function () {
-        return User.update({
-          params: {
-            userId: createdIds[0]
-          },
-          body: {
-            password: password,
-            passwordResetKey: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabce'
-          }
-        }).then(function () {
-          assert(false, 'The update succeeded.')
-        }).catch(AuthenticationError, function () {})
-      })
-
-      it('should fail to set a password anonymously with extra attributes', function () {
-        return User.update({
-          params: {
-            userId: createdIds[0]
-          },
-          body: {
-            passwordResetKey: passwordResetKey.key,
-            password: password,
-            emailAddress: emailAddress // This attribute is not expected.
-          }
-        }).then(function () {
-          assert(false, 'The update succeeded.')
-        }).catch(ValidationError, function (err) {
-          if (Object.keys(err.messages).length !== 1
-            || !err.messages.emailAddress
-            || err.messages.emailAddress.length !== 1) {
-            throw err
-          }
         })
       })
 
@@ -1498,31 +1361,167 @@ describe('users', function () {
         }).catch(AuthorisationError, function () {})
       })
 
-      it('should fail to do an anonymous password reset', function () {
-        return User.update({
-          params: {
-            userId: badId
-          },
+    })
+
+  })
+
+  describe('setPassword', () => {
+    const emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
+    const password = 'taco tuesday'
+    const passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8))
+
+    beforeEach('Create a user to be updated.', () =>
+    knex.into('users').insert({
+      emailAddress: emailAddress,
+      passwordHash: passwordHash
+    })
+    .returning('id')
+    .then(ids => createdIds.push(ids[0]))
+  )
+
+    it('should be able to send a password reset email', () =>
+      User.setPassword({
+        body: {
+          emailAddress: emailAddress,
+          passwordResetKey: null
+        }
+      })
+      .then(() => {
+        assert(mockEmailer.calledOnce, 'The emailer was not called.')
+      })
+    )
+
+    it('should be able to send a password reset email with an all-caps email address', function () {
+      return User.setPassword({
+        body: {
+          emailAddress: emailAddress.toUpperCase(),
+          passwordResetKey: null
+        }
+      })
+      .then(() => {
+        assert(mockEmailer.calledOnce, 'The emailer was not called.')
+      })
+    })
+
+    it('should fail to send a password reset email with a failing emailer', () => {
+      mockEmailer.err = new EmailerError()
+      return User.setPassword({
+        body: {
+          emailAddress: emailAddress,
+          passwordResetKey: null
+        }
+      })
+      .then(user => {
+        assert(false, 'The email was sent.')
+      })
+      .catch(EmailerError, () => {})
+    })
+
+    context('after password reset email', () => {
+      const passwordResetKey = {
+        key: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd'
+      }
+      passwordResetKey.hash = bcrypt.hashSync(passwordResetKey.key, bcrypt.genSaltSync(8))
+
+      beforeEach('Set the password reset key.', () =>
+        knex.into('users').where('id', createdIds[0]).update({
+          passwordResetKeyHash: passwordResetKey.hash
+        })
+      )
+
+      it('should be able to set a password anonymously with a key', () =>
+        User.setPassword({
           body: {
-            passwordResetKey: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd',
-            password: password
+            emailAddress,
+            passwordResetKey: passwordResetKey.key,
+            password
           }
-        }).then(function () {
-          assert(false, 'The update did not fail.')
-        }).catch(NoSuchResourceError, function () {})
+        })
+      )
+
+      it('should not be able to resuse the password reset key', () => {
+        let completedFirstUpdate = false
+        return User.setPassword({
+          body: {
+            emailAddress,
+            passwordResetKey: passwordResetKey.key,
+            password
+          }
+        })
+        .then(() => {
+          completedFirstUpdate = true
+          return User.setPassword({
+            body: {
+              emailAddress,
+              passwordResetKey: passwordResetKey.key,
+              password
+            }
+          })
+        })
+        .then(() => {
+          assert(false, 'The update succeeded.')
+        })
+        .catch(AuthenticationError, () => {
+          assert(completedFirstUpdate, 'The second update failed.')
+        })
       })
 
-      it('should fail to send a password reset email', function () {
-        return User.update({
+      it('should fail to set a password with an incorrect key', () =>
+        User.setPassword({
+          params: {
+            userId: createdIds[0]
+          },
           body: {
-            emailAddress: 'notAssigned' + emailAddress,
+            emailAddress,
+            password,
+            passwordResetKey: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabce'
+          }
+        })
+        .then(() => {
+          assert(false, 'The update succeeded.')
+        })
+        .catch(AuthenticationError, () => {})
+      )
+
+    })
+
+    context('when the user does not exist', () => {
+      const otherEmailAddress = 'somethingElse' + emailAddress
+      let badId
+
+      beforeEach('Get an unassigned ID.', () => {
+        //Create a user, store his ID, then delete the user.
+        return knex.into('users').insert({
+          emailAddress: otherEmailAddress
+        }).returning('id').then(function (ids) {
+          badId = ids[0]
+          return knex.from('users').where('id', badId).del()
+        })
+      })
+
+      it('should fail to do an anonymous password reset', () =>
+        User.setPassword({
+          body: {
+            emailAddress: otherEmailAddress,
+            passwordResetKey: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd',
+            password
+          }
+        }).then(() => {
+          assert(false, 'The update did not fail.')
+        }).catch(NoSuchResourceError, () => {})
+      )
+
+      it('should fail to send a password reset email', () =>
+        User.setPassword({
+          body: {
+            emailAddress: otherEmailAddress,
             passwordResetKey: null
           }
-        }).then(function () {
+        }).then(() => {
           assert(!mockEmailer.called, 'The emailer was called.')
           assert(false, 'The update did not fail.')
-        }).catch(NoSuchResourceError, function () {})
-      })
+        }).catch(NoSuchResourceError, () => {})
+      )
 
     })
 

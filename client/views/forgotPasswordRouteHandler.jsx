@@ -1,21 +1,46 @@
 'use strict'
+const _ = require('lodash')
 const React = require('react')
-const { save: saveUser } = require('../flux/users/actions')
+const { resetPassword: resetPasswordAction } = require('../flux/users/actions')
 const { connect } = require('react-redux')
 const Helmet = require('react-helmet')
+const ErrorMessage = require('./errorMessage.jsx')
+const validate = require('../../utilities/validate')
+const { funcs: vf, ValidationError } = validate
 
 class ForgotPassword extends React.Component{
+  static propTypes = {
+    resetPassword: React.PropTypes.func
+  };
+  static defaultProps = {
+    resetPassword: () => {}
+  };
+  state = {
+    emailAddress: '',
+    busy: false,
+    success: false,
+    fieldErrors: null,
+    error: null
+  };
   constructor(props) {
     super(props)
-    this.state = {
-      busy: false,
-      success: false,
-      error: null
-    }
+    this._validate = this._validate.bind(this)
+    this._onChangeEmailAddress = this._onChangeEmailAddress.bind(this)
     this._onSubmit = this._onSubmit.bind(this)
   }
   render() {
-    if (this.state.success) {
+    const {
+      state: {
+        emailAddress,
+        busy,
+        success,
+        fieldErrors,
+        error
+      },
+      _onChangeEmailAddress,
+      _onSubmit
+    } = this
+    if (success) {
       return (
         <div className='message'>
           <p>
@@ -24,6 +49,8 @@ class ForgotPassword extends React.Component{
         </div>
       )
     } else {
+      const fieldErrorMessage = fieldName =>
+        <ErrorMessage error={_.at(fieldErrors, fieldName)[0] || []}/>
       return (
         <div id='forgotPassword'>
           <Helmet title='forgot password'/>
@@ -33,45 +60,83 @@ class ForgotPassword extends React.Component{
           <p>
             If you're locked out of your account, enter your email address to reset your password.
           </p>
-          <form onSubmit={this._onSubmit}>
-            <input type='email' ref='emailAddress' name='emailAddress' placeholder='email address' disabled={this.state.busy} required/>
-            {this.state.error
-              ? <p className='error'>
-                  {this.state.error}
-                </p>
-              : null}
+          <form onSubmit={_onSubmit}>
+            <input
+              type='email'
+              value={emailAddress}
+              onChange={_onChangeEmailAddress}
+              placeholder='email address'
+              disabled={busy}
+              required
+              />
+            {fieldErrorMessage('emailAddress')}
+            {error ?
+              <ErrorMessage error={error}/>
+            : null}
             <div>
-              <button disabled={this.state.busy} className='highlighted'>send the email</button>
+              <button
+                disabled={busy || !!fieldErrors}
+                className='highlighted'
+                >
+                send the email
+              </button>
             </div>
           </form>
         </div>
       )
     }
   }
+  _validate(values) {
+    return validate(values, {
+      emailAddress: [
+        vf.emailAddress('The email address must be, well, an email address.')
+      ]
+    })
+    .catch(ValidationError, err => {
+      this.setState({
+        fieldErrors: err.messages
+      })
+    })
+  }
+  _onChangeEmailAddress({target: {value}}) {
+    this.setState({
+      emailAddress: value,
+      fieldErrors: null
+    })
+    this._validate({
+      emailAddress: value
+    })
+  }
   _onSubmit(event) {
     event.preventDefault()
-    let emailAddress = this.refs.emailAddress.value
+    const {
+      props: {
+        resetPassword
+      },
+      state: {
+        emailAddress
+      }
+    } = this
     this.setState({
       busy: true,
       error: null
     })
-    return this.props.saveUser({
-      emailAddress,
-      passwordResetKey: null
-    }).then(() => this.setState({
+    return resetPassword(emailAddress)
+    .then(() => this.setState({
       success: true
-    })).catch(err => this.setState({
+    }))
+    .catch(ValidationError, err => {
+      this.setState({
+        fieldErrors: err.messages
+      })
+    })
+    .catch(err => this.setState({
       error: err.message || err
-    })).finally(() => this.setState({
+    }))
+    .finally(() => this.setState({
       busy: false
     }))
   }
-}
-ForgotPassword.propTypes = {
-  saveUser: React.PropTypes.func
-}
-ForgotPassword.defaultProps = {
-  saveUser: () => {}
 }
 
 const wrapped = connect(
@@ -80,8 +145,7 @@ const wrapped = connect(
   },
   function mapDispatchToProps(dispatch) {
     return {
-      saveUser: ({ emailAddress, passwordResetKey }) =>
-        dispatch(saveUser({ emailAddress, passwordResetKey }))
+      resetPassword: emailAddress => dispatch(resetPasswordAction(emailAddress))
     }
   }
 )(ForgotPassword)

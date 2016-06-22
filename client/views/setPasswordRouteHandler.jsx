@@ -1,28 +1,59 @@
 'use strict'
+const _ = require('lodash')
 const React = require('react')
-const { save: saveUser } = require('../flux/users/actions')
+const { setPassword: setPasswordAction } = require('../flux/users/actions')
+const { logIn: logInAction } = require('../flux/auth/actions')
 const { connect } = require('react-redux')
 const Helmet = require('react-helmet')
+const ErrorMessage = require('./errorMessage.jsx')
+const validate = require('../../utilities/validate')
+const { funcs: vf, ValidationError } = validate
 
 class SetPassword extends React.Component{
+  static propTypes = {
+    setPassword: React.PropTypes.func,
+    logIn: React.PropTypes.func
+  };
+  static defaultProps = {
+    setPassword: () => {},
+    logIn: () => {}
+  };
+  state = {
+    busy: false,
+    success: false,
+    fieldErrors: null,
+    error: null,
+    password: '',
+    verifyPassword: ''
+  };
   constructor(props) {
     super(props)
-    this.state = {
-      busy: false,
-      success: false,
-      error: null
-    }
+    this._validate = this._validate.bind(this)
+    this._onChangePassword = this._onChangePassword.bind(this)
+    this._onChangeVerifyPassword = this._onChangeVerifyPassword.bind(this)
     this._onSubmit = this._onSubmit.bind(this)
   }
-  componentWillUpdate(nextProps, nextState) {
-    if (nextState.success) {
-      this.props.history.pushState(null, '/login')
-    }
-  }
   render() {
-    const passwordResetKey = this.props.location.query.key
-    const userId = this.props.params.userId
-    if (!userId || !passwordResetKey) {
+    const {
+      props: {
+        location: {
+          query: {
+            key: passwordResetKey,
+            emailAddress
+          }
+        }
+      },
+      state: {
+        busy,
+        fieldErrors,
+        error,
+        password,
+        verifyPassword
+      },
+      _onChangePassword,
+      _onChangeVerifyPassword
+    } = this
+    if (!emailAddress || !passwordResetKey) {
       return (
         <div className='message'>
           <p>
@@ -31,6 +62,8 @@ class SetPassword extends React.Component{
         </div>
       )
     } else {
+      const fieldErrorMessage = fieldName =>
+        <ErrorMessage error={_.at(fieldErrors, fieldName)[0] || []}/>
       return (
         <div id='setPassword'>
           <Helmet title='set password'/>
@@ -38,32 +71,35 @@ class SetPassword extends React.Component{
             set password
           </h1>
           <p>
-            Set a new password.
+            Set a new password for {emailAddress}.
           </p>
           <form onSubmit={this._onSubmit}>
             <input
               type='password'
-              ref='password'
-              name='password'
+              value={password}
+              onChange={_onChangePassword}
               placeholder='new password'
-              disabled={this.state.busy}
-              required/>
+              disabled={busy}
+              required
+              />
+            {fieldErrorMessage('password')}
             <input
               type='password'
-              ref='verifyPassword'
-              name='verifyPassword'
+              value={verifyPassword}
+              onChange={_onChangeVerifyPassword}
               placeholder='verify new password'
-              disabled={this.state.busy}
-              required/>
-            {this.state.error
-              ? <p className='error'>
-                  {this.state.error}
-                </p>
-              : null}
+              disabled={busy}
+              required
+              />
+            {fieldErrorMessage('verifyPassword')}
+            {error ?
+              <ErrorMessage error={error}/>
+            : null}
             <div>
               <button
-                disabled={this.state.busy}
-                className='highlighted'>
+                disabled={busy || !!fieldErrors}
+                className='highlighted'
+                >
                 set password
               </button>
             </div>
@@ -72,39 +108,105 @@ class SetPassword extends React.Component{
       )
     }
   }
+  _validate(values) {
+    return validate(values, {
+      password: [
+        vf.minLength('The password must not be shorter than eight characters.', 8),
+        vf.maxLength('The password must not be longer than thirty characters.', 30)
+      ],
+      verifyPassword: [
+        val => {
+          if (val !== values.password)
+            throw new ValidationError('The passwords must match.')
+        }
+      ]
+    })
+    .catch(ValidationError, err => {
+      this.setState({
+        fieldErrors: err.messages
+      })
+    })
+  }
+  _onChangePassword({target: {value}}) {
+    this.setState({
+      password: value,
+      fieldErrors: null
+    })
+    this._validate({
+      password: value,
+      verifyPassword: this.state.verifyPassword
+    })
+  }
+  _onChangeVerifyPassword({target: {value}}) {
+    this.setState({
+      verifyPassword: value,
+      fieldErrors: null
+    })
+    this._validate({
+      verifyPassword: value,
+      password: this.state.password
+    })
+  }
   _onSubmit(event) {
     event.preventDefault()
-    const id = this.props.params.userId
-    const passwordResetKey = this.props.location.query.key
-    const password = this.refs.password.value
-    const verifyPassword = this.refs.verifyPassword.value
-    if (password !== verifyPassword) {
-      this.setState({
-        error: 'The passwords must match.'
-      })
-    } else {
-      this.setState({
-        busy: true,
-        error: null
-      })
-      return this.props.saveUser({
-        password,
-        passwordResetKey
-      }, id).then(() => this.setState({
-        success: true
-      })).catch(err => this.setState({
-        error: err.message || err
-      })).finally(() => this.setState({
-        busy: false
-      }))
-    }
+    const {
+      props: {
+        location: {
+          query: {
+            key: passwordResetKey,
+            emailAddress
+          }
+        },
+        history: {
+          replaceState: navigate
+        },
+        setPassword,
+        logIn
+      },
+      state: {
+        password
+      }
+    } = this
+    this.setState({
+      busy: true,
+      error: null
+    })
+    return setPassword({
+      emailAddress,
+      password,
+      passwordResetKey
+    })
+    .then(
+
+      // Setting the password succeeded. Let's log in now.
+      () =>
+        logIn({
+          emailAddress,
+          password
+        })
+        .catch(() => {})
+        .then(() =>
+          navigate(null, '/')
+        )
+      ,
+
+      // Setting the password failed.
+      err => {
+        if (err instanceof ValidationError) {
+          this.setState({
+            fieldErrors: err.messages
+          })
+        } else {
+          this.setState({
+            error: err.message || err
+          })
+        }
+        this.setState({
+          busy: false
+        })
+      }
+    )
   }
-}
-SetPassword.propTypes = {
-  saveUser: React.PropTypes.func
-}
-SetPassword.defaultProps = {
-  saveUser: () => {}
 }
 
 const wrapped = connect(
@@ -113,8 +215,22 @@ const wrapped = connect(
   },
   function mapDispatchToProps(dispatch) {
     return {
-      saveUser: ({ password, passwordResetKey }, id) =>
-        dispatch(saveUser({ password, passwordResetKey }, id))
+      setPassword: ({
+        emailAddress,
+        password,
+        passwordResetKey
+      }) => dispatch(setPasswordAction({
+        emailAddress,
+        password,
+        passwordResetKey
+      })),
+      logIn: ({
+        emailAddress,
+        password
+      }) => dispatch(logInAction({
+        emailAddress,
+        password
+      }))
     }
   }
 )(SetPassword)

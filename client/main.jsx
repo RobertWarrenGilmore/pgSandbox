@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </Route>
 
               <Route onEnter={logOut}>
-                <Route component={SetPassword} path='users/:userId/setPassword'/>
+                <Route component={SetPassword} path='setPassword'/>
                 <Redirect from='/logOut' to='/'/>
               </Route>
 

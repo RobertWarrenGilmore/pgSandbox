@@ -22,7 +22,8 @@ const creators = {
         uri: '/api/users',
         json: true,
         body: user
-      }).then(({ statusCode, body }) => {
+      })
+      .then(({ statusCode, body }) => {
         if (statusCode !== 201) {
           handleError(body)
         }
@@ -51,7 +52,8 @@ const creators = {
         json: true,
         auth: authCredentials,
         body: user
-      }).then(({ statusCode, body }) => {
+      })
+      .then(({ statusCode, body }) => {
         if (statusCode === 200) {
           if (id) {
             dispatch(cacheUsers({
@@ -93,7 +95,8 @@ const creators = {
         uri: '/api/users/' + id,
         json: true,
         auth: authCredentials
-      }).then(({ statusCode, body }) => {
+      })
+      .then(({ statusCode, body }) => {
         if (statusCode === 200) {
           dispatch(cacheUsers({
             [id]: body
@@ -117,7 +120,8 @@ const creators = {
         auth: authCredentials,
         json: true,
         qs: query
-      }).then(({ statusCode, body }) => {
+      })
+      .then(({ statusCode, body }) => {
         if (statusCode === 200) {
           let userMap = {}
           let idList = []
@@ -130,6 +134,41 @@ const creators = {
         } else {
           handleError(body)
         }
+      })
+    }
+  },
+  setPassword({ emailAddress, password, passwordResetKey }) {
+    return dispatch => {
+      return ajax({
+        method: 'PUT',
+        uri: '/api/setPassword',
+        json: true,
+        body: {
+          emailAddress,
+          password,
+          passwordResetKey
+        }
+      })
+      .then(({ statusCode, body }) => {
+        if (statusCode !== 200)
+          handleError(body)
+      })
+    }
+  },
+  resetPassword(emailAddress) {
+    return dispatch => {
+      return ajax({
+        method: 'PUT',
+        uri: '/api/setPassword',
+        json: true,
+        body: {
+          emailAddress,
+          passwordResetKey: null
+        }
+      })
+      .then(({ statusCode, body }) => {
+        if (statusCode !== 200)
+          handleError(body)
       })
     }
   }

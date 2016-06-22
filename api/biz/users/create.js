@@ -77,7 +77,7 @@ module.exports = (knex, emailer) =>
       })
       // Send the password reset email. Note that the transaction can still fail at this point.
       .tap(result =>
-          sendPasswordResetEmail(emailer, args.body.emailAddress, result.id, result.key)
+          sendPasswordResetEmail(emailer, args.body.emailAddress, result.key)
       )
       .then(result =>
           trx
