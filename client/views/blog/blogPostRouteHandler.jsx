@@ -1,5 +1,6 @@
 'use strict'
 const React = require('react')
+const { withRouter } = require('react-router')
 const BusyIndicator = require('../busyIndicator.jsx')
 const Post = require('./post.jsx')
 const Editor = require('./editor.jsx')
@@ -18,7 +19,10 @@ class BlogPost extends React.Component {
     savePost: React.PropTypes.func,
     loadPost: React.PropTypes.func,
     deletePost: React.PropTypes.func,
-    loadAuthors: React.PropTypes.func
+    loadAuthors: React.PropTypes.func,
+    router: React.PropTypes.shape({
+      replace: React.PropTypes.func.isRequired
+    }).isRequired
   };
   static defaultProps = {
     authUser: null,
@@ -87,9 +91,12 @@ class BlogPost extends React.Component {
           editingPost: this.props.posts[post.id]
         })
         if (post.id !== this.props.params.postId) {
-          this.props.history.replaceState({
-            editing: true
-          }, '/blog/' + this.state.editingPost.id)
+          this.props.router.replace({
+            state: {
+              editing: true
+            },
+            pathname: '/blog/' + this.state.editingPost.id
+          })
         }
       }).catch(err => this.setState({
         error: err.message || err
@@ -188,7 +195,7 @@ class BlogPost extends React.Component {
         this._exitEditMode()
       // Otherwise, redirect to this page without that location state so that a refresh won't return us to the editor.
       } else {
-        this.props.history.replaceState(null, nextProps.location.pathname)
+        this.props.router.replace(nextProps.location.pathname)
       }
       if (!nextProps.posts[nextProps.params.postId]) {
         this._loadPost(nextProps.params.postId)
@@ -313,7 +320,7 @@ class BlogPost extends React.Component {
 
 }
 
-const wrapped = connect(
+let wrapped = connect(
   function mapStateToProps(state) {
     state = state.asMutable({deep: true})
     let authUser
@@ -338,5 +345,7 @@ const wrapped = connect(
     }
   }
 )(BlogPost)
+
+wrapped = withRouter(wrapped)
 
 module.exports = wrapped

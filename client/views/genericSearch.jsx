@@ -1,6 +1,7 @@
 'use strict'
 const _ = require('lodash')
 const React = require('react')
+const { withRouter } = require('react-router')
 const ScrollCaboose = require('./scrollCaboose.jsx')
 const BusyIndicator = require('./busyIndicator.jsx')
 const validate = require('../../utilities/validate')
@@ -29,9 +30,9 @@ class GenericSearch extends React.Component {
     // a function that takes a proposed query and returns a valid query using defaults where appropriate
     correctUrlQuery: React.PropTypes.func,
 
-    history: React.PropTypes.shape({
-      replaceState: React.PropTypes.func.isRequired,
-      pushState: React.PropTypes.func.isRequired
+    router: React.PropTypes.shape({
+      replace: React.PropTypes.func.isRequired,
+      push: React.PropTypes.func.isRequired
     }).isRequired,
 
     location: React.PropTypes.shape({
@@ -81,7 +82,7 @@ class GenericSearch extends React.Component {
     const {
       props: {
         correctUrlQuery,
-        history,
+        router,
         location: {
           pathname,
           query: currentUrlQuery
@@ -94,14 +95,17 @@ class GenericSearch extends React.Component {
 
     const validQuery = correctUrlQuery(query)
 
-    const navigate = history[replace
-        ? 'replaceState'
-        : 'pushState']
+    const navigate = router[replace
+        ? 'replace'
+        : 'push']
 
     const doRedirect = () => {
       // If the valid query differs from the current query, redirect to it.
       if (!_.isEqual(currentUrlQuery, validQuery)) {
-        navigate(null, pathname, validQuery)
+        navigate({
+          pathname,
+          query: validQuery
+        })
       }
       if (queryUpdateTimeout) {
         this.setState({
@@ -351,4 +355,6 @@ class GenericSearch extends React.Component {
   }
 }
 
-module.exports = GenericSearch
+const wrapped = withRouter(GenericSearch)
+
+module.exports = wrapped

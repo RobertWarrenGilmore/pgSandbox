@@ -1,6 +1,6 @@
 'use strict'
 const React = require('react')
-const { Link } = require('react-router')
+const { Link, withRouter } = require('react-router')
 const { connect } = require('react-redux')
 const { logIn: logInAction } = require('../flux/auth/actions')
 const Helmet = require('react-helmet')
@@ -9,7 +9,10 @@ const ErrorMessage = require('./errorMessage.jsx')
 class LogIn extends React.Component {
   static propTypes = {
     busy: React.PropTypes.bool,
-    logIn: React.PropTypes.func
+    logIn: React.PropTypes.func,
+    router: React.PropTypes.shape({
+      replace: React.PropTypes.func.isRequired
+    }).isRequired
   };
   static defaultProps = {
     busy: false,
@@ -113,9 +116,9 @@ class LogIn extends React.Component {
     .then(() => {
       const location = this.props.location
       if (location.state && location.state.nextLocation) {
-        this.props.history.replaceState(null, location.state.nextLocation.pathname, location.state.nextLocation.query)
+        this.props.router.replace(location.state.nextLocation)
       } else {
-        this.props.history.replaceState(null, '/')
+        this.props.router.replace('/')
       }
     })
     .catch(err => this.setState({
@@ -124,7 +127,7 @@ class LogIn extends React.Component {
   }
 }
 
-const wrapped = connect(
+let wrapped = connect(
   function mapStateToProps(state) {
     return {
       busy: state.auth.busy
@@ -136,5 +139,7 @@ const wrapped = connect(
     }
   }
 )(LogIn)
+
+wrapped = withRouter(wrapped)
 
 module.exports = wrapped

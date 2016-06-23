@@ -1,6 +1,7 @@
 'use strict'
 const _ = require('lodash')
 const React = require('react')
+const { withRouter } = require('react-router')
 const { setPassword: setPasswordAction } = require('../flux/users/actions')
 const { logIn: logInAction } = require('../flux/auth/actions')
 const { connect } = require('react-redux')
@@ -12,7 +13,10 @@ const { funcs: vf, ValidationError } = validate
 class SetPassword extends React.Component{
   static propTypes = {
     setPassword: React.PropTypes.func,
-    logIn: React.PropTypes.func
+    logIn: React.PropTypes.func,
+    router: React.PropTypes.shape({
+      replace: React.PropTypes.func.isRequired
+    }).isRequired
   };
   static defaultProps = {
     setPassword: () => {},
@@ -157,8 +161,8 @@ class SetPassword extends React.Component{
             emailAddress
           }
         },
-        history: {
-          replaceState: navigate
+        router: {
+          replace: navigate
         },
         setPassword,
         logIn
@@ -186,7 +190,7 @@ class SetPassword extends React.Component{
         })
         .catch(() => {})
         .then(() =>
-          navigate(null, '/')
+          navigate('/')
         )
       ,
 
@@ -209,7 +213,7 @@ class SetPassword extends React.Component{
   }
 }
 
-const wrapped = connect(
+let wrapped = connect(
   function mapStateToProps(state) {
     return {}
   },
@@ -234,5 +238,7 @@ const wrapped = connect(
     }
   }
 )(SetPassword)
+
+wrapped = withRouter(wrapped)
 
 module.exports = wrapped

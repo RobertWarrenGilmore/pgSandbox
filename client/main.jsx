@@ -1,16 +1,15 @@
 'use strict'
 require('babel-polyfill')
 
-if (!window.location.origin) {
+if (!window.location.origin)
   window.location.origin = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port: '')
-}
 
 const React = require('react')
 const ReactDom = require('react-dom')
-const {Router, Route, IndexRoute, Redirect} = require('react-router')
+const { Router, Route, IndexRoute, Redirect, useRouterHistory } = require('react-router')
+const { createHistory } = require('history')
 const qs = require('qs')
 const { Provider } = require('react-redux')
-const createBrowserHistory = require('history/lib/createBrowserHistory')
 const flux = require('./flux')
 const authActions = require('./flux/auth/actions')
 const App = require('./views/app.jsx')
@@ -26,34 +25,39 @@ const BlogSearch = require('./views/blog/blogSearchRouteHandler.jsx')
 const NotFound = require('./views/notFoundRouteHandler.jsx')
 const DragTest = require('./views/dragTest.jsx')
 
-function requireAuth(nextState, replaceState) {
-  if (!flux.getState().auth.credentials) {
-    replaceState({
-      nextLocation: nextState.location
-    }, '/logIn')
-  }
-}
-
-function requireNoAuth(nextState, replaceState) {
-  if (flux.getState().auth.credentials) {
-    replaceState(null, '/')
-  }
-}
-
-function logOut(nextState, replaceState) {
-  flux.dispatch(authActions.logOut())
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   flux.dispatch(authActions.resume())
     .catch(err => {})
     .then(() => {
+
+      function requireAuth(nextState, replace) {
+        if (!flux.getState().auth.credentials)
+          return replace({
+            state: {
+              nextLocation: nextState.location
+            },
+            pathname: '/logIn'
+          })
+      }
+
+      function requireNoAuth(nextState, replace) {
+        if (flux.getState().auth.credentials)
+          return replace('/')
+      }
+
+      function logOut(nextState, replace) {
+        return flux.dispatch(authActions.logOut())
+      }
+
+      const history = useRouterHistory(createHistory)({
+        parseQueryString: qs.parse,
+        stringifyQuery: qs.stringify
+      })
+
       const router = (
         <Provider store={flux}>
           <Router
-            history={createBrowserHistory()}
-            stringifyQuery={qs.stringify}
-            parseQueryString={qs.parse}
+            history={history}
             >
             <Route component={App} path='/'>
 
