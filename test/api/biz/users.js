@@ -3,7 +3,7 @@ const knex = require('../../../api/database/knex')
 const assert = require('assert')
 const sinon = require('sinon')
 const Promise = require('bluebird')
-const bcrypt = Promise.promisifyAll(require('bcryptjs'))
+const bcrypt = Promise.promisifyAll(require('bcrypt'))
 const mockEmailer = sinon.spy(function () {
   if (mockEmailer.err) {
     return Promise.reject(mockEmailer.err)
