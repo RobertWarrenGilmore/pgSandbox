@@ -1,7 +1,7 @@
 'use strict'
 const _ = require('lodash')
 const React = require('react')
-const {Link} = require('react-router')
+const { Link, withRouter } = require('react-router')
 const BusyIndicator = require('../busyIndicator.jsx')
 const Post = require('./post.jsx')
 const appScroll = require('../../utilities/appScroll')
@@ -10,14 +10,28 @@ const blogActions = require('../../flux/blog/actions')
 const Helmet = require('react-helmet')
 
 class BlogSearch extends React.Component {
+  static propTypes = {
+    authUser: React.PropTypes.object,
+    posts: React.PropTypes.object,
+    searchPosts: React.PropTypes.func,
+    router: React.PropTypes.shape({
+      replace: React.PropTypes.func.isRequired,
+      push: React.PropTypes.func.isRequired
+    }).isRequired
+  };
+  static defaultProps = {
+    authUser: null,
+    posts: null,
+    searchPosts: null
+  };
+  state = {
+    busy: false,
+    error: null,
+    results: [],
+    endReached: false
+  };
   constructor(props) {
     super(props)
-    this.state = {
-      busy: false,
-      error: null,
-      results: [],
-      endReached: false
-    }
     this._correctUrlQuery = this._correctUrlQuery.bind(this)
     this._doSearch = this._doSearch.bind(this)
     this._loadMoreResults = this._loadMoreResults.bind(this)
@@ -37,12 +51,15 @@ class BlogSearch extends React.Component {
         validQuery[parameter] = query[parameter]
       }
     }
-    let navigate = this.props.history[replace
-        ? 'replaceState'
-        : 'pushState']
-    // If the valid query differs = require(the supplied query, redirect to it.
+    let navigate = this.props.router[replace
+        ? 'replace'
+        : 'push']
+    // If the valid query differs from the supplied query, redirect to it.
     if (!_.isEqual(query, validQuery)) {
-      navigate(null, this.props.location.pathname, validQuery)
+      navigate({
+        pathname: this.props.location.pathname,
+        query: validQuery
+      })
     }
   }
   // Initiate a search from the URL query.
@@ -138,11 +155,14 @@ class BlogSearch extends React.Component {
         {(authorisedToBlog || isAdmin) ? (
           <div className='actions'>
             <Link
-              to='/blog/new'
-              state={{
-                editing: true
+              to={{
+                pathname: '/blog/new',
+                state: {
+                  editing: true
+                }
               }}
-              className='button highlighted'>
+              className='button highlighted'
+              >
               <span className='icon-plus'/>
               &nbsp;
               create a new blog post
@@ -161,18 +181,8 @@ class BlogSearch extends React.Component {
     )
   }
 }
-BlogSearch.propTypes = {
-  authUser: React.PropTypes.object,
-  posts: React.PropTypes.object,
-  searchPosts: React.PropTypes.func
-}
-BlogSearch.defaultProps = {
-  authUser: null,
-  posts: null,
-  searchPosts: null
-}
 
-const wrapped = connect(
+let wrapped = connect(
   function mapStateToProps(state) {
     let authUser
     if (state.auth.id && state.users.cache) {
@@ -189,5 +199,7 @@ const wrapped = connect(
     }
   }
 )(BlogSearch)
+
+wrapped = withRouter(wrapped)
 
 module.exports = wrapped
