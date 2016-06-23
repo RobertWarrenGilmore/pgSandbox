@@ -1,8 +1,7 @@
 'use strict'
 const Immutable = require('seamless-immutable')
 const thunkMiddleware = require('redux-thunk')
-const createLogger = require('redux-logger')
-const { createStore, applyMiddleware, combineReducers } = require('redux')
+const { createStore, applyMiddleware, combineReducers, compose } = require('redux')
 
 // Get the reducers.
 const auth = require('./auth/reducer')
@@ -21,14 +20,14 @@ const rootReducer = combineReducers({
 
 const immutableRootReducer = (...args) => Immutable(rootReducer(...args))
 
-const loggerMiddleware = createLogger()
-
 const store = createStore(
   immutableRootReducer,
   Immutable({}),
-  applyMiddleware(
-    thunkMiddleware, // lets us dispatch() functions
-    loggerMiddleware // neat middleware that logs actions
+  compose(
+    applyMiddleware(
+      thunkMiddleware, // lets us dispatch() functions
+    ),
+    window.devToolsExtension ? window.devToolsExtension() : f => f
   )
 )
 
