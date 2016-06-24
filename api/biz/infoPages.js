@@ -1,8 +1,8 @@
 'use strict'
 const _ = require('lodash')
 const authenticatedTransaction = require('./utilities/authenticatedTransaction')
-const AuthorisationError = require('../errors/authorisationError')
-const NoSuchResourceError = require('../errors/noSuchResourceError')
+const AuthorisationError = require('../../errors/authorisationError')
+const NoSuchResourceError = require('../../errors/noSuchResourceError')
 const validate = require('../../utilities/validate')
 const { funcs: vf } = validate
 

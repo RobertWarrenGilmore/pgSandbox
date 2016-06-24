@@ -7,7 +7,7 @@ const { funcs: vf, ValidationError } = validate
 const escapeForLike = require('../utilities/escapeForLike')
 const crypto = require('./crypto')
 const sendPasswordResetEmail = require('./sendPasswordResetEmail')
-const ConflictingEditError = require('../../errors/conflictingEditError')
+const ConflictingEditError = require('../../../errors/conflictingEditError')
 
 module.exports = (knex, emailer) =>
   args =>

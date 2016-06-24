@@ -1,6 +1,6 @@
 'use strict'
 const authenticatedTransaction = require('./utilities/authenticatedTransaction')
-const AuthenticationError = require('../errors/authenticationError')
+const AuthenticationError = require('../../errors/authenticationError')
 
 module.exports = knex => ({
 

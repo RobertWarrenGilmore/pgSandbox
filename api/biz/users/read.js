@@ -6,8 +6,8 @@ const vf = validate.funcs
 const ValidationError = validate.ValidationError
 const escapeForLike = require('../utilities/escapeForLike')
 const outputQuery = require('./outputQuery')
-const MalformedRequestError = require('../../errors/malformedRequestError')
-const NoSuchResourceError = require('../../errors/noSuchResourceError')
+const MalformedRequestError = require('../../../errors/malformedRequestError')
+const NoSuchResourceError = require('../../../errors/noSuchResourceError')
 
 module.exports = knex =>
   args =>

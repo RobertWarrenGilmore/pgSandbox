@@ -1,6 +1,6 @@
 'use strict'
 const Promise = require('bluebird')
-const AuthenticationError = require('../../errors/authenticationError')
+const AuthenticationError = require('../../../errors/authenticationError')
 const bcrypt = Promise.promisifyAll(require('bcrypt'))
 const escapeForLike = require('./escapeForLike')
 

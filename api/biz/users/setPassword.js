@@ -3,9 +3,9 @@ const authenticatedTransaction = require('../utilities/authenticatedTransaction'
 const escapeForLike = require('../utilities/escapeForLike')
 const crypto = require('./crypto')
 const sendPasswordResetEmail = require('./sendPasswordResetEmail')
-const AuthenticationError = require('../../errors/authenticationError')
-const MalformedRequestError = require('../../errors/malformedRequestError')
-const NoSuchResourceError = require('../../errors/noSuchResourceError')
+const AuthenticationError = require('../../../errors/authenticationError')
+const MalformedRequestError = require('../../../errors/malformedRequestError')
+const NoSuchResourceError = require('../../../errors/noSuchResourceError')
 const validate = require('../../../utilities/validate')
 const { funcs: vf } = validate
 

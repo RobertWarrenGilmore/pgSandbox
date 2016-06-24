@@ -5,8 +5,8 @@ const Promise = require('bluebird')
 const bcrypt = Promise.promisifyAll(require('bcrypt'))
 const knex = require('../../../api/database/knex')
 const InfoPage = require('../../../api/biz/infoPages')(knex)
-const AuthorisationError = require('../../../api/errors/authorisationError')
-const NoSuchResourceError = require('../../../api/errors/noSuchResourceError')
+const AuthorisationError = require('../../../errors/authorisationError')
+const NoSuchResourceError = require('../../../errors/noSuchResourceError')
 
 
 describe('info pages', () => {

@@ -2,7 +2,7 @@
 const authenticatedTransaction = require('../utilities/authenticatedTransaction')
 const validate = require('../../../utilities/validate')
 const { funcs: vf } = validate
-const NoSuchResourceError = require('../../errors/noSuchResourceError')
+const NoSuchResourceError = require('../../../errors/noSuchResourceError')
 const fs = require('fs')
 const path = require('path')
 
