@@ -1,18 +1,13 @@
 'use strict'
-const express = require('express')
-const handleError = require('./handleError')
+const transportModule = require('./general')
 
-module.exports = authBiz => {
-  const router = express.Router({
-    mergeParams: true
-  })
-
-  router.route('/')
-    .get((req, res) =>
-      authBiz.read(req)
-        .then(res.send.bind(res))
-        .catch(handleError(res))
-    )
-
-  return router
-}
+module.exports = transportModule([
+  {
+    path: '/',
+    actions: {
+      get: {
+        bizMethod: 'read'
+      }
+    }
+  }
+])

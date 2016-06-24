@@ -3,7 +3,6 @@ const ajax = require('../../utilities/ajax')
 const store = require('../')
 const { createAction: createActionCreator } = require('redux-actions')
 const types = require('./types')
-const handleError = require('../handleError')
 
 // private action creators
 const setAuthBusy = createActionCreator(types.SET_AUTH_BUSY, (arg) => arg !== false)
@@ -44,16 +43,12 @@ const creators = {
           json: true,
           auth: credentials
         })
-        .then(({ statusCode, body }) => {
-          if (statusCode === 200) {
-            dispatch(setAuthCredentials({
-              credentials,
-              id: body.id
-            }))
-            newId = body.id
-          } else {
-            handleError(body)
-          }
+        .then(response => {
+          dispatch(setAuthCredentials({
+            credentials,
+            id: response.id
+          }))
+          newId = response.id
         })
         // Cache the new user.
         .then(() => dispatch(loadUser(newId)))

@@ -59,7 +59,8 @@ class BlogPost extends React.Component {
     return this.props.loadPost(this.props.params.postId)
       .catch(err => this.setState({
         error: err.message || err
-      })).finally(() => this.setState({
+      }))
+      .then(() => this.setState({
         busy: false
       }))
   }

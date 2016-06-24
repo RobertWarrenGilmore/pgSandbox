@@ -4,7 +4,7 @@ const store = require('../')
 const { createAction: createActionCreator } = require('redux-actions')
 const types = require('./types')
 const { search: searchUsers } = require('../users/actions')
-const handleError = require('../handleError')
+const NoSuchResourceError = require('../../../errors/noSuchResourceError')
 
 // private action creators
 const cachePosts = createActionCreator(types.CACHE_POSTS)
@@ -29,22 +29,23 @@ const creators = {
         json: true,
         auth,
         body: requestBody
-      }).then(({ statusCode, body }) => {
-        if (statusCode === (exists ? 200 : 201)) {
-          let postMap = {
-            [post.id]: body
-          }
-          if (existingId && (post.id !== existingId)) {
-            postMap[existingId] = null
-          }
-          dispatch(cachePosts(postMap))
-        } else if (statusCode === 404) {
+      })
+      .then(response => {
+        let postMap = {
+          [post.id]: response
+        }
+        if (existingId && (post.id !== existingId)) {
+          postMap[existingId] = null
+        }
+        dispatch(cachePosts(postMap))
+      })
+      .catch(err => {
+        if (err instanceof NoSuchResourceError)
           dispatch(cachePosts({
             [post.id]: null
           }))
-        } else {
-          handleError(body)
-        }
+        else
+          throw err
       })
     }
   },
@@ -56,18 +57,19 @@ const creators = {
         uri: '/api/blog/' + id,
         json: true,
         auth
-      }).then(({ statusCode, body }) => {
-        if (statusCode === 200) {
-          dispatch(cachePosts({
-            [id]: body
-          }))
-        } else if (statusCode === 404) {
+      })
+      .then(response => {
+        dispatch(cachePosts({
+          [id]: response
+        }))
+      })
+      .catch(err => {
+        if (err instanceof NoSuchResourceError)
           dispatch(cachePosts({
             [id]: null
           }))
-        } else {
-          handleError(body)
-        }
+        else
+          throw err
       })
     }
   },
@@ -79,14 +81,17 @@ const creators = {
         uri: '/api/blog/' + id,
         json: true,
         auth
-      }).then(({statusCode, body }) => {
-        if (statusCode === 200 || statusCode === 404) {
+      })
+      .then(response => {
+        dispatch(cachePosts({
+          [id]: null
+        }))
+      })
+      .catch(err => {
+        if (err instanceof NoSuchResourceError)
           dispatch(cachePosts({
             [id]: null
           }))
-        } else {
-          handleError(body)
-        }
       })
     }
   },
@@ -99,19 +104,16 @@ const creators = {
         auth,
         json: true,
         qs: query
-      }).then(({ statusCode, body }) => {
-        if (statusCode === 200) {
-          let postMap = {}
-          let idList = []
-          body.forEach(post => {
-            postMap[post.id] = post
-            idList.push(post.id)
-          })
-          dispatch(cachePosts(postMap))
-          return idList
-        } else {
-          handleError(body)
-        }
+      })
+      .then(response => {
+        let postMap = {}
+        let idList = []
+        response.forEach(post => {
+          postMap[post.id] = post
+          idList.push(post.id)
+        })
+        dispatch(cachePosts(postMap))
+        return idList
       })
     }
   },
@@ -122,14 +124,14 @@ const creators = {
         return dispatch(searchUsers({
           authorisedToBlog: true,
           offset: authorIds.length
-        })).then(ids => {
-          if (ids.length) {
+        }))
+        .then(ids => {
+          if (ids.length)
             // We keep adding this back into this promise chain until no more ids are returned.
             return loadMoreAuthors(authorIds.concat(ids))
-          } else {
+          else
             // Base case; no more authors to add.
             dispatch(setAuthorIds(authorIds))
-          }
         })
       }
       return loadMoreAuthors()

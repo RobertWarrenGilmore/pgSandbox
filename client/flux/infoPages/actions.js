@@ -3,7 +3,7 @@ const ajax = require('../../utilities/ajax')
 const store = require('../')
 const { createAction: createActionCreator } = require('redux-actions')
 const types = require('./types')
-const handleError = require('../handleError')
+const NoSuchResourceError = require('../../../errors/noSuchResourceError')
 
 // private action creators
 const cachePages = createActionCreator(types.CACHE_PAGES)
@@ -19,19 +19,20 @@ const creators = {
         json: true,
         auth,
         body: page
-      }).then(({ statusCode, body }) => {
-        if (statusCode === 200) {
-          let pageMap = {
-            [id]: body
-          }
-          dispatch(cachePages(pageMap))
-        } else if (statusCode === 404) {
+      })
+      .then(response => {
+        let pageMap = {
+          [id]: response
+        }
+        dispatch(cachePages(pageMap))
+      })
+      .catch(err => {
+        if (err instanceof NoSuchResourceError)
           dispatch(cachePages({
             [id]: null
           }))
-        } else {
-          handleError(body)
-        }
+        else
+          throw err
       })
     }
   },
@@ -43,18 +44,19 @@ const creators = {
         uri: '/api/infoPages/' + id,
         json: true,
         auth
-      }).then(({ statusCode, body }) => {
-        if (statusCode === 200) {
-          dispatch(cachePages({
-            [id]: body
-          }))
-        } else if (statusCode === 404) {
+      })
+      .then(response => {
+        dispatch(cachePages({
+          [id]: response
+        }))
+      })
+      .catch(err => {
+        if (err instanceof NoSuchResourceError)
           dispatch(cachePages({
             [id]: null
           }))
-        } else {
-          handleError(body)
-        }
+        else
+          throw err
       })
     }
   }

@@ -1,9 +1,14 @@
 'use strict'
 class AbstractError extends Error {
-  constructor(message, defaultMessage, errorCode) {
-    super(message)
+  constructor(messageArg /* either a string or {message, messages}*/,
+    defaultMessage, errorCode) {
+    super(
+      (messageArg ? messageArg.message : undefined) ||
+      messageArg ||
+      defaultMessage
+    )
+    this.messages = messageArg ? messageArg.messages : undefined
     this.name = this.constructor.name
-    this.message = message || defaultMessage
     this.errorCode = errorCode
     // Error.captureStackTrace(this, this.constructor)
   }

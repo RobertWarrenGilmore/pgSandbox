@@ -4,7 +4,7 @@ const store = require('../')
 const { createAction: createActionCreator } = require('redux-actions')
 const types = require('./types')
 const authTypes = require('../auth/types')
-const handleError = require('../handleError')
+const NoSuchResourceError = require('../../../errors/noSuchResourceError')
 
 const setAuthCredentials = createActionCreator(authTypes.SET_AUTH_CREDENTIALS)
 const { setTimeZone } = require('../timeZone/actions')
@@ -16,19 +16,13 @@ const updateAvatar = createActionCreator(types.UPDATE_AVATAR)
 // public action creators
 const creators = {
   create(user) {
-    return dispatch => {
-      return ajax({
+    return dispatch =>
+      ajax({
         method: 'POST',
         uri: '/api/users',
         json: true,
         body: user
       })
-      .then(({ statusCode, body }) => {
-        if (statusCode !== 201) {
-          handleError(body)
-        }
-      })
-    }
   },
   save(user, id) {
     return dispatch => {
@@ -53,37 +47,35 @@ const creators = {
         auth: authCredentials,
         body: user
       })
-      .then(({ statusCode, body }) => {
-        if (statusCode === 200) {
-          if (id) {
-            dispatch(cacheUsers({
-              [id]: body
+      .then(response => {
+        if (id) {
+          dispatch(cacheUsers({
+            [id]: response
+          }))
+          if (user.avatar !== undefined)
+            dispatch(updateAvatar({
+              id
             }))
-            if (user.avatar !== undefined)
-              dispatch(updateAvatar({
-                id
-              }))
-            if (user.timeZone && id == authUserId)
-              dispatch(setTimeZone(user.timeZone.toString()))
-          }
-          if (id == store.getState().auth.id) {
-            dispatch(setAuthCredentials({
-              credentials: {
-                emailAddress: user.emailAddress || authCredentials.emailAddress,
-                password: user.password || authCredentials.password
-              },
-              id: id
-            }))
-          }
-        } else if (statusCode === 404) {
-          if (id) {
-            dispatch(cacheUsers({
-              [id]: null
-            }))
-          }
-        } else {
-          handleError(body)
+          if (user.timeZone && id == authUserId)
+            dispatch(setTimeZone(user.timeZone.toString()))
         }
+        if (id == store.getState().auth.id) {
+          dispatch(setAuthCredentials({
+            credentials: {
+              emailAddress: user.emailAddress || authCredentials.emailAddress,
+              password: user.password || authCredentials.password
+            },
+            id: id
+          }))
+        }
+      })
+      .catch(err => {
+        if (err instanceof NoSuchResourceError)
+          dispatch(cacheUsers({
+            [id]: null
+          }))
+        else
+          throw err
       })
     }
   },
@@ -96,18 +88,18 @@ const creators = {
         json: true,
         auth: authCredentials
       })
-      .then(({ statusCode, body }) => {
-        if (statusCode === 200) {
-          dispatch(cacheUsers({
-            [id]: body
-          }))
-        } else if (statusCode === 404) {
+      .then(response => {
+        dispatch(cacheUsers({
+          [id]: response
+        }))
+      })
+      .catch(err => {
+        if (err instanceof NoSuchResourceError)
           dispatch(cacheUsers({
             [id]: null
           }))
-        } else {
-          handleError(body)
-        }
+        else
+          throw err
       })
     }
   },
@@ -121,26 +113,22 @@ const creators = {
         json: true,
         qs: query
       })
-      .then(({ statusCode, body }) => {
-        if (statusCode === 200) {
-          let userMap = {}
-          let idList = []
-          body.forEach(user => {
-            userMap[user.id] = user
-            idList.push(user.id)
-          })
-          dispatch(cacheUsers(userMap))
-          return idList
-        } else {
-          handleError(body)
-        }
+      .then(response => {
+        let userMap = {}
+        let idList = []
+        response.forEach(user => {
+          userMap[user.id] = user
+          idList.push(user.id)
+        })
+        dispatch(cacheUsers(userMap))
+        return idList
       })
     }
   },
   setPassword({ emailAddress, password, passwordResetKey }) {
-    return dispatch => {
-      return ajax({
-        method: 'PUT',
+    return dispatch =>
+      ajax({
+        method: 'POST',
         uri: '/api/setPassword',
         json: true,
         body: {
@@ -149,15 +137,11 @@ const creators = {
           passwordResetKey
         }
       })
-      .then(({ statusCode, body }) => {
-        if (statusCode !== 200)
-          handleError(body)
-      })
-    }
+
   },
   resetPassword(emailAddress) {
-    return dispatch => {
-      return ajax({
+    return dispatch =>
+      ajax({
         method: 'PUT',
         uri: '/api/setPassword',
         json: true,
@@ -166,11 +150,6 @@ const creators = {
           passwordResetKey: null
         }
       })
-      .then(({ statusCode, body }) => {
-        if (statusCode !== 200)
-          handleError(body)
-      })
-    }
   }
 }
 

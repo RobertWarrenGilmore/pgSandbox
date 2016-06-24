@@ -1,50 +1,44 @@
 'use strict'
-const express = require('express')
-const handleError = require('./handleError')
+const transportModule = require('./general')
 
-module.exports = usersBiz => {
-  const router = express.Router({
-    mergeParams: true
-  })
-
-  // users in general
-  router.route('/')
-    .post((req, res) =>
-      usersBiz.create(req)
-        .then(res.status(201).send.bind(res))
-        .catch(handleError(res))
-    )
-    .get((req, res) =>
-      usersBiz.read(req)
-        .then(res.send.bind(res))
-        .catch(handleError(res))
-    )
-    .put((req, res) =>
-      usersBiz.update(req)
-        .then(res.send.bind(res))
-        .catch(handleError(res))
-    )
-
-  // a specific user
-  router.route('/:userId')
-    .get((req, res) =>
-      usersBiz.read(req)
-        .then(res.send.bind(res))
-        .catch(handleError(res))
-    )
-    .put((req, res) =>
-      usersBiz.update(req)
-        .then(res.send.bind(res))
-        .catch(handleError(res))
-    )
-
-  // the avatar for a user
-  router.route('/:userId/avatar.jpg')
-    .get((req, res) => {
-      usersBiz.serveAvatar(req)
-        .then(result => res.type('jpeg').send(result))
-        .catch(handleError(res))
-    })
-
-  return router
-}
+module.exports = transportModule([
+  {
+    path: '/',
+    actions: {
+      post: {
+        bizMethod: 'create',
+        extraResponse: res => {
+          res.status(201)
+        }
+      },
+      get: {
+        bizMethod: 'read'
+      },
+      put: {
+        bizMethod: 'update'
+      }
+    }
+  },
+  {
+    path: '/:userId',
+    actions: {
+      get: {
+        bizMethod: 'read'
+      },
+      put: {
+        bizMethod: 'update'
+      }
+    }
+  },
+  {
+    path: '/:userId/avatar.jpg',
+    actions: {
+      get: {
+        bizMethod: 'serveAvatar',
+        extraResponse: res => {
+          res.type('jpeg')
+        }
+      }
+    }
+  }
+])

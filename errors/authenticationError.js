@@ -1,8 +1,9 @@
 'use strict'
 const AbstractError = require('./abstractError')
+
 class AuthenticationError extends AbstractError {
-  constructor(message) {
-    super(message, 'Authentication failed.', 400)
+  constructor(messageArg) {
+    super(messageArg, 'Authentication failed.', 418) // IE mishandles 401.
   }
 }
 module.exports = AuthenticationError

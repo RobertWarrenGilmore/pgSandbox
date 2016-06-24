@@ -1,18 +1,13 @@
 'use strict'
-const express = require('express')
-const handleError = require('./handleError')
+const transportModule = require('./general')
 
-module.exports = usersBiz => {
-  const router = express.Router({
-    mergeParams: true
-  })
-
-  router.route('/')
-    .put((req, res) =>
-      usersBiz.setPassword(req)
-        .then(res.send.bind(res))
-        .catch(handleError(res))
-    )
-
-  return router
-}
+module.exports = transportModule([
+  {
+    path: '/',
+    actions: {
+      post: {
+        bizMethod: 'setPassword'
+      }
+    }
+  }
+])
