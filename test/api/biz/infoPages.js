@@ -1,8 +1,7 @@
 'use strict'
 const _ = require('lodash')
 const assert = require('assert')
-const Promise = require('bluebird')
-const bcrypt = Promise.promisifyAll(require('bcrypt'))
+const bcrypt = require('bcrypt')
 const knex = require('../../../api/database/knex')
 const InfoPage = require('../../../api/biz/infoPages')(knex)
 const AuthorisationError = require('../../../errors/authorisationError')
@@ -109,7 +108,8 @@ describe('info pages', () => {
           emailAddress: notAdmin.emailAddress,
           password: notAdmin.password
         }
-      }).then(function (page) {
+      })
+      .then(function (page) {
         assert.deepEqual(page, {
           title: '',
           body: body
@@ -122,9 +122,16 @@ describe('info pages', () => {
         params: {
           pageId: badId
         }
-      }).then(function (page) {
+      })
+      .then(function (page) {
         assert(false, 'The read succeeded.')
-      }).catch(NoSuchResourceError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof NoSuchResourceError) {
+        } else {
+          throw err
+        }
+      })
     )
 
   })
@@ -139,9 +146,16 @@ describe('info pages', () => {
         body: {
           body: otherBody
         }
-      }).then(function (page) {
+      })
+      .then(function (page) {
         assert(false, 'The update succeeded.')
-      }).catch(AuthorisationError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof AuthorisationError) {
+        } else {
+          throw err
+        }
+      })
     )
 
     it('should be able to update a page as an admin user', () =>
@@ -156,7 +170,8 @@ describe('info pages', () => {
         body: {
           body: otherBody
         }
-      }).then(function (page) {
+      })
+      .then(function (page) {
         assert.deepEqual(page, {
           title: '',
           body: otherBody
@@ -178,7 +193,8 @@ describe('info pages', () => {
             body: otherBody
           }
         })
-      ).then(function (page) {
+      )
+      .then(function (page) {
         assert.deepEqual(page, {
           title: '',
           body: otherBody
@@ -198,9 +214,16 @@ describe('info pages', () => {
         body: {
           body: otherBody
         }
-      }).then(page => {
+      })
+      .then(page => {
         assert(false, 'The update succeeded.')
-      }).catch(AuthorisationError, () => {})
+      })
+      .catch(err => {
+        if (err instanceof AuthorisationError) {
+        } else {
+          throw err
+        }
+      })
     )
 
     it('should fail to update a non-existent page', () =>
@@ -215,9 +238,16 @@ describe('info pages', () => {
         body: {
           body: otherBody
         }
-      }).then(page => {
+      })
+      .then(page => {
         assert(false, 'The update succeeded.')
-      }).catch(NoSuchResourceError, () => {})
+      })
+      .catch(err => {
+        if (err instanceof NoSuchResourceError) {
+        } else {
+          throw err
+        }
+      })
     )
 
   })

@@ -2,8 +2,7 @@
 const knex = require('../../../api/database/knex')
 const assert = require('assert')
 const sinon = require('sinon')
-const Promise = require('bluebird')
-const bcrypt = Promise.promisifyAll(require('bcrypt'))
+const bcrypt = require('bcrypt')
 const mockEmailer = sinon.spy(function () {
   if (mockEmailer.err) {
     return Promise.reject(mockEmailer.err)
@@ -134,9 +133,13 @@ describe('users', function () {
       .then(user => {
         assert(false, 'The creation succeeded.')
       })
-      .catch(ValidationError, err => {
-        assert(err.messages.givenName, 'wrong error')
-        assert(err.messages.familyName, 'wrong error')
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          assert(err.messages.givenName, 'wrong error')
+          assert(err.messages.familyName, 'wrong error')
+        } else {
+          throw err
+        }
       })
     )
 
@@ -170,9 +173,11 @@ describe('users', function () {
           givenName,
           familyName
         }
-      }).then(function (user) {
+      })
+      .then(function (user) {
         return knex.select().from('users').where('emailAddress', emailAddress)
-      }).then(function (users) {
+      })
+      .then(function (users) {
         createdIds.push(users[0].id)
         assert(users[0].active, 'The user is not active.')
       })
@@ -186,14 +191,20 @@ describe('users', function () {
           familyName,
           active: false
         }
-      }).then(function (user) {
+      })
+      .then(function (user) {
         return knex.select().from('users').where('emailAddress', emailAddress)
-      }).then(function (users) {
+      })
+      .then(function (users) {
         createdIds.push(users[0].id)
         assert(false, 'The creation succeeded.')
       })
-      .catch(ValidationError, err => {
-        assert(err.messages.active)
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          assert(err.messages.active)
+        } else {
+          throw err
+        }
       })
     })
 
@@ -207,8 +218,12 @@ describe('users', function () {
       .then(user => {
         assert(false, 'The creation succeeded.')
       })
-      .catch(ValidationError, err => {
-        assert(err.messages.emailAddress)
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          assert(err.messages.emailAddress)
+        } else {
+          throw err
+        }
       })
     )
 
@@ -222,8 +237,12 @@ describe('users', function () {
       .then(user => {
         assert(false, 'The creation succeeded.')
       })
-      .catch(ValidationError, err => {
-        assert(err.messages.givenName)
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          assert(err.messages.givenName)
+        } else {
+          throw err
+        }
       })
     )
 
@@ -237,8 +256,12 @@ describe('users', function () {
       .then(user => {
         assert(false, 'The creation succeeded.')
       })
-      .catch(ValidationError, err => {
-        assert(err.messages.familyName)
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          assert(err.messages.familyName)
+        } else {
+          throw err
+        }
       })
     )
 
@@ -257,7 +280,13 @@ describe('users', function () {
       }).then(user => {
         createdIds.push(user.id)
         assert(false, 'The creation succeeded.')
-      }).catch(ConflictingEditError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof ConflictingEditError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     it('should fail with an invalid email address', function () {
@@ -271,8 +300,11 @@ describe('users', function () {
         createdIds.push(user.id)
         assert(false, 'The creation succeeded.')
       })
-      .catch(ValidationError, err => {
-        assert(err.messages.emailAddress)
+      .catch(err => {
+        if (err instanceof ValidationError) {
+        } else {
+          throw err
+        }
       })
     })
 
@@ -290,7 +322,13 @@ describe('users', function () {
         createdIds.push(users[0].id)
         assert(!mockEmailer.called, 'The password setting email was sent.')
         assert(false, 'The creation did not fail.')
-      }).catch(EmailerError, err => {})
+      })
+      .catch(err => {
+        if (err instanceof EmailerError) {
+        } else {
+          throw err
+        }
+      })
     })
 
   })
@@ -372,7 +410,13 @@ describe('users', function () {
         })
       }).then(function (user) {
         assert(false, 'The read succeeded.')
-      }).catch(NoSuchResourceError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof NoSuchResourceError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     it('should fail to authenticate with an unassigned email address', function () {
@@ -386,7 +430,13 @@ describe('users', function () {
         }
       }).then(function (user) {
         assert(false, 'Authentication did not fail.')
-      }).catch(AuthenticationError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof AuthenticationError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     it('should fail to authenticate with a wrong password', function () {
@@ -400,7 +450,13 @@ describe('users', function () {
         }
       }).then(function (user) {
         assert(false, 'Authentication did not fail.')
-      }).catch(AuthenticationError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof AuthenticationError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     describe('search', function () {
@@ -457,7 +513,8 @@ describe('users', function () {
                 sortOrder: 'ascending'
               }
             })
-          }).then(function (users) {
+          })
+          .then(function (users) {
             assert.strictEqual(users.length, count, 'The wrong number of users was returned.')
             for (let i = 0; i < users.length - 1; ++i) {
               const inOrder = (users[i].familyName <= users[i + 1].familyName)
@@ -473,12 +530,18 @@ describe('users', function () {
             sortBy: 'active', // not sortrable
             sortOrder: 'ascending'
           }
-        }).then(function (users) {
+        })
+        .then(function (users) {
           assert(false, 'The read succeeded.')
-        }).catch(ValidationError, function (err) {
-          if (Object.keys(err.messages).length !== 1
-            || !err.messages.sortBy
-            || err.messages.sortBy.length !== 1) {
+        })
+        .catch(err => {
+          if (err instanceof ValidationError) {
+            if (Object.keys(err.messages).length !== 1
+              || !err.messages.sortBy
+              || err.messages.sortBy.length !== 1) {
+              throw err
+            }
+          } else {
             throw err
           }
         })
@@ -489,7 +552,8 @@ describe('users', function () {
           query: {
             familyName: familyName1
           }
-        }).then(function (users) {
+        })
+        .then(function (users) {
           assert.strictEqual(users.length, 2, 'The wrong number of users was returned.')
           for (let i in users) {
             assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.')
@@ -502,7 +566,8 @@ describe('users', function () {
           query: {
             familyName: familyName1.substr(0, 3).toLowerCase()
           }
-        }).then(function (users) {
+        })
+        .then(function (users) {
           assert.strictEqual(users.length, 2, 'The wrong number of users was returned.')
           for (let i in users) {
             assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.')
@@ -515,7 +580,8 @@ describe('users', function () {
           query: {
             familyName: familyName1.replace('e', '_')
           }
-        }).then(function (users) {
+        })
+        .then(function (users) {
           assert.strictEqual(users.length, 0, 'The wrong number of users was returned.')
         })
       })
@@ -526,7 +592,8 @@ describe('users', function () {
             familyName: familyName1,
             givenName: givenName1
           }
-        }).then(function (users) {
+        })
+        .then(function (users) {
           assert.strictEqual(users.length, 1, 'The wrong number of users was returned.')
           assert.strictEqual(users[0].givenName, givenName1, 'The returned user has the wrong given name.')
           assert.strictEqual(users[0].familyName, familyName1, 'The returned user has the wrong family name.')
@@ -540,7 +607,8 @@ describe('users', function () {
             sortBy: 'givenName',
             sortOrder: 'descending'
           }
-        }).then(function (users) {
+        })
+        .then(function (users) {
           assert.strictEqual(users.length, 2, 'The wrong number of users was returned.')
           for (let i in users) {
             assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.')
@@ -556,7 +624,8 @@ describe('users', function () {
             sortBy: 'givenName',
             sortOrder: 'ascending'
           }
-        }).then(function (users) {
+        })
+        .then(function (users) {
           assert.strictEqual(users.length, 2, 'The wrong number of users was returned.')
           for (let i in users) {
             assert.strictEqual(users[i].familyName, familyName1, 'The wrong users were returned.')
@@ -572,7 +641,8 @@ describe('users', function () {
             sortBy: 'familyName',
             sortOrder: 'ascending'
           }
-        }).then(function (users) {
+        })
+        .then(function (users) {
           assert.strictEqual(users.length, 2, 'The wrong number of users was returned.')
           for (let i in users) {
             assert(users[i].authorisedToBlog, 'The wrong users were returned.')
@@ -586,12 +656,18 @@ describe('users', function () {
           query: {
             emailAddress: emailAddress
           }
-        }).then(function (users) {
+        })
+        .then(function (users) {
           assert(false, 'The read succeeded')
-        }).catch(ValidationError, function (err) {
-          if (Object.keys(err.messages).length !== 1
-            || !err.messages.emailAddress
-            || err.messages.emailAddress.length !== 1) {
+        })
+        .catch(err => {
+          if (err instanceof ValidationError) {
+            if (Object.keys(err.messages).length !== 1
+              || !err.messages.emailAddress
+              || err.messages.emailAddress.length !== 1) {
+              throw err
+            }
+          } else {
             throw err
           }
         })
@@ -603,12 +679,18 @@ describe('users', function () {
             familyName: familyName1,
             notARealAttribute: 'hello'
           }
-        }).then(function () {
+        })
+        .then(function () {
           assert(false, 'The read succeeded.')
-        }).catch(ValidationError, function (err) {
-          if (Object.keys(err.messages).length !== 1
-            || !err.messages.notARealAttribute
-            || err.messages.notARealAttribute.length !== 1) {
+        })
+        .catch(err => {
+          if (err instanceof ValidationError) {
+            if (Object.keys(err.messages).length !== 1
+              || !err.messages.notARealAttribute
+              || err.messages.notARealAttribute.length !== 1) {
+              throw err
+            }
+          } else {
             throw err
           }
         })
@@ -622,9 +704,16 @@ describe('users', function () {
           query: {
             familyName: familyName1
           }
-        }).then(function () {
+        })
+        .then(function () {
           assert(false, 'The read succeeded.')
-        }).catch(MalformedRequestError, function () {})
+        })
+        .catch(err => {
+          if (err instanceof MalformedRequestError) {
+          } else {
+            throw err
+          }
+        })
       })
     })
 
@@ -640,7 +729,9 @@ describe('users', function () {
           passwordHash: bcrypt.hashSync(adminUser.password, bcrypt.genSaltSync(8)),
           admin: true,
           active: true
-        }).returning('id').then(function (ids) {
+        })
+        .returning('id')
+        .then(function (ids) {
           createdIds.push(ids[0])
         })
       })
@@ -651,7 +742,8 @@ describe('users', function () {
             emailAddress: searchableUsers[0].emailAddress
           },
           auth: adminUser
-        }).then(function (users) {
+        })
+        .then(function (users) {
           assert.strictEqual(users.length, 1, 'The wrong number of users was returned.')
           for (let i in users) {
             assert.strictEqual(users[i].emailAddress, searchableUsers[0].emailAddress, 'The wrong users were returned.')
@@ -721,12 +813,18 @@ describe('users', function () {
         body: {
           password: '1234567'
         }
-      }).then(function () {
+      })
+      .then(function () {
         assert(false, 'The update succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.password
-          || err.messages.password.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.password
+            || err.messages.password.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -744,12 +842,18 @@ describe('users', function () {
         body: {
           password: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcde'
         }
-      }).then(function () {
+      })
+      .then(function () {
         assert(false, 'The update succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.password
-          || err.messages.password.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.password
+            || err.messages.password.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -767,12 +871,18 @@ describe('users', function () {
         body: {
           notARealAttribute: 'hello'
         }
-      }).then(function () {
+      })
+      .then(function () {
         assert(false, 'The update succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.notARealAttribute
-          || err.messages.notARealAttribute.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.notARealAttribute
+            || err.messages.notARealAttribute.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -883,8 +993,12 @@ describe('users', function () {
         .then(() => {
           assert(false, 'The update succeeded.')
         })
-        .catch(ValidationError, err => {
-          assert(err.messages.avatar)
+        .catch(err => {
+          if (err instanceof ValidationError) {
+            assert(err.messages.avatar)
+          } else {
+            throw err
+          }
         })
     )
 
@@ -905,8 +1019,12 @@ describe('users', function () {
         .then(() => {
           assert(false, 'The update succeeded.')
         })
-        .catch(ValidationError, err => {
-          assert(err.messages.avatar)
+        .catch(err => {
+          if (err instanceof ValidationError) {
+            assert(err.messages.avatar)
+          } else {
+            throw err
+          }
         })
     )
 
@@ -951,13 +1069,19 @@ describe('users', function () {
         body: {
           emailAddress: badEmailAddress
         }
-      }).then(function (user) {
+      })
+      .then(function (user) {
         assert.notStrictEqual(user.emailAddress, badEmailAddress, 'The email address was set to "' + badEmailAddress + '".')
         assert(false, 'The update succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
           || !err.messages.emailAddress
           || err.messages.emailAddress.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -971,9 +1095,16 @@ describe('users', function () {
         body: {
           emailAddress: emailAddress
         }
-      }).then(function () {
+      })
+      .then(function () {
         assert(false, 'The update succeeded.')
-      }).catch(AuthenticationError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof AuthenticationError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     it('should fail to remove an email address', () =>
@@ -992,8 +1123,12 @@ describe('users', function () {
       .then(() => {
         assert(false, 'The update succeeded.')
       })
-      .catch(ValidationError, err => {
-        assert(err.messages.emailAddress)
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          assert(err.messages.emailAddress)
+        } else {
+          throw err
+        }
       })
     )
 
@@ -1013,8 +1148,12 @@ describe('users', function () {
       .then(() => {
         assert(false, 'The update succeeded.')
       })
-      .catch(ValidationError, err => {
-        assert(err.messages.emailAddress)
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          assert(err.messages.emailAddress)
+        } else {
+          throw err
+        }
       })
     )
 
@@ -1034,8 +1173,12 @@ describe('users', function () {
       .then(() => {
         assert(false, 'The update succeeded.')
       })
-      .catch(ValidationError, err => {
-        assert(err.messages.givenName)
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          assert(err.messages.givenName)
+        } else {
+          throw err
+        }
       })
     )
 
@@ -1055,8 +1198,12 @@ describe('users', function () {
       .then(() => {
         assert(false, 'The update succeeded.')
       })
-      .catch(ValidationError, err => {
-        assert(err.messages.givenName)
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          assert(err.messages.givenName)
+        } else {
+          throw err
+        }
       })
     )
 
@@ -1076,8 +1223,12 @@ describe('users', function () {
       .then(() => {
         assert(false, 'The update succeeded.')
       })
-      .catch(ValidationError, err => {
-        assert(err.messages.familyName)
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          assert(err.messages.familyName)
+        } else {
+          throw err
+        }
       })
     )
 
@@ -1097,8 +1248,12 @@ describe('users', function () {
       .then(() => {
         assert(false, 'The update succeeded.')
       })
-      .catch(ValidationError, err => {
-        assert(err.messages.familyName)
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          assert(err.messages.familyName)
+        } else {
+          throw err
+        }
       })
     )
 
@@ -1186,8 +1341,12 @@ describe('users', function () {
       .then(() => {
         assert(false, 'The update succeeded.')
       })
-      .catch(ValidationError, err => {
-        assert(err.messages.timeZone)
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          assert(err.messages.timeZone)
+        } else {
+          throw err
+        }
       })
     )
 
@@ -1207,8 +1366,12 @@ describe('users', function () {
       .then(() => {
         assert(false, 'The update succeeded.')
       })
-      .catch(ValidationError, err => {
-        assert(err.messages.timeZone)
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          assert(err.messages.timeZone)
+        } else {
+          throw err
+        }
       })
     )
 
@@ -1306,9 +1469,16 @@ describe('users', function () {
           body: {
             active: false
           }
-        }).then(function () {
+        })
+        .then(function () {
           assert(false, 'The update succeeded.')
-        }).catch(AuthorisationError, function () {})
+        })
+        .catch(err => {
+          if (err instanceof AuthorisationError) {
+          } else {
+            throw err
+          }
+        })
       })
 
       it('should fail to set a password', function () {
@@ -1323,9 +1493,16 @@ describe('users', function () {
           body: {
             password: password
           }
-        }).then(function () {
+        })
+        .then(function () {
           assert(false, 'The update succeeded.')
-        }).catch(AuthorisationError, function () {})
+        })
+        .catch(err => {
+          if (err instanceof AuthorisationError) {
+          } else {
+            throw err
+          }
+        })
       })
 
     })
@@ -1338,7 +1515,9 @@ describe('users', function () {
         //Create a user, store his ID, then delete the user.
         return knex.into('users').insert({
           emailAddress: otherEmailAddress
-        }).returning('id').then(function (ids) {
+        })
+        .returning('id')
+        .then(function (ids) {
           badId = ids[0]
           return knex.from('users').where('id', badId).del()
         })
@@ -1356,9 +1535,16 @@ describe('users', function () {
           body: {
             emailAddress: 'different' + emailAddress
           }
-        }).then(function () {
+        })
+        .then(function () {
           assert(false, 'The update did not fail.')
-        }).catch(AuthorisationError, function () {})
+        })
+        .catch(err => {
+          if (err instanceof AuthorisationError) {
+          } else {
+            throw err
+          }
+        })
       })
 
     })
@@ -1414,7 +1600,12 @@ describe('users', function () {
       .then(user => {
         assert(false, 'The email was sent.')
       })
-      .catch(EmailerError, () => {})
+      .catch(err => {
+        if (err instanceof EmailerError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     context('after password reset email', () => {
@@ -1461,8 +1652,12 @@ describe('users', function () {
         .then(() => {
           assert(false, 'The update succeeded.')
         })
-        .catch(AuthenticationError, () => {
-          assert(completedFirstUpdate, 'The second update failed.')
+        .catch(err => {
+          if (err instanceof AuthenticationError) {
+            assert(completedFirstUpdate, 'The second update failed.')
+          } else {
+            throw err
+          }
         })
       })
 
@@ -1480,7 +1675,12 @@ describe('users', function () {
         .then(() => {
           assert(false, 'The update succeeded.')
         })
-        .catch(AuthenticationError, () => {})
+        .catch(err => {
+          if (err instanceof AuthenticationError) {
+          } else {
+            throw err
+          }
+        })
       )
 
     })
@@ -1493,7 +1693,9 @@ describe('users', function () {
         //Create a user, store his ID, then delete the user.
         return knex.into('users').insert({
           emailAddress: otherEmailAddress
-        }).returning('id').then(function (ids) {
+        })
+        .returning('id')
+        .then(function (ids) {
           badId = ids[0]
           return knex.from('users').where('id', badId).del()
         })
@@ -1506,9 +1708,16 @@ describe('users', function () {
             passwordResetKey: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcd',
             password
           }
-        }).then(() => {
+        })
+        .then(() => {
           assert(false, 'The update did not fail.')
-        }).catch(NoSuchResourceError, () => {})
+        })
+        .catch(err => {
+          if (err instanceof NoSuchResourceError) {
+          } else {
+            throw err
+          }
+        })
       )
 
       it('should fail to send a password reset email', () =>
@@ -1517,10 +1726,17 @@ describe('users', function () {
             emailAddress: otherEmailAddress,
             passwordResetKey: null
           }
-        }).then(() => {
+        })
+        .then(() => {
           assert(!mockEmailer.called, 'The emailer was called.')
           assert(false, 'The update did not fail.')
-        }).catch(NoSuchResourceError, () => {})
+        })
+        .catch(err => {
+          if (err instanceof NoSuchResourceError) {
+          } else {
+            throw err
+          }
+        })
       )
 
     })

@@ -99,9 +99,11 @@ class BlogPost extends React.Component {
             pathname: '/blog/' + this.state.editingPost.id
           })
         }
-      }).catch(err => this.setState({
+      })
+      .catch(err => this.setState({
         error: err.message || err
-      })).finally(() => this.setState({
+      }))
+      .then(() => this.setState({
         busy: false
       }))
   }
@@ -121,9 +123,11 @@ class BlogPost extends React.Component {
     this.props.deletePost(this.props.params.postId)
       .then(() => this.setState({
         editingPost: null
-      })).catch(err => this.setState({
+      }))
+      .catch(err => this.setState({
         error: err.message || err
-      })).finally(() => this.setState({
+      }))
+      .then(() => this.setState({
         busy: false,
         confirmingDelete: false
       }))
@@ -154,7 +158,8 @@ class BlogPost extends React.Component {
       return this.props.loadAuthors()
         .catch(err => this.setState({
           error: err.message || err
-        })).then(() => this.setState({
+        }))
+        .then(() => this.setState({
           busy: false
         }))
     }

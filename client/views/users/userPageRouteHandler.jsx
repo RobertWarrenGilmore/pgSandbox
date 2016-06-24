@@ -60,7 +60,8 @@ class UserPage extends React.Component {
     return props.loadUser()
       .catch(err => this.setState({
         error: err.message || err
-      })).finally(() => this.setState({
+      }))
+      .then(() => this.setState({
         busy: false
       }))
   }
@@ -213,7 +214,13 @@ class UserPage extends React.Component {
 
       ]
     })
-    .catch(ValidationError, err => err.messages)
+    .catch(err => {
+      if (err instanceof ValidationError) {
+        return err.messages
+      } else {
+        throw err
+      }
+    })
     .then(fieldErrors =>
       this.setState((previousState, currentProps) => ({
         // Set the avatar as it was mutated by the validator.

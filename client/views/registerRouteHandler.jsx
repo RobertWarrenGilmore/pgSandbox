@@ -60,11 +60,14 @@ class Register extends React.Component {
       emailAddress: this.refs.emailAddress.value,
       givenName: this.refs.givenName.value,
       familyName: this.refs.familyName.value
-    }).then(() => this.setState({
+    })
+    .then(() => this.setState({
       success: true
-    })).catch(err => this.setState({
+    }))
+    .catch(err => this.setState({
       error: err.message || err
-    })).finally(() => this.setState({
+    }))
+    .then(() => this.setState({
       busy: false
     }))
   }

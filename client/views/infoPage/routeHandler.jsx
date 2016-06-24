@@ -44,7 +44,8 @@ class InfoPage extends React.Component {
     return this.props.loadPage(getPageId(this.props))
       .catch(err => this.setState({
         error: err.message || err
-      })).finally(() => this.setState({
+      }))
+      .then(() => this.setState({
         busy: false
       }))
   }
@@ -57,9 +58,11 @@ class InfoPage extends React.Component {
     return this.props.savePage(this.state.editingPage, getPageId(this.props))
       .then(() => this.setState({
         editingPost: getPage(this.props)
-      })).catch(err => this.setState({
+      }))
+      .catch(err => this.setState({
         error: err.message || err
-      })).finally(() => this.setState({
+      }))
+      .then(() => this.setState({
         busy: false
       }))
   }

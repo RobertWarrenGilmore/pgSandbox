@@ -1,17 +1,31 @@
 'use strict'
 const _ = require('lodash')
-const Promise = require('bluebird')
 
 // a list of promises resolving to error messages for the given attribute
 const messagePromiseList = (valueMap, key, validationList) =>
   _.map(validationList, validation =>
-    Promise.try(() => validation(valueMap[key]))
+    new Promise((resolve, reject) => {
+      try {
+        let v = validation(valueMap[key])
+        if (v && v.then) {
+          v.then(resolve).catch(reject)
+        } else {
+          resolve(v)
+        }
+      } catch (err) {
+        reject(err)
+      }
+    })
     .then(() => null)
-    .catch(ValidationError, err => {
-      if (err.messages) {
-        return err.messages
+    .catch(err => {
+      if (err instanceof ValidationError) {
+        if (err.messages) {
+          return err.messages
+        } else {
+          return err.message
+        }
       } else {
-        return err.message
+        throw err
       }
     })
   )
@@ -48,14 +62,22 @@ const messageListPromiseMap = (valueMap, validationListMap) =>
   )
 
 // Ideally a promise resolving to void if there are errors, rejects with a (pruned) object whose keys are from obj and whose values are lists of error messages.
-const messageListMapPromise = argMessageListPromiseMap =>
-  Promise.props(argMessageListPromiseMap)
-  .then(messageLists => {
-    messageLists = _.omit(messageLists, _.isEmpty)
-    if (Object.keys(messageLists).length) {
-      throw new ValidationError(messageLists)
-    }
+const messageListMapPromise = argMessageListPromiseMap => {
+  const keys = []
+  const promises = []
+  _.toPairs(argMessageListPromiseMap).forEach(([key, promise]) => {
+    keys.push(key)
+    promises.push(promise)
   })
+  return Promise.all(promises)
+    .then(values => {
+      let messageLists = _.fromPairs(_.zip(keys, values))
+      messageLists = _.omitBy(messageLists, _.isEmpty)
+      if (Object.keys(messageLists).length) {
+        throw new ValidationError(messageLists)
+      }
+    })
+}
 
 const validate = (obj, validations) =>
   messageListMapPromise(
@@ -83,21 +105,20 @@ const transformMessageListMapToLines = messageListMap =>
 const transformMessageListMapToString = messageListMap =>
   '\n' + transformMessageListMapToLines(messageListMap).join('\n')
 
-function ValidationError(arg) {
-  Error.call(this)
-  this.name = this.constructor.name
-  if (_.isString(arg)) {
-    this.message = arg
-  } else if (_.isObject(arg)) {
-    this.messages = arg.messages || arg
-    this.message = arg.message || transformMessageListMapToString(this.messages)
-  } else {
-    this.message = 'The request was malformed.'
+class ValidationError extends Error {
+  constructor(arg) {
+    super(arg)
+    this.name = this.constructor.name
+    if (_.isString(arg)) {
+      this.message = arg
+    } else if (_.isObject(arg)) {
+      this.messages = arg.messages || arg
+      this.message = arg.message || transformMessageListMapToString(this.messages)
+    } else {
+      this.message = 'The request was malformed.'
+    }
   }
-  Error.captureStackTrace(this, this.constructor)
 }
-ValidationError.prototype = Object.create(Error.prototype)
-ValidationError.prototype.constructor = ValidationError
 validate.ValidationError = ValidationError
 
 const commonValidations = {

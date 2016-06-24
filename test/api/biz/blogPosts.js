@@ -1,9 +1,8 @@
 'use strict'
 const assert = require('assert')
-const Promise = require('bluebird')
 const knex = require('../../../api/database/knex')
 const escapeForLike = require('../../../api/biz/utilities/escapeForLike')
-const bcrypt = Promise.promisifyAll(require('bcrypt'))
+const bcrypt = require('bcrypt')
 const BlogPost = require('../../../api/biz/blogPosts')(knex)
 const AuthenticationError = require('../../../errors/authenticationError')
 const AuthorisationError = require('../../../errors/authorisationError')
@@ -41,7 +40,9 @@ describe('blog posts', function () {
       familyName: familyName,
       passwordHash: passwordHash,
       authorisedToBlog: true
-    }).returning('id').then(function (ids) {
+    })
+    .returning('id')
+    .then(function (ids) {
       authorId = ids[0]
     })
   })
@@ -52,7 +53,8 @@ describe('blog posts', function () {
         .from('blogPosts')
         .where('id', 'ilike', escapeForLike(deletionId))
         .del()
-    })).then(function () {
+    }))
+    .then(function () {
       createdIds.length = 0
     })
   })
@@ -60,7 +62,6 @@ describe('blog posts', function () {
   afterEach('Destroy the author.', function () {
     return knex
       .from('users')
-      .where('id', authorId)
       .del()
   })
 
@@ -84,9 +85,11 @@ describe('blog posts', function () {
             id: authorId
           }
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(posts[0], 'No post was created.')
       })
@@ -112,9 +115,11 @@ describe('blog posts', function () {
             id: authorId
           }
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(id)
         assert(posts[0], 'No post was created.')
       })
@@ -140,7 +145,8 @@ describe('blog posts', function () {
             id: authorId
           }
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         createdIds.push(id)
         assert(!(post instanceof Array), 'An array was returned instead of a single post.')
         assert.deepStrictEqual(post, {
@@ -179,12 +185,20 @@ describe('blog posts', function () {
             id: authorId
           }
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(AuthenticationError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof AuthenticationError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     it('should fail with no auth and minimal attributes', function () {
@@ -201,12 +215,20 @@ describe('blog posts', function () {
             id: authorId
           }
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(AuthorisationError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof AuthorisationError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     it('should fail with a poorly formatted post id', function () {
@@ -227,15 +249,22 @@ describe('blog posts', function () {
             id: authorId
           }
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.postId
-          || err.messages.postId.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.postId
+            || err.messages.postId.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -259,15 +288,22 @@ describe('blog posts', function () {
             id: authorId
           }
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.postedTime
-          || err.messages.postedTime.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.postedTime
+            || err.messages.postedTime.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -291,15 +327,22 @@ describe('blog posts', function () {
             id: authorId
           }
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.timeZone
-          || err.messages.timeZone.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.timeZone
+            || err.messages.timeZone.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -324,15 +367,23 @@ describe('blog posts', function () {
           },
           silly: 'this is not a legal attribute'
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.silly
-          || err.messages.silly.length !== 1) {
+      })
+
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.silly
+            || err.messages.silly.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -345,7 +396,8 @@ describe('blog posts', function () {
         body: body,
         postedTime: postedTime,
         author: authorId
-      }).then(function () {
+      })
+      .then(function () {
         createdIds.push(id)
         return BlogPost.create({
           auth: {
@@ -365,12 +417,20 @@ describe('blog posts', function () {
             }
           }
         })
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(ConflictingEditError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof ConflictingEditError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     it('should fail if the id is omitted', function () {
@@ -393,10 +453,15 @@ describe('blog posts', function () {
       }).then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.postId
-          || err.messages.postId.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.postId
+            || err.messages.postId.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -419,15 +484,22 @@ describe('blog posts', function () {
             id: authorId
           }
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.body
-          || err.messages.body.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.body
+            || err.messages.body.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -450,15 +522,22 @@ describe('blog posts', function () {
             id: authorId
           }
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.title
-          || err.messages.title.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.title
+            || err.messages.title.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -481,15 +560,22 @@ describe('blog posts', function () {
             id: authorId
           }
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.postedTime
-          || err.messages.postedTime.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.postedTime
+            || err.messages.postedTime.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -512,15 +598,22 @@ describe('blog posts', function () {
             id: authorId
           }
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.timeZone
-          || err.messages.timeZone.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.timeZone
+            || err.messages.timeZone.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -541,15 +634,22 @@ describe('blog posts', function () {
           postedTime: postedTime,
           timeZone
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.author
-          || err.messages.author.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.author
+            || err.messages.author.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -571,16 +671,23 @@ describe('blog posts', function () {
           timeZone,
           author: {}
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.author
-          || Object.keys(err.messages.author).length !== 1
-          || err.messages.author.id.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.author
+            || Object.keys(err.messages.author).length !== 1
+            || err.messages.author.id.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -605,16 +712,23 @@ describe('blog posts', function () {
             givenName: 'George'
           }
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.author
-          || Object.keys(err.messages.author).length !== 1
-          || err.messages.author.givenName.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.author
+            || Object.keys(err.messages.author).length !== 1
+            || err.messages.author.givenName.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -638,16 +752,23 @@ describe('blog posts', function () {
             id: authorId + 1
           }
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.author
-          || Object.keys(err.messages.author).length !== 1
-          || err.messages.author.id.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.author
+            || Object.keys(err.messages.author).length !== 1
+            || err.messages.author.id.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -663,10 +784,12 @@ describe('blog posts', function () {
           familyName: familyName,
           passwordHash: passwordHash,
           authorisedToBlog: true
-        }).returning('id').then(function (ids) {
+        })
+        .returning('id').then(ids => {
           otherAuthorId = ids[0]
-        }).then(function () {
-          return BlogPost.create({
+        })
+        .then(() =>
+          BlogPost.create({
             auth: {
               emailAddress: emailAddress,
               password: password
@@ -684,24 +807,32 @@ describe('blog posts', function () {
               }
             }
           })
-        }).then(function (post) {
-          return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-        }).then(function (posts) {
+        )
+        .then(post =>
+          knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
+        )
+        .then(posts => {
           createdIds.push(posts[0].id)
           assert(false, 'The creation succeeded.')
-        }).catch(ValidationError, function (err) {
-          if (Object.keys(err.messages).length !== 1
-            || !err.messages.author
-            || Object.keys(err.messages.author).length !== 1
-            || err.messages.author.id.length !== 1) {
+        })
+        .catch(err => {
+          if (err instanceof ValidationError) {
+            if (Object.keys(err.messages).length !== 1
+              || !err.messages.author
+              || Object.keys(err.messages.author).length !== 1
+              || err.messages.author.id.length !== 1) {
+              throw err
+            }
+          } else {
             throw err
           }
-        }).finally(function () {
-          return knex
+        })
+        .then(() =>
+          knex
             .from('users')
             .where('id', otherAuthorId)
             .del()
-        })
+        )
 
     })
 
@@ -726,12 +857,20 @@ describe('blog posts', function () {
             }
           }
         })
-      }).then(function (post) {
+      })
+      .then(function (post) {
         return knex.select().from('blogPosts').where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         createdIds.push(posts[0].id)
         assert(false, 'The creation succeeded.')
-      }).catch(AuthorisationError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof AuthorisationError) {
+        } else {
+          throw err
+        }
+      })
     })
 
   })
@@ -781,7 +920,8 @@ describe('blog posts', function () {
         params: {
           postId: createdIds[0]
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(!(post instanceof Array), 'An array was returned instead of a single post.')
         assert(!!post.id, 'The returned post had no id.')
       })
@@ -792,7 +932,8 @@ describe('blog posts', function () {
         params: {
           postId: createdIds[0]
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(!(post instanceof Array), 'An array was returned instead of a single post.')
         const exp = searchablePosts[0]
         assert.deepStrictEqual(post, {
@@ -818,9 +959,16 @@ describe('blog posts', function () {
         params: {
           postId: createdIds[createdIds.length] + 'a'
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(false, 'The read succeeded')
-      }).catch(NoSuchResourceError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof NoSuchResourceError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     it('should fail to look up the contents of an inactive post without authenticating', function () {
@@ -878,21 +1026,23 @@ describe('blog posts', function () {
           })
 
         // Assert stuff.
-        }).then(function (post) {
+        })
+        .then(post => {
           assert.strictEqual(post.title, undefined, 'The title was returned.')
           assert.strictEqual(post.body, undefined, 'The body was returned.')
           assert.strictEqual(post.preview, undefined, 'The preview was returned.')
           assert.strictEqual(post.postedTime, undefined, 'The posted time was returned.')
           assert.strictEqual(post.active, false, 'The post was active.')
           assert.strictEqual(post.author.id, authorId, 'The post did not have the right author.')
-        }).finally(function () {
+        })
 
-          // Destroy the other author.
-          return knex
+        // Destroy the other author.
+        .then(() =>
+          knex
             .from('users')
             .where('id', otherAuthorId)
             .del()
-        })
+        )
     })
 
     it('should be able to look up the contents of an inactive post that belongs to oneself', function () {
@@ -932,19 +1082,23 @@ describe('blog posts', function () {
           passwordHash: passwordHash,
           authorisedToBlog: false,
           admin: true
-        }).returning('id').then(function (ids) {
+        })
+        .returning('id')
+        .then(ids => {
           otherAuthorId = ids[0]
-        }).then(function () {
+        })
 
-          // Deactivate the post.
-          return knex.into('blogPosts').where('id', 'ilike', escapeForLike(createdIds[0]))
+        // Deactivate the post.
+        .then(() =>
+          knex.into('blogPosts').where('id', 'ilike', escapeForLike(createdIds[0]))
             .update({
               active: false
             })
-        }).then(function () {
+        )
 
-          // Authenticate as the other author.
-          return BlogPost.read({
+        // Authenticate as the other author.
+        .then(() =>
+          BlogPost.read({
             auth: {
               emailAddress: otherAuthorEmailAddress,
               password: password
@@ -953,23 +1107,25 @@ describe('blog posts', function () {
               postId: createdIds[0]
             }
           })
+        )
 
         // Assert stuff.
-        }).then(function (post) {
+        .then(post=> {
           assert(!(post instanceof Array), 'An array was returned instead of a single post.')
           assert.strictEqual(post.title, searchablePosts[0].title, 'The wrong title was returned.')
           assert.strictEqual(post.body, searchablePosts[0].body, 'The wrong body was returned.')
           assert(searchablePosts[0].postedTime.isSame(post.postedTime), 'The wrong posted time was returned.')
           assert.strictEqual(post.active, false, 'The post was active.')
           assert.strictEqual(post.author.id, searchablePosts[0].author, 'The post did not have the right author.')
-        }).finally(function () {
+        })
 
-          // Destroy the other author.
-          return knex
+        // Destroy the other author.
+        .then(() =>
+          knex
             .from('users')
             .where('id', otherAuthorId)
             .del()
-        })
+        )
     })
 
 
@@ -1015,27 +1171,34 @@ describe('blog posts', function () {
             familyName: familyName,
             passwordHash: passwordHash,
             authorisedToBlog: true
-          }).returning('id').then(function (ids) {
+          })
+          .returning('id')
+          .then(ids => {
             otherAuthorId = ids[0]
-          }).then(function () {
+          })
 
-            // Deactivate the post.
-            return knex.into('blogPosts').where('id', 'ilike', escapeForLike(createdIds[0]))
+          // Deactivate the post.
+          .then(() =>
+            knex
+              .into('blogPosts')
+              .where('id', 'ilike', escapeForLike(createdIds[0]))
               .update({
                 active: false
               })
-          }).then(function () {
+          )
 
-            // Authenticate as the other author.
-            return BlogPost.read({
+          // Authenticate as the other author.
+          .then(() =>
+            BlogPost.read({
               auth: {
                 emailAddress: otherAuthorEmailAddress,
                 password: password
               }
             })
+          )
 
           // Assert stuff.
-          }).then(function (posts) {
+          .then(posts => {
             assert.strictEqual(posts.length, searchablePosts.length, 'The list contains the wrong number of posts.')
             let activeCount = 0
             for (let i in posts) {
@@ -1051,14 +1214,15 @@ describe('blog posts', function () {
               assert.strictEqual(post.author.id, authorId, 'The list contains posts by the wrong author.')
             }
             assert.strictEqual(activeCount, searchablePosts.length - 1, 'The wrong number of posts were active.')
-          }).finally(function () {
+          })
 
-            // Destroy the other author.
-            return knex
+          // Destroy the other author.
+          .then(() =>
+            knex
               .from('users')
               .where('id', otherAuthorId)
               .del()
-          })
+          )
       })
 
       it('should see a post list that includes the contents of the inactive posts of oneself', function () {
@@ -1109,27 +1273,34 @@ describe('blog posts', function () {
             passwordHash: passwordHash,
             authorisedToBlog: false,
             admin: true
-          }).returning('id').then(function (ids) {
+          })
+          .returning('id')
+          .then(ids => {
             otherAuthorId = ids[0]
-          }).then(function () {
+          })
 
-            // Deactivate the post.
-            return knex.into('blogPosts').where('id', 'ilike', escapeForLike(createdIds[0]))
+          // Deactivate the post.
+          .then(() =>
+            knex
+              .into('blogPosts')
+              .where('id', 'ilike', escapeForLike(createdIds[0]))
               .update({
                 active: false
               })
-          }).then(function () {
+          )
 
-            // Authenticate as the other author.
-            return BlogPost.read({
+          // Authenticate as the other author.
+          .then(() =>
+            BlogPost.read({
               auth: {
                 emailAddress: otherAuthorEmailAddress,
                 password: password
               }
             })
+          )
 
           // Assert stuff.
-          }).then(function (posts) {
+          .then(posts => {
             assert.strictEqual(posts.length, searchablePosts.length, 'The list contains the wrong number of posts.')
             let inactivePostEncountered = false
             for (let i in posts) {
@@ -1146,14 +1317,15 @@ describe('blog posts', function () {
               }
             }
             assert(inactivePostEncountered, 'The list did not contain the post that was deactivated.')
-          }).finally(function () {
+          })
 
-            // Destroy the other author.
-            return knex
+          // Destroy the other author.
+          .then(() =>
+            knex
               .from('users')
               .where('id', otherAuthorId)
               .del()
-          })
+          )
       })
     })
   })
@@ -1167,10 +1339,11 @@ describe('blog posts', function () {
         body: body,
         postedTime: postedTime,
         author: authorId
-      }).returning('id')
-        .then(function (returnedIds) {
-          createdIds.push(returnedIds[0])
-        })
+      })
+      .returning('id')
+      .then(function (returnedIds) {
+        createdIds.push(returnedIds[0])
+      })
     })
 
     it('should fail without auth', function () {
@@ -1178,9 +1351,16 @@ describe('blog posts', function () {
         params: {
           postId: createdIds[0]
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(false, 'The update succeeded.')
-      }).catch(AuthorisationError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof AuthorisationError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     it('should fail if the user is not authorised to blog', function () {
@@ -1193,9 +1373,16 @@ describe('blog posts', function () {
             password: password
           }
         })
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(false, 'The update succeeded.')
-      }).catch(AuthorisationError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof AuthorisationError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     it('should fail if the post does not exist', function () {
@@ -1207,9 +1394,16 @@ describe('blog posts', function () {
         params: {
           postId: createdIds[0] + 1
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(false, 'The update succeeded.')
-      }).catch(NoSuchResourceError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof NoSuchResourceError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     it('should be able to change the id', function () {
@@ -1224,7 +1418,8 @@ describe('blog posts', function () {
         body: {
           id: id + 'a'
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         createdIds[0] = post.id
         assert.strictEqual(post.id, id + 'a', 'The id was not modified correctly.')
       })
@@ -1242,7 +1437,8 @@ describe('blog posts', function () {
         body: {
           id: id
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         createdIds[0] = post.id
         assert.strictEqual(post.id, id, 'The id was not modified correctly.')
       })
@@ -1260,12 +1456,18 @@ describe('blog posts', function () {
         body: {
           id: null
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(false, 'The id was removed.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.id
-          || err.messages.id.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.id
+            || err.messages.id.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -1294,9 +1496,16 @@ describe('blog posts', function () {
               id: createdIds[0]
             }
           })
-        }).then(function (post) {
+        })
+        .then(function (post) {
           assert(false, 'The id was set.')
-        }).catch(ConflictingEditError, function () {})
+        })
+        .catch(err => {
+          if (err instanceof ConflictingEditError) {
+          } else {
+            throw err
+          }
+        })
     })
 
     it('should fail to set an id that does not start with a date', function () {
@@ -1311,9 +1520,16 @@ describe('blog posts', function () {
         body: {
           id: 'This_id_does_not_start_with_a_date'
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(false, 'The id was set.')
-      }).catch(MalformedRequestError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof MalformedRequestError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     it('should be able to change the body', function () {
@@ -1328,7 +1544,8 @@ describe('blog posts', function () {
         body: {
           body: body + 'a'
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert.strictEqual(post.body, body + 'a', 'The body was not modified correctly.')
       })
     })
@@ -1345,12 +1562,18 @@ describe('blog posts', function () {
         body: {
           body: null
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(false, 'The body was removed.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.body
-          || err.messages.body.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.body
+            || err.messages.body.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -1368,7 +1591,8 @@ describe('blog posts', function () {
         body: {
           title: title + 'a'
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert.strictEqual(post.title, title + 'a', 'The title was not modified correctly.')
       })
     })
@@ -1385,12 +1609,18 @@ describe('blog posts', function () {
         body: {
           title: null
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(false, 'The title was removed.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.title
-          || err.messages.title.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.title
+            || err.messages.title.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -1408,7 +1638,8 @@ describe('blog posts', function () {
         body: {
           preview: preview + 'a'
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert.strictEqual(post.preview, preview + 'a', 'The preview was not modified correctly.')
       })
     })
@@ -1425,7 +1656,8 @@ describe('blog posts', function () {
         body: {
           preview: null
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert.strictEqual(post.preview, null, 'The preview was not removed.')
       })
     })
@@ -1443,7 +1675,8 @@ describe('blog posts', function () {
         body: {
           postedTime: modifiedPostedTime
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(modifiedPostedTime.isSame(post.postedTime), 'The wrong posted time was returned.')
       })
     })
@@ -1461,7 +1694,8 @@ describe('blog posts', function () {
         body: {
           postedTime: modifiedPostedTime
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(modifiedPostedTime.isSame(post.postedTime), 'The wrong posted time was returned.')
       })
     })
@@ -1478,12 +1712,18 @@ describe('blog posts', function () {
         body: {
           postedTime: null
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(false, 'The postedTime was removed.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.postedTime
-          || err.messages.postedTime.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.postedTime
+            || err.messages.postedTime.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -1502,12 +1742,18 @@ describe('blog posts', function () {
         body: {
           postedTime: dateString
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(false, 'The postedTime was set to ' + post.postedTime + '.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.postedTime
-          || err.messages.postedTime.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.postedTime
+            || err.messages.postedTime.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -1533,7 +1779,8 @@ describe('blog posts', function () {
               active: true
             }
           })
-        }).then(function (post) {
+        })
+        .then(function (post) {
           assert.strictEqual(post.active, true, 'The active attribute was not modified correctly.')
         })
     })
@@ -1550,7 +1797,8 @@ describe('blog posts', function () {
         body: {
           active: false
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert.strictEqual(post.active, false, 'The active attribute was not modified correctly.')
       })
     })
@@ -1565,7 +1813,7 @@ describe('blog posts', function () {
           authorisedToBlog: true
         })
         .returning('id')
-        .then(function (ids) {
+        .then(ids => {
           otherAuthorId = ids[0]
           return BlogPost.update({
             auth: {
@@ -1581,22 +1829,26 @@ describe('blog posts', function () {
               }
             }
           })
-        }).then(function (post) {
+        })
+        .then(post => {
           assert(false, 'The author was reassigned.')
-        }).catch(ValidationError, function (err) {
-          if (Object.keys(err.messages).length !== 1
+        })
+        .catch(err => {
+          if (!(err instanceof ValidationError)
+            || Object.keys(err.messages).length !== 1
             || !err.messages.author
             || Object.keys(err.messages.author).length !== 1
             || !err.messages.author.id
             || err.messages.author.id.length !== 1) {
             throw err
           }
-        }).finally(function () {
-          return knex
+        })
+        .then(() =>
+          knex
             .from('users')
             .where('id', otherAuthorId)
             .del()
-        })
+        )
     })
 
     it('should be able to set the author to the existing author', function () {
@@ -1644,10 +1896,17 @@ describe('blog posts', function () {
               }
             }
           })
-        }).then(function (post) {
+        })
+        .then(function (post) {
           assert.strictEqual(post.author.id, otherAuthorId, 'The author was assigned incorrectly.')
-        }).catch(AuthorisationError, function () {})
-        .finally(function () {
+        })
+        .catch(err => {
+          if (err instanceof AuthenticationError) {
+          } else {
+            throw err
+          }
+        })
+        .then(function () {
           // Change the author of the post back so that we can delete the other author.
           return knex
             .into('blogPosts')
@@ -1675,14 +1934,20 @@ describe('blog posts', function () {
         body: {
           author: {}
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(false, 'The author was reassigned.')
-      }).catch(ValidationError, function (err) {
-        if (Object.keys(err.messages).length !== 1
-          || !err.messages.author
-          || Object.keys(err.messages.author).length !== 1
-          || !err.messages.author.id
-          || err.messages.author.id.length !== 1) {
+      })
+      .catch(err => {
+        if (err instanceof ValidationError) {
+          if (Object.keys(err.messages).length !== 1
+            || !err.messages.author
+            || Object.keys(err.messages.author).length !== 1
+            || !err.messages.author.id
+            || err.messages.author.id.length !== 1) {
+            throw err
+          }
+        } else {
           throw err
         }
       })
@@ -1712,10 +1977,17 @@ describe('blog posts', function () {
               body: body + 'a'
             }
           })
-        }).then(function (post) {
+        })
+        .then(function (post) {
           assert(false, 'The update succeeded.')
-        }).catch(AuthorisationError, function () {})
-        .finally(function () {
+        })
+        .catch(err => {
+          if (err instanceof AuthorisationError) {
+          } else {
+            throw err
+          }
+        })
+        .then(function () {
           return knex
             .from('users')
             .where('id', otherAuthorId)
@@ -1734,10 +2006,11 @@ describe('blog posts', function () {
         body: body,
         postedTime: postedTime,
         author: authorId
-      }).returning('id')
-        .then(function (returnedIds) {
-          createdIds.push(returnedIds[0])
-        })
+      })
+      .returning('id')
+      .then(function (returnedIds) {
+        createdIds.push(returnedIds[0])
+      })
     })
 
     it('should work in the happy case', function () {
@@ -1749,12 +2022,14 @@ describe('blog posts', function () {
         params: {
           postId: createdIds[0]
         }
-      }).then(function () {
+      })
+      .then(function () {
         return knex
           .from('blogPosts')
           .select('id')
           .where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         assert.strictEqual(posts.length, 0, 'The post was not deleted.')
       })
     })
@@ -1768,14 +2043,22 @@ describe('blog posts', function () {
         params: {
           postId: createdIds[0] + 1
         }
-      }).then(function () {
+      })
+      .then(function () {
         return knex
           .from('blogPosts')
           .select('id')
           .where('id', 'ilike', escapeForLike(id))
-      }).then(function (posts) {
+      })
+      .then(function (posts) {
         assert(false, 'The post was deleted.')
-      }).catch(NoSuchResourceError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof NoSuchResourceError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     it('should fail with someone else\'s auth', function () {
@@ -1799,10 +2082,17 @@ describe('blog posts', function () {
               postId: createdIds[0]
             }
           })
-        }).then(function (post) {
+        })
+        .then(function (post) {
           assert(false, 'The deletion succeeded.')
-        }).catch(AuthorisationError, function () {})
-        .finally(function () {
+        })
+        .catch(err => {
+          if (err instanceof AuthorisationError) {
+          } else {
+            throw err
+          }
+        })
+        .then(function () {
           return knex
             .from('users')
             .where('id', otherAuthorId)
@@ -1815,9 +2105,16 @@ describe('blog posts', function () {
         params: {
           postId: createdIds[0]
         }
-      }).then(function (post) {
+      })
+      .then(function (post) {
         assert(false, 'The deletion succeeded.')
-      }).catch(AuthorisationError, function () {})
+      })
+      .catch(err => {
+        if (err instanceof AuthorisationError) {
+        } else {
+          throw err
+        }
+      })
     })
 
     it('should fail with an unauthorised user', function () {
@@ -1837,9 +2134,16 @@ describe('blog posts', function () {
               postId: createdIds[0]
             }
           })
-        }).then(function (post) {
+        })
+        .then(function (post) {
           assert(false, 'The deletion succeeded.')
-        }).catch(AuthorisationError, function () {})
+        })
+        .catch(err => {
+          if (err instanceof AuthorisationError) {
+          } else {
+            throw err
+          }
+        })
     })
 
   })

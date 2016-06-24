@@ -68,22 +68,9 @@ module.exports = (knex, emailer) =>
         })
         return trx
           .into('users')
-          .insert(newUser, 'id')
-          .returning(['id'])
-          .then(rows => ({
-            id: rows[0].id,
-            key: key.key
-          }))
+          .insert(newUser)
+          .then(() => key.key)
       })
       // Send the password reset email. Note that the transaction can still fail at this point.
-      .tap(result =>
-          sendPasswordResetEmail(emailer, args.body.emailAddress, result.key)
-      )
-      .then(result =>
-          trx
-            .from('users')
-            .where('id', result.id)
-            .select()
-      )
-      .then(() => null)
+      .then(key => sendPasswordResetEmail(emailer, args.body.emailAddress, key))
     )

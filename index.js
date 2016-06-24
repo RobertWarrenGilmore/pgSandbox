@@ -11,7 +11,6 @@ const api = require('./api')
 const browserify = require('browserify')
 const sass = require('node-sass')
 const knex = require('./api/database/knex')
-const Promise = require('bluebird')
 const forever = require('forever')
 const commandLineArgs = require('command-line-args')
 const LEX = require('letsencrypt-express')
@@ -82,23 +81,31 @@ if (isProductionMode) {
   })
 }
 b.add('./client/main.jsx')
-const clientScriptPromise = Promise.promisify(b.bundle, {
-  context: b
-})()
-
-// Create Sass promise.
-const sassRender = Promise.promisify(sass.render, {
-  context: sass
+const clientScriptPromise = new Promise((resolve, reject) => {
+  b.bundle((err, result) => {
+    if (err)
+      reject(err)
+    else
+      resolve(result)
+  })
 })
-const clientStylePromise = sassRender({
-  file: './client/main.sass',
-  outputStyle: (isProductionMode) ? 'compressed' : 'expanded'
+// Create Sass promise.
+const clientStylePromise = new Promise((resolve, reject) => {
+  sass.render({
+    file: './client/main.sass',
+    outputStyle: (isProductionMode) ? 'compressed' : 'expanded'
+  }, (err, result) => {
+    if (err)
+      reject(err)
+    else
+      resolve(result)
+  })
 })
 
 
 console.info('Bundling scripts and styles.')
-Promise.join(clientScriptPromise, clientStylePromise,
-  (clientScript, clientStyle, migrate) => {
+Promise.all([clientScriptPromise, clientStylePromise])
+  .then(([clientScript, clientStyle]) => {
 
     // Link the three server-side layers together and serve them as the API.
     console.info('Routing the API.')

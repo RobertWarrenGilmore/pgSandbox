@@ -1,7 +1,6 @@
 'use strict'
 const _ = require('lodash')
 const request = require('request')
-const Promise = require('bluebird')
 const AuthenticationError = require('../../errors/authenticationError')
 const AuthorisationError = require('../../errors/authorisationError')
 const ConflictingEditError = require('../../errors/conflictingEditError')

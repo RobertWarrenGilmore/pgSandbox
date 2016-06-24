@@ -125,10 +125,14 @@ class SetPassword extends React.Component{
         }
       ]
     })
-    .catch(ValidationError, err => {
-      this.setState({
-        fieldErrors: err.messages
-      })
+    .catch(err => {
+      if (err instanceof ValidationError) {
+        this.setState({
+          fieldErrors: err.messages
+        })
+      } else {
+        throw err
+      }
     })
   }
   _onChangePassword({target: {value}}) {

@@ -92,10 +92,14 @@ class ForgotPassword extends React.Component{
         vf.emailAddress('The email address must be, well, an email address.')
       ]
     })
-    .catch(ValidationError, err => {
-      this.setState({
-        fieldErrors: err.messages
-      })
+    .catch(err => {
+      if (err instanceof ValidationError) {
+        this.setState({
+          fieldErrors: err.messages
+        })
+      } else {
+        throw err
+      }
     })
   }
   _onChangeEmailAddress({target: {value}}) {
@@ -125,15 +129,18 @@ class ForgotPassword extends React.Component{
     .then(() => this.setState({
       success: true
     }))
-    .catch(ValidationError, err => {
-      this.setState({
-        fieldErrors: err.messages
-      })
+    .catch(err => {
+      if (err instanceof ValidationError) {
+        this.setState({
+          fieldErrors: err.messages
+        })
+      } else {
+        this.setState({
+          error: err.message || err
+        })
+      }
     })
-    .catch(err => this.setState({
-      error: err.message || err
-    }))
-    .finally(() => this.setState({
+    .then(() => this.setState({
       busy: false
     }))
   }

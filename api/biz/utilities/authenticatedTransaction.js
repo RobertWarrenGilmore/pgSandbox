@@ -1,7 +1,6 @@
 'use strict'
-const Promise = require('bluebird')
 const AuthenticationError = require('../../../errors/authenticationError')
-const bcrypt = Promise.promisifyAll(require('bcrypt'))
+const bcrypt = require('bcrypt')
 const escapeForLike = require('./escapeForLike')
 
 function authenticatedTransaction (knex, auth, callback) {
@@ -18,16 +17,11 @@ function authenticatedTransaction (knex, auth, callback) {
           if (users.length === 0) {
             throw new AuthenticationError('There is no such user.')
           }
+          const passwordGood = bcrypt.compareSync(auth.password, users[0].passwordHash)
+          if (!passwordGood)
+            throw new AuthenticationError('The password was incorrect.')
           return users[0]
         })
-        .tap(authUser =>
-          bcrypt.compareAsync(auth.password, authUser.passwordHash)
-            .then(passwordGood => {
-              if (!passwordGood) {
-                throw new AuthenticationError('The password was incorrect.')
-              }
-            })
-        )
     } else {
       authPromise = Promise.resolve(null)
     }

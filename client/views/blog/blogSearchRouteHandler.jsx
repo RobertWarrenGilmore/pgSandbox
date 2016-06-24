@@ -79,9 +79,11 @@ class BlogSearch extends React.Component {
           results,
           endReached: !ids.length
         }, this._loadMoreResults)
-      }).catch(err => this.setState({
+      })
+      .catch(err => this.setState({
         error: err.message || err
-      })).finally(() => this.setState({
+      }))
+      .then(() => this.setState({
         busy: false
       }))
   }
