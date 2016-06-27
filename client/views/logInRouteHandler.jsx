@@ -102,7 +102,10 @@ class LogIn extends React.Component {
     event.preventDefault()
     const {
       props: {
-        logIn
+        logIn,
+        router: {
+          replace: navigate
+        }
       },
       state: {
         emailAddress,
@@ -116,9 +119,9 @@ class LogIn extends React.Component {
     .then(() => {
       const location = this.props.location
       if (location.state && location.state.nextLocation) {
-        this.props.router.replace(location.state.nextLocation)
+        navigate(location.state.nextLocation)
       } else {
-        this.props.router.replace('/')
+        navigate('/')
       }
     })
     .catch(err => this.setState({

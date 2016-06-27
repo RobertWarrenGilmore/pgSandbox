@@ -72,7 +72,7 @@ const creators = {
 
           dispatch(setAuthBusy(false))
 
-          if (err)
+          if (err instanceof Error)
             throw err
         })
       } else {
