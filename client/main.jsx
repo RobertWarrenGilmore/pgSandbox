@@ -59,7 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <Router
             history={history}
             >
-            <Route component={App} path='/'>
+            <Route
+              component={App}
+              path='/'
+              >
 
               <IndexRoute component={InfoPage}/>
 
