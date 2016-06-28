@@ -13,7 +13,7 @@ const validate = require('../../../utilities/validate')
 const { ValidationError } = validate
 const moment = require('moment-timezone')
 
-describe('blog posts', function () {
+describe('blog posts', () => {
   const emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
   let authorId
   const password = 'taco tuesday'
@@ -33,45 +33,45 @@ describe('blog posts', function () {
   const postedTime = moment()
   const timeZone = 'Europe/Moscow'
 
-  beforeEach('Create an author.', function () {
+  beforeEach('Create an author.', () => {
     return knex.into('users').insert({
-      emailAddress: emailAddress,
-      givenName: givenName,
-      familyName: familyName,
-      passwordHash: passwordHash,
+      emailAddress,
+      givenName,
+      familyName,
+      passwordHash,
       authorisedToBlog: true
     })
     .returning('id')
-    .then(function (ids) {
+    .then(ids => {
       authorId = ids[0]
     })
   })
 
-  afterEach('Delete any created test posts.', function () {
+  afterEach('Delete any created test posts.', () => {
     return Promise.all(createdIds.map(function (deletionId) {
       return knex
         .from('blogPosts')
         .where('id', 'ilike', escapeForLike(deletionId))
         .del()
     }))
-    .then(function () {
+    .then(() => {
       createdIds.length = 0
     })
   })
 
-  afterEach('Destroy the author.', function () {
+  afterEach('Destroy the author.', () => {
     return knex
       .from('users')
       .del()
   })
 
-  describe('create', function () {
+  describe('create', () => {
 
-    it('should work with good auth and minimal attributes', function () {
+    it('should work with good auth and minimal attributes', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: id
@@ -95,11 +95,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should work with good auth and all attributes', function () {
+    it('should work with good auth and all attributes', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: id
@@ -125,11 +125,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should return the proper contents', function () {
+    it('should return the proper contents', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: id
@@ -157,8 +157,8 @@ describe('blog posts', function () {
           timeZone,
           author: {
             id: authorId,
-            givenName: givenName,
-            familyName: familyName,
+            givenName,
+            familyName,
             active: true
           },
           active: true,
@@ -167,10 +167,10 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail with bad auth and minimal attributes', function () {
+    it('should fail with bad auth and minimal attributes', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
+          emailAddress,
           password: password + 'a'
         },
         params: {
@@ -201,7 +201,7 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail with no auth and minimal attributes', function () {
+    it('should fail with no auth and minimal attributes', () => {
       return BlogPost.create({
         params: {
           postId: id
@@ -231,11 +231,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail with a poorly formatted post id', function () {
+    it('should fail with a poorly formatted post id', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: 'This_id_does_not_start_with_a_date'
@@ -270,11 +270,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail with a poorly formatted posted time', function () {
+    it('should fail with a poorly formatted posted time', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: id
@@ -309,11 +309,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail with a poorly formatted time zone', function () {
+    it('should fail with a poorly formatted time zone', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: id
@@ -348,11 +348,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should reject silly attributes', function () {
+    it('should reject silly attributes', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: id
@@ -389,7 +389,7 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail if the id is not unique', function () {
+    it('should fail if the id is not unique', () => {
       return knex.into('blogPosts').insert({
         id: id,
         title: title,
@@ -397,12 +397,12 @@ describe('blog posts', function () {
         postedTime: postedTime,
         author: authorId
       })
-      .then(function () {
+      .then(() => {
         createdIds.push(id)
         return BlogPost.create({
           auth: {
-            emailAddress: emailAddress,
-            password: password
+            emailAddress,
+            password
           },
           params: {
             postId: id
@@ -433,11 +433,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail if the id is omitted', function () {
+    it('should fail if the id is omitted', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         body: {
           title,
@@ -467,11 +467,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail if the body is omitted', function () {
+    it('should fail if the body is omitted', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: id
@@ -505,11 +505,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail if the title is omitted', function () {
+    it('should fail if the title is omitted', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: id
@@ -543,11 +543,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail if the postedTime is omitted', function () {
+    it('should fail if the postedTime is omitted', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: id
@@ -581,11 +581,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail if the timeZone is omitted', function () {
+    it('should fail if the timeZone is omitted', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: id
@@ -619,11 +619,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail if the author is omitted', function () {
+    it('should fail if the author is omitted', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: id
@@ -655,11 +655,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail if the author\'s id is omitted', function () {
+    it('should fail if the author\'s id is omitted', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: id
@@ -693,11 +693,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail if the author\'s givenName is included', function () {
+    it('should fail if the author\'s givenName is included', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: id
@@ -734,11 +734,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail if the author is not a user', function () {
+    it('should fail if the author is not a user', () => {
       return BlogPost.create({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: id
@@ -774,15 +774,15 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail if the author is not the authenticated user', function () {
+    it('should fail if the author is not the authenticated user', () => {
       let otherAuthorId
       const otherAuthorEmailAddress = 'a' + emailAddress
       return knex.into('users')
         .insert({
           emailAddress: otherAuthorEmailAddress,
-          givenName: givenName,
-          familyName: familyName,
-          passwordHash: passwordHash,
+          givenName,
+          familyName,
+          passwordHash,
           authorisedToBlog: true
         })
         .returning('id').then(ids => {
@@ -791,8 +791,8 @@ describe('blog posts', function () {
         .then(() =>
           BlogPost.create({
             auth: {
-              emailAddress: emailAddress,
-              password: password
+              emailAddress,
+              password
             },
             params: {
               postId: id
@@ -836,14 +836,14 @@ describe('blog posts', function () {
 
     })
 
-    it('should fail if the user is not authorised to blog', function () {
+    it('should fail if the user is not authorised to blog', () => {
       return knex.from('users').where('id', authorId).update({
         authorisedToBlog: false
-      }).then(function () {
+      }).then(() => {
         return BlogPost.create({
           auth: {
-            emailAddress: emailAddress,
-            password: password
+            emailAddress,
+            password
           },
           params: {
             postId: id
@@ -875,11 +875,11 @@ describe('blog posts', function () {
 
   })
 
-  describe('read', function () {
+  describe('read', () => {
 
     let searchablePosts
 
-    beforeEach('Create the searchable posts.', function () {
+    beforeEach('Create the searchable posts.', () => {
       searchablePosts = [{
         id: id + 'a',
         title,
@@ -915,7 +915,7 @@ describe('blog posts', function () {
         })
     })
 
-    it('should be able to look up by postId', function () {
+    it('should be able to look up by postId', () => {
       return BlogPost.read({
         params: {
           postId: createdIds[0]
@@ -927,7 +927,7 @@ describe('blog posts', function () {
       })
     })
 
-    it('should return the proper contents', function () {
+    it('should return the proper contents', () => {
       return BlogPost.read({
         params: {
           postId: createdIds[0]
@@ -944,8 +944,8 @@ describe('blog posts', function () {
           timeZone,
           author: {
             id: authorId,
-            givenName: givenName,
-            familyName: familyName,
+            givenName,
+            familyName,
             active: true
           },
           active: true,
@@ -954,7 +954,7 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail to look up a non-existent post', function () {
+    it('should fail to look up a non-existent post', () => {
       return BlogPost.read({
         params: {
           postId: createdIds[createdIds.length] + 'a'
@@ -971,11 +971,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail to look up the contents of an inactive post without authenticating', function () {
+    it('should fail to look up the contents of an inactive post without authenticating', () => {
       return knex.into('blogPosts').where('id', 'ilike', escapeForLike(createdIds[0]))
         .update({
           active: false
-        }).then(function () {
+        }).then(() => {
           return BlogPost.read({
             params: {
               postId: createdIds[0]
@@ -991,7 +991,7 @@ describe('blog posts', function () {
         })
     })
 
-    it('should fail to look up the contents of an inactive post that belongs to someone else', function () {
+    it('should fail to look up the contents of an inactive post that belongs to someone else', () => {
 
       // Create the other author.
       let otherAuthorId
@@ -999,26 +999,26 @@ describe('blog posts', function () {
       return knex.into('users')
         .insert({
           emailAddress: otherAuthorEmailAddress,
-          givenName: givenName,
-          familyName: familyName,
-          passwordHash: passwordHash,
+          givenName,
+          familyName,
+          passwordHash,
           authorisedToBlog: true
         }).returning('id').then(function (ids) {
           otherAuthorId = ids[0]
-        }).then(function () {
+        }).then(() => {
 
           // Deactivate the post.
           return knex.into('blogPosts').where('id', 'ilike', escapeForLike(createdIds[0]))
             .update({
               active: false
             })
-        }).then(function () {
+        }).then(() => {
 
           // Authenticate as the other author.
           return BlogPost.read({
             auth: {
               emailAddress: otherAuthorEmailAddress,
-              password: password
+              password
             },
             params: {
               postId: createdIds[0]
@@ -1045,15 +1045,15 @@ describe('blog posts', function () {
         )
     })
 
-    it('should be able to look up the contents of an inactive post that belongs to oneself', function () {
+    it('should be able to look up the contents of an inactive post that belongs to oneself', () => {
       return knex.into('blogPosts').where('id', 'ilike', escapeForLike(createdIds[0]))
         .update({
           active: false
-        }).then(function () {
+        }).then(() => {
           return BlogPost.read({
             auth: {
-              emailAddress: emailAddress,
-              password: password
+              emailAddress,
+              password
             },
             params: {
               postId: createdIds[0]
@@ -1069,7 +1069,7 @@ describe('blog posts', function () {
         })
     })
 
-    it('should be able to look up the contents of an inactive post of another user as an admin', function () {
+    it('should be able to look up the contents of an inactive post of another user as an admin', () => {
 
       // Create the other author.
       let otherAuthorId
@@ -1077,9 +1077,9 @@ describe('blog posts', function () {
       return knex.into('users')
         .insert({
           emailAddress: otherAuthorEmailAddress,
-          givenName: givenName,
-          familyName: familyName,
-          passwordHash: passwordHash,
+          givenName,
+          familyName,
+          passwordHash,
           authorisedToBlog: false,
           admin: true
         })
@@ -1101,7 +1101,7 @@ describe('blog posts', function () {
           BlogPost.read({
             auth: {
               emailAddress: otherAuthorEmailAddress,
-              password: password
+              password
             },
             params: {
               postId: createdIds[0]
@@ -1110,7 +1110,7 @@ describe('blog posts', function () {
         )
 
         // Assert stuff.
-        .then(post=> {
+        .then(post => {
           assert(!(post instanceof Array), 'An array was returned instead of a single post.')
           assert.strictEqual(post.title, searchablePosts[0].title, 'The wrong title was returned.')
           assert.strictEqual(post.body, searchablePosts[0].body, 'The wrong body was returned.')
@@ -1130,15 +1130,15 @@ describe('blog posts', function () {
 
 
 
-    describe('search', function () {
+    describe('search', () => {
 
-      it('should be able to list posts', function () {
+      it('should be able to list posts', () => {
         return BlogPost.read({}).then(function (posts) {
           assert((posts instanceof Array), 'The result was not an array.')
         })
       })
 
-      it('should return the proper contents', function () {
+      it('should return the proper contents', () => {
         return BlogPost.read({}).then(function (posts) {
           assert((posts instanceof Array), 'The result was not an array.')
           const exp = searchablePosts[0]
@@ -1150,8 +1150,8 @@ describe('blog posts', function () {
             timeZone,
             author: {
               id: authorId,
-              givenName: givenName,
-              familyName: familyName,
+              givenName,
+              familyName,
               active: true
             },
             active: true,
@@ -1160,16 +1160,16 @@ describe('blog posts', function () {
         })
       })
 
-      it('should see a post list that omits the contents of the inactive posts of others', function () {
+      it('should see a post list that omits the contents of the inactive posts of others', () => {
         // Create the other author.
         let otherAuthorId
         const otherAuthorEmailAddress = 'a' + emailAddress
         return knex.into('users')
           .insert({
             emailAddress: otherAuthorEmailAddress,
-            givenName: givenName,
-            familyName: familyName,
-            passwordHash: passwordHash,
+            givenName,
+            familyName,
+            passwordHash,
             authorisedToBlog: true
           })
           .returning('id')
@@ -1192,7 +1192,7 @@ describe('blog posts', function () {
             BlogPost.read({
               auth: {
                 emailAddress: otherAuthorEmailAddress,
-                password: password
+                password
               }
             })
           )
@@ -1225,18 +1225,18 @@ describe('blog posts', function () {
           )
       })
 
-      it('should see a post list that includes the contents of the inactive posts of oneself', function () {
+      it('should see a post list that includes the contents of the inactive posts of oneself', () => {
         // Deactivate the post.
         return knex.into('blogPosts').where('id', 'ilike', escapeForLike(createdIds[0]))
           .update({
             active: false
-          }).then(function () {
+          }).then(() => {
 
             // Do the read.
             return BlogPost.read({
               auth: {
-                emailAddress: emailAddress,
-                password: password
+                emailAddress,
+                password
               }
             })
 
@@ -1261,16 +1261,16 @@ describe('blog posts', function () {
           })
       })
 
-      it('should see a post list that includes the contents of the inactive posts of others as an admin', function () {
+      it('should see a post list that includes the contents of the inactive posts of others as an admin', () => {
         // Create the other author.
         let otherAuthorId
         const otherAuthorEmailAddress = 'a' + emailAddress
         return knex.into('users')
           .insert({
             emailAddress: otherAuthorEmailAddress,
-            givenName: givenName,
-            familyName: familyName,
-            passwordHash: passwordHash,
+            givenName,
+            familyName,
+            passwordHash,
             authorisedToBlog: false,
             admin: true
           })
@@ -1294,7 +1294,7 @@ describe('blog posts', function () {
             BlogPost.read({
               auth: {
                 emailAddress: otherAuthorEmailAddress,
-                password: password
+                password
               }
             })
           )
@@ -1330,9 +1330,9 @@ describe('blog posts', function () {
     })
   })
 
-  describe('update', function () {
+  describe('update', () => {
 
-    beforeEach('Create the post to be updated.', function () {
+    beforeEach('Create the post to be updated.', () => {
       return knex.into('blogPosts').insert({
         id: id,
         title: title,
@@ -1346,7 +1346,7 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail without auth', function () {
+    it('should fail without auth', () => {
       return BlogPost.update({
         params: {
           postId: createdIds[0]
@@ -1363,14 +1363,14 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail if the user is not authorised to blog', function () {
+    it('should fail if the user is not authorised to blog', () => {
       return knex.from('users').where('id', authorId).update({
         authorisedToBlog: false
-      }).then(function () {
+      }).then(() => {
         return BlogPost.update({
           auth: {
-            emailAddress: emailAddress,
-            password: password
+            emailAddress,
+            password
           }
         })
       })
@@ -1385,11 +1385,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail if the post does not exist', function () {
+    it('should fail if the post does not exist', () => {
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0] + 1
@@ -1406,11 +1406,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should be able to change the id', function () {
+    it('should be able to change the id', () => {
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1425,11 +1425,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should be able to set the existing id', function () {
+    it('should be able to set the existing id', () => {
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1444,11 +1444,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail to remove the id', function () {
+    it('should fail to remove the id', () => {
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1473,7 +1473,7 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail to set a conflicting id', function () {
+    it('should fail to set a conflicting id', () => {
       return knex
         .into('blogPosts')
         .insert({
@@ -1486,8 +1486,8 @@ describe('blog posts', function () {
           createdIds.push(ids[0])
           return BlogPost.update({
             auth: {
-              emailAddress: emailAddress,
-              password: password
+              emailAddress,
+              password
             },
             params: {
               postId: createdIds[1]
@@ -1508,11 +1508,11 @@ describe('blog posts', function () {
         })
     })
 
-    it('should fail to set an id that does not start with a date', function () {
+    it('should fail to set an id that does not start with a date', () => {
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1532,11 +1532,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should be able to change the body', function () {
+    it('should be able to change the body', () => {
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1550,11 +1550,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail to remove the body', function () {
+    it('should fail to remove the body', () => {
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1579,11 +1579,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should be able to change the title', function () {
+    it('should be able to change the title', () => {
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1597,11 +1597,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail to remove the title', function () {
+    it('should fail to remove the title', () => {
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1626,11 +1626,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should be able to change the preview', function () {
+    it('should be able to change the preview', () => {
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1644,11 +1644,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should be able to remove the preview', function () {
+    it('should be able to remove the preview', () => {
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1662,12 +1662,12 @@ describe('blog posts', function () {
       })
     })
 
-    it('should be able to change the posted time', function () {
+    it('should be able to change the posted time', () => {
       const modifiedPostedTime = postedTime.clone().add(1, 'day')
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1681,12 +1681,12 @@ describe('blog posts', function () {
       })
     })
 
-    it('should be able to set the posted time to a number string', function () {
+    it('should be able to set the posted time to a number string', () => {
       const modifiedPostedTime = postedTime.clone().add(1, 'day')
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1700,11 +1700,11 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail to remove the posted time', function () {
+    it('should fail to remove the posted time', () => {
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1729,12 +1729,12 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail to set the posted time to a formatted date string', function () {
+    it('should fail to set the posted time to a formatted date string', () => {
       const dateString = postedTime.toString()
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1759,18 +1759,18 @@ describe('blog posts', function () {
       })
     })
 
-    it('should be able to set active', function () {
+    it('should be able to set active', () => {
       return knex
         .into('blogPosts')
         .where('id', 'ilike', escapeForLike(id))
         .update({
           active: false
         })
-        .then(function () {
+        .then(() => {
           return BlogPost.update({
             auth: {
-              emailAddress: emailAddress,
-              password: password
+              emailAddress,
+              password
             },
             params: {
               postId: createdIds[0]
@@ -1785,11 +1785,11 @@ describe('blog posts', function () {
         })
     })
 
-    it('should be able to set inactive', function () {
+    it('should be able to set inactive', () => {
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1803,13 +1803,13 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail to set the author to someone else', function () {
+    it('should fail to set the author to someone else', () => {
       let otherAuthorId
       return knex
         .into('users')
         .insert({
           emailAddress: 'a' + emailAddress,
-          passwordHash: passwordHash,
+          passwordHash,
           authorisedToBlog: true
         })
         .returning('id')
@@ -1817,8 +1817,8 @@ describe('blog posts', function () {
           otherAuthorId = ids[0]
           return BlogPost.update({
             auth: {
-              emailAddress: emailAddress,
-              password: password
+              emailAddress,
+              password
             },
             params: {
               postId: createdIds[0]
@@ -1851,11 +1851,11 @@ describe('blog posts', function () {
         )
     })
 
-    it('should be able to set the author to the existing author', function () {
+    it('should be able to set the author to the existing author', () => {
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1870,13 +1870,13 @@ describe('blog posts', function () {
       })
     })
 
-    it('should be able to set the author to someone else as an admin', function () {
+    it('should be able to set the author to someone else as an admin', () => {
       let otherAuthorId
       return knex
         .into('users')
         .insert({
           emailAddress: 'a' + emailAddress,
-          passwordHash: passwordHash,
+          passwordHash,
           admin: true
         })
         .returning('id')
@@ -1885,7 +1885,7 @@ describe('blog posts', function () {
           return BlogPost.update({
             auth: {
               emailAddress: 'a' + emailAddress,
-              password: password
+              password
             },
             params: {
               postId: createdIds[0]
@@ -1906,14 +1906,14 @@ describe('blog posts', function () {
             throw err
           }
         })
-        .then(function () {
+        .then(() => {
           // Change the author of the post back so that we can delete the other author.
           return knex
             .into('blogPosts')
             .where('id', createdIds[0])
             .update({
               author: authorId
-            }).then(function () {
+            }).then(() => {
               return knex
                 .from('users')
                 .where('id', otherAuthorId)
@@ -1922,11 +1922,11 @@ describe('blog posts', function () {
         })
     })
 
-    it('should fail to set the author without an id', function () {
+    it('should fail to set the author without an id', () => {
       return BlogPost.update({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
@@ -1953,13 +1953,13 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail with someone else\'s auth', function () {
+    it('should fail with someone else\'s auth', () => {
       let otherAuthorId
       return knex
         .into('users')
         .insert({
           emailAddress: 'a' + emailAddress,
-          passwordHash: passwordHash,
+          passwordHash,
           authorisedToBlog: true
         })
         .returning('id')
@@ -1968,7 +1968,7 @@ describe('blog posts', function () {
           return BlogPost.update({
             auth: {
               emailAddress: 'a' + emailAddress,
-              password: password
+              password
             },
             params: {
               postId: createdIds[0]
@@ -1987,7 +1987,7 @@ describe('blog posts', function () {
             throw err
           }
         })
-        .then(function () {
+        .then(() => {
           return knex
             .from('users')
             .where('id', otherAuthorId)
@@ -1997,9 +1997,9 @@ describe('blog posts', function () {
 
   })
 
-  describe('delete', function () {
+  describe('delete', () => {
 
-    beforeEach('Create the post to be deleted.', function () {
+    beforeEach('Create the post to be deleted.', () => {
       return knex.into('blogPosts').insert({
         id: id,
         title: title,
@@ -2013,17 +2013,17 @@ describe('blog posts', function () {
       })
     })
 
-    it('should work in the happy case', function () {
+    it('should work in the happy case', () => {
       return BlogPost.delete({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0]
         }
       })
-      .then(function () {
+      .then(() => {
         return knex
           .from('blogPosts')
           .select('id')
@@ -2034,17 +2034,17 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail when the post does not exist', function () {
+    it('should fail when the post does not exist', () => {
       return BlogPost.delete({
         auth: {
-          emailAddress: emailAddress,
-          password: password
+          emailAddress,
+          password
         },
         params: {
           postId: createdIds[0] + 1
         }
       })
-      .then(function () {
+      .then(() => {
         return knex
           .from('blogPosts')
           .select('id')
@@ -2061,13 +2061,13 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail with someone else\'s auth', function () {
+    it('should fail with someone else\'s auth', () => {
       let otherAuthorId
       return knex
         .into('users')
         .insert({
           emailAddress: 'a' + emailAddress,
-          passwordHash: passwordHash,
+          passwordHash,
           authorisedToBlog: true
         })
         .returning('id')
@@ -2076,7 +2076,7 @@ describe('blog posts', function () {
           return BlogPost.delete({
             auth: {
               emailAddress: 'a' + emailAddress,
-              password: password
+              password
             },
             params: {
               postId: createdIds[0]
@@ -2092,7 +2092,7 @@ describe('blog posts', function () {
             throw err
           }
         })
-        .then(function () {
+        .then(() => {
           return knex
             .from('users')
             .where('id', otherAuthorId)
@@ -2100,7 +2100,7 @@ describe('blog posts', function () {
         })
     })
 
-    it('should fail with no auth', function () {
+    it('should fail with no auth', () => {
       return BlogPost.delete({
         params: {
           postId: createdIds[0]
@@ -2117,18 +2117,18 @@ describe('blog posts', function () {
       })
     })
 
-    it('should fail with an unauthorised user', function () {
+    it('should fail with an unauthorised user', () => {
       return knex
         .into('users')
         .where('id', authorId)
         .update({
           authorisedToBlog: false
         })
-        .then(function () {
+        .then(() => {
           return BlogPost.delete({
             auth: {
-              emailAddress: emailAddress,
-              password: password
+              emailAddress,
+              password
             },
             params: {
               postId: createdIds[0]

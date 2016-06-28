@@ -34,7 +34,7 @@ module.exports = knex => ({
     }),
 
   update: args =>
-    authenticatedTransaction(knex, args.auth, function (trx, authUser) {
+    authenticatedTransaction(knex, args.auth, (trx, authUser) => {
       if (!authUser || !authUser.admin) {
         throw new AuthorisationError('Only administrators can edit info pages.')
       }
@@ -57,7 +57,7 @@ module.exports = knex => ({
           .select()
       ).then(pages => {
         if (!pages.length) {
-          let newPage = _.clone(args.body)
+          const newPage = _.clone(args.body)
           newPage.id = args.params.pageId
           return trx
             .into('infoPages')

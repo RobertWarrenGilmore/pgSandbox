@@ -8,7 +8,7 @@ const generalTransportModule = routes => bizModule => {
   })
 
   fn => (req, res, next) => {
-    let fnResult = fn(req, res)
+    const fnResult = fn(req, res)
     if (fnResult.then) {
       fnResult
         .then(promiseResult => res.send(promiseResult))
@@ -19,7 +19,7 @@ const generalTransportModule = routes => bizModule => {
   }
 
   routes.forEach(route => {
-    for (let httpMethod in route.actions) {
+    for (const httpMethod in route.actions) {
       const bizMethod = bizModule[route.actions[httpMethod].bizMethod]
       router[httpMethod](route.path, (req, res, next) => {
         bizMethod(req)

@@ -4,13 +4,13 @@ function getElements() {
 }
 
 module.exports = {
-  addListener: function (callback) {
-    let elements = getElements()
+  addListener: callback => {
+    const elements = getElements()
     for (const i in elements) {
       elements[i].addEventListener('scroll', callback)
     }
   },
-  removeListener: function (callback) {
+  removeListener: callback => {
     const elements = getElements()
     for (const i in elements) {
       elements[i].removeEventListener('scroll', callback)

@@ -15,7 +15,7 @@ module.exports = biz => {
   })
 
   // Get the auth.
-  router.use(function authMiddleware(req, res, next) {
+  router.use((req, res, next) => {
     const auth = parseAuth(req)
     if (auth) {
       req.auth = {

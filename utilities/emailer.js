@@ -5,7 +5,7 @@ const sparkPostTransport = require('nodemailer-sparkpost-transport')
 const appInfo = require('../appInfo.json')
 const sparkPostApiKey = process.env.sparkPostApiKey
 const transporter = nodemailer.createTransport(sparkPostTransport({
-  sparkPostApiKey: sparkPostApiKey
+  sparkPostApiKey
 }))
 
 function emailer(recipient, subject, message) {
@@ -22,7 +22,7 @@ function emailer(recipient, subject, message) {
             name: appInfo.name,
             email: 'app@' + appInfo.host
           },
-          subject: subject,
+          subject,
           text: message
         }
       }, (err, result) => {

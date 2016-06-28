@@ -9,7 +9,7 @@ const NoSuchResourceError = require('../../errors/noSuchResourceError')
 const ServerError = require('../../errors/serverError')
 
 module.exports = function (options) {
-  return new Promise(function (resolve, reject) {
+  return new Promise((resolve, reject) => {
     const optionsClone = _.cloneDeep(options)
     if (optionsClone.auth && optionsClone.auth.emailAddress) {
       optionsClone.auth.username = optionsClone.auth.emailAddress

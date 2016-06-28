@@ -19,7 +19,7 @@ const creators = {
       const exists = !!store.getState().blog.posts[newId]
       const method = exists ? 'PUT' : 'POST'
       const uri = '/api/blog/' + newId
-      let requestBody = Object.assign({}, post)
+      const requestBody = Object.assign({}, post)
       if (!!requestBody.id && !exists) {
         delete requestBody.id
       }
@@ -31,7 +31,7 @@ const creators = {
         body: requestBody
       })
       .then(response => {
-        let postMap = {
+        const postMap = {
           [post.id]: response
         }
         if (existingId && (post.id !== existingId)) {
@@ -106,8 +106,8 @@ const creators = {
         qs: query
       })
       .then(response => {
-        let postMap = {}
-        let idList = []
+        const postMap = {}
+        const idList = []
         response.forEach(post => {
           postMap[post.id] = post
           idList.push(post.id)

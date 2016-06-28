@@ -21,7 +21,7 @@ const creators = {
         body: page
       })
       .then(response => {
-        let pageMap = {
+        const pageMap = {
           [id]: response
         }
         dispatch(cachePages(pageMap))

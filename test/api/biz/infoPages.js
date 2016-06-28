@@ -1,5 +1,4 @@
 'use strict'
-const _ = require('lodash')
 const assert = require('assert')
 const bcrypt = require('bcrypt')
 const knex = require('../../../api/database/knex')
@@ -27,7 +26,7 @@ describe('info pages', () => {
   beforeEach('Create info pages.', () =>
     knex
       .into('infoPages')
-      .insert(_.map(ids, id => ({
+      .insert(ids.map(id => ({
         id,
         body
       })))
@@ -47,7 +46,9 @@ describe('info pages', () => {
           passwordHash: notAdmin.passwordHash,
           admin: false
         }
-      ]).returning('id').then(function (returnedIds) {
+      ])
+      .returning('id')
+      .then(returnedIds => {
         admin.id = returnedIds[0]
         notAdmin.id = returnedIds[1]
       })
@@ -74,10 +75,11 @@ describe('info pages', () => {
         params: {
           pageId: ids[0]
         }
-      }).then(function (page) {
+      })
+      .then(page => {
         assert.deepEqual(page, {
           title: '',
-          body: body
+          body
         }, 'The returned page was wrong.')
       })
     )
@@ -91,10 +93,11 @@ describe('info pages', () => {
           emailAddress: admin.emailAddress,
           password: admin.password
         }
-      }).then(function (page) {
+      })
+      .then(page => {
         assert.deepEqual(page, {
           title: '',
-          body: body
+          body
         }, 'The returned page was wrong.')
       })
     )
@@ -109,10 +112,10 @@ describe('info pages', () => {
           password: notAdmin.password
         }
       })
-      .then(function (page) {
+      .then(page => {
         assert.deepEqual(page, {
           title: '',
-          body: body
+          body
         }, 'The returned page was wrong.')
       })
     )
@@ -123,7 +126,7 @@ describe('info pages', () => {
           pageId: badId
         }
       })
-      .then(function (page) {
+      .then(page => {
         assert(false, 'The read succeeded.')
       })
       .catch(err => {
@@ -147,7 +150,7 @@ describe('info pages', () => {
           body: otherBody
         }
       })
-      .then(function (page) {
+      .then(page => {
         assert(false, 'The update succeeded.')
       })
       .catch(err => {
@@ -171,7 +174,7 @@ describe('info pages', () => {
           body: otherBody
         }
       })
-      .then(function (page) {
+      .then(page => {
         assert.deepEqual(page, {
           title: '',
           body: otherBody
@@ -180,7 +183,8 @@ describe('info pages', () => {
     )
 
     it('should be able to update a page that does not yet exist', () =>
-      knex.from('infoPages').where('id', ids[0]).del().then(() =>
+      knex.from('infoPages').where('id', ids[0]).del()
+      .then(() =>
         InfoPage.update({
           params: {
             pageId: ids[0]
@@ -194,7 +198,7 @@ describe('info pages', () => {
           }
         })
       )
-      .then(function (page) {
+      .then(page => {
         assert.deepEqual(page, {
           title: '',
           body: otherBody

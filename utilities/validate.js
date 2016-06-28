@@ -6,7 +6,7 @@ const messagePromiseList = (valueMap, key, validationList) =>
   _.map(validationList, validation =>
     new Promise((resolve, reject) => {
       try {
-        let v = validation(valueMap[key])
+        const v = validation(valueMap[key])
         if (v && v.then) {
           v.then(resolve).catch(reject)
         } else {
@@ -35,7 +35,7 @@ const messageListPromise = argMessagePromiseList =>
   Promise.all(argMessagePromiseList)
     .then(messageList => {
       // Prune the list or return the first item that is an object.
-      for (let i in messageList) {
+      for (const i in messageList) {
         if (_.isObject(messageList[i])) {
           return messageList[i]
         }
@@ -211,7 +211,7 @@ const commonValidations = {
 
 validate.funcs = _.mapValues(commonValidations,
   rule => (message, options) => val => {
-    let ruleResult = rule(options, val)
+    const ruleResult = rule(options, val)
     if (ruleResult === false) {
       throw new ValidationError(message)
     } else if (!!ruleResult && !!ruleResult.then && !!ruleResult.catch) {

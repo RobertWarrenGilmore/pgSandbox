@@ -61,7 +61,7 @@ module.exports = (knex, emailer) =>
         const key = crypto.generatePasswordResetKey()
 
         // Do the insertion.
-        let newUser = {}
+        const newUser = {}
         _.merge(newUser, args.body)
         _.merge(newUser, {
           passwordResetKeyHash: key.hash

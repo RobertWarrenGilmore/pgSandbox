@@ -55,7 +55,7 @@ module.exports = knex => ({
               .from('blogPosts')
               .select(['id'])
               .where('id', 'ilike', escapeForLike(val))
-              .then(function (existingPosts) {
+              .then(existingPosts => {
                 if (existingPosts && existingPosts.length) {
                   throw new ConflictingEditError('That id already belongs to another post.')
                 }
@@ -108,7 +108,7 @@ module.exports = knex => ({
                     .from('users')
                     .select(['id'])
                     .where('id', val)
-                    .then(function (users) {
+                    .then(users => {
                       if (!users || !users.length) {
                         throw new ValidationError('The given author does not exist.')
                       }
@@ -253,16 +253,18 @@ module.exports = knex => ({
         }
 
         // Add search parameters.
-        let searchParams = _.omit(args.query, ['offset']) || {}
+        const searchParams = _.omit(args.query, ['offset']) || {}
         return validate(searchParams, {
           // No filter is accepted yet.
-        }).then(() => {
+        })
+        .then(() => {
           // TODO Interpret tag, postedTime, and author filters here.
           query = query.where(searchParams)
 
           // The query is finished.
           return query
-        }).then(transformOutput)
+        })
+        .then(transformOutput)
         // Remove the contents of inactive posts that don't belong to the authenticated user.
         .then(posts =>
           _.map(posts, post => {
@@ -275,12 +277,13 @@ module.exports = knex => ({
           })
         )
       }
-    }).then(function (result) {
+    })
+    .then(result => {
       return JSON.parse(JSON.stringify(result))
     }),
 
   update: args =>
-    authenticatedTransaction(knex, args.auth, function (trx, authUser) {
+    authenticatedTransaction(knex, args.auth, (trx, authUser) => {
       if (!authUser) {
         throw new AuthorisationError('Blog posts cannot be updated anonymously.')
       }
@@ -368,7 +371,7 @@ module.exports = knex => ({
                       .from('users')
                       .select(['id'])
                       .where('id', val)
-                      .then(function (users) {
+                      .then(users => {
                         if (!users || !users.length) {
                           throw new ValidationError('The given author does not exist.')
                         }

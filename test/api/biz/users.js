@@ -3,7 +3,7 @@ const knex = require('../../../api/database/knex')
 const assert = require('assert')
 const sinon = require('sinon')
 const bcrypt = require('bcrypt')
-const mockEmailer = sinon.spy(function () {
+const mockEmailer = sinon.spy(() => {
   if (mockEmailer.err) {
     return Promise.reject(mockEmailer.err)
   } else {
@@ -32,7 +32,7 @@ function EmailerError(message) {
 EmailerError.prototype = Object.create(Error.prototype)
 EmailerError.prototype.constructor = EmailerError
 
-describe('users', function () {
+describe('users', () => {
   const createdIds = []
 
   let goodAvatar = 'data:image/jpeg;base64,'
@@ -92,17 +92,17 @@ describe('users', function () {
   const notAnImageAvatar = 'data:image/jpeg;base64,VGhpcyBmaWxlIGlzIG5vdCBhbiBpbWFnZS4K'
 
 
-  beforeEach('Reset the mock emailer.', function () {
+  beforeEach('Reset the mock emailer.', () => {
     mockEmailer.reset()
     delete mockEmailer.err
   })
-  afterEach('Delete any created test users.', function () {
-    return knex.from('users').del().then(function () {
+  afterEach('Delete any created test users.', () => {
+    return knex.from('users').del().then(() => {
       createdIds.length = 0
     })
   })
 
-  describe('create', function () {
+  describe('create', () => {
     const emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
     const badEmailAddress = 'NotAValidEmailAddress.com'
     const givenName = 'Victor'
@@ -143,7 +143,7 @@ describe('users', function () {
       })
     )
 
-    it('should send a correct password reset email', function () {
+    it('should send a correct password reset email', () => {
       return User.create({
         body: {
           emailAddress,
@@ -166,7 +166,7 @@ describe('users', function () {
       })
     })
 
-    it('should make a user active by default', function () {
+    it('should make a user active by default', () => {
       return User.create({
         body: {
           emailAddress,
@@ -174,16 +174,16 @@ describe('users', function () {
           familyName
         }
       })
-      .then(function (user) {
+      .then(user => {
         return knex.select().from('users').where('emailAddress', emailAddress)
       })
-      .then(function (users) {
+      .then(users => {
         createdIds.push(users[0].id)
         assert(users[0].active, 'The user is not active.')
       })
     })
 
-    it('should reject non-creation attributes', function () {
+    it('should reject non-creation attributes', () => {
       return User.create({
         body: {
           emailAddress,
@@ -265,7 +265,7 @@ describe('users', function () {
       })
     )
 
-    it('should fail when the email address is not unique', function () {
+    it('should fail when the email address is not unique', () => {
       return knex.into('users').insert({
         emailAddress,
         givenName,
@@ -289,7 +289,7 @@ describe('users', function () {
       })
     })
 
-    it('should fail with an invalid email address', function () {
+    it('should fail with an invalid email address', () => {
       return User.create({
         body: {
           emailAddress: badEmailAddress,
@@ -333,7 +333,7 @@ describe('users', function () {
 
   })
 
-  describe('read', function () {
+  describe('read', () => {
     const emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
     const password = 'taco tuesday'
     const givenName1 = 'James'
@@ -367,14 +367,14 @@ describe('users', function () {
       timeZone
     }]
 
-    beforeEach('Create the searchable users.', function () {
+    beforeEach('Create the searchable users.', () => {
       return knex.into('users').insert(searchableUsers).returning('id')
         .then(function (returnedIds) {
           Array.prototype.push.apply(createdIds, returnedIds)
         })
     })
 
-    it('should be able to look up by userId', function () {
+    it('should be able to look up by userId', () => {
       return User.read({
         params: {
           userId: createdIds[0]
@@ -392,7 +392,7 @@ describe('users', function () {
       })
     })
 
-    it('should fail to look up a non-existent user.', function () {
+    it('should fail to look up a non-existent user.', () => {
       //Create a user, store his ID, then delete the user.
       let badId
       return knex.into('users').insert({
@@ -400,7 +400,7 @@ describe('users', function () {
       }).returning('id').then(function (ids) {
         badId = ids[0]
         return knex.from('users').where('id', badId).del()
-      }).then(function () {
+      }).then(() => {
 
         // Try to read the user.
         return User.read({
@@ -419,7 +419,7 @@ describe('users', function () {
       })
     })
 
-    it('should fail to authenticate with an unassigned email address', function () {
+    it('should fail to authenticate with an unassigned email address', () => {
       return User.read({
         auth: {
           emailAddress: 'notAssigned' + emailAddress,
@@ -439,7 +439,7 @@ describe('users', function () {
       })
     })
 
-    it('should fail to authenticate with a wrong password', function () {
+    it('should fail to authenticate with a wrong password', () => {
       return User.read({
         auth: {
           emailAddress: emailAddress,
@@ -459,15 +459,15 @@ describe('users', function () {
       })
     })
 
-    describe('search', function () {
+    describe('search', () => {
 
-      it('should be able to list all users', function () {
+      it('should be able to list all users', () => {
         let count
         return knex.from('users').count('id')
           .then(function (result) {
             count = Number.parseInt(result[0].count)
           })
-          .then(function () {
+          .then(() => {
             return User.read({
               params: {}
             })
@@ -477,13 +477,13 @@ describe('users', function () {
           })
       })
 
-      it('should be able to sort the list by family name, descending', function () {
+      it('should be able to sort the list by family name, descending', () => {
         let count
         return knex.from('users').count('id')
           .then(function (result) {
             count = Number.parseInt(result[0].count)
           })
-          .then(function () {
+          .then(() => {
             return User.read({
               query: {
                 sortBy: 'familyName',
@@ -500,13 +500,13 @@ describe('users', function () {
           })
       })
 
-      it('should be able to sort the list by family name, ascending', function () {
+      it('should be able to sort the list by family name, ascending', () => {
         let count
         return knex.from('users').count('id')
           .then(function (result) {
             count = Number.parseInt(result[0].count)
           })
-          .then(function () {
+          .then(() => {
             return User.read({
               query: {
                 sortBy: 'familyName',
@@ -524,7 +524,7 @@ describe('users', function () {
           })
       })
 
-      it('should fail to sort the list by a bad attribute', function () {
+      it('should fail to sort the list by a bad attribute', () => {
         return User.read({
           query: {
             sortBy: 'active', // not sortrable
@@ -547,7 +547,7 @@ describe('users', function () {
         })
       })
 
-      it('should be able to search by family name', function () {
+      it('should be able to search by family name', () => {
         return User.read({
           query: {
             familyName: familyName1
@@ -561,7 +561,7 @@ describe('users', function () {
         })
       })
 
-      it('should be able to search by partial, lower-case family name', function () {
+      it('should be able to search by partial, lower-case family name', () => {
         return User.read({
           query: {
             familyName: familyName1.substr(0, 3).toLowerCase()
@@ -575,7 +575,7 @@ describe('users', function () {
         })
       })
 
-      it('should fail to search by family name using like expressions', function () {
+      it('should fail to search by family name using like expressions', () => {
         return User.read({
           query: {
             familyName: familyName1.replace('e', '_')
@@ -586,7 +586,7 @@ describe('users', function () {
         })
       })
 
-      it('should be able to search by family name and given name', function () {
+      it('should be able to search by family name and given name', () => {
         return User.read({
           query: {
             familyName: familyName1,
@@ -600,7 +600,7 @@ describe('users', function () {
         })
       })
 
-      it('should be able to search by family name and sort by given name, descending', function () {
+      it('should be able to search by family name and sort by given name, descending', () => {
         return User.read({
           query: {
             familyName: familyName1,
@@ -617,7 +617,7 @@ describe('users', function () {
         })
       })
 
-      it('should be able to search by family name and sort by given name, ascending', function () {
+      it('should be able to search by family name and sort by given name, ascending', () => {
         return User.read({
           query: {
             familyName: familyName1,
@@ -634,7 +634,7 @@ describe('users', function () {
         })
       })
 
-      it('should be able to search by blog authorisation and sort by family name, ascending', function () {
+      it('should be able to search by blog authorisation and sort by family name, ascending', () => {
         return User.read({
           query: {
             authorisedToBlog: true,
@@ -651,7 +651,7 @@ describe('users', function () {
         })
       })
 
-      it('should fail to search by email address', function () {
+      it('should fail to search by email address', () => {
         return User.read({
           query: {
             emailAddress: emailAddress
@@ -673,14 +673,14 @@ describe('users', function () {
         })
       })
 
-      it('should fail to search with a malformed query', function () {
+      it('should fail to search with a malformed query', () => {
         return User.read({
           query: {
             familyName: familyName1,
             notARealAttribute: 'hello'
           }
         })
-        .then(function () {
+        .then(() => {
           assert(false, 'The read succeeded.')
         })
         .catch(err => {
@@ -696,7 +696,7 @@ describe('users', function () {
         })
       })
 
-      it('should fail to search with a userId', function () {
+      it('should fail to search with a userId', () => {
         return User.read({
           params: {
             userId: createdIds[0]
@@ -705,7 +705,7 @@ describe('users', function () {
             familyName: familyName1
           }
         })
-        .then(function () {
+        .then(() => {
           assert(false, 'The read succeeded.')
         })
         .catch(err => {
@@ -717,13 +717,13 @@ describe('users', function () {
       })
     })
 
-    context('as an admin', function () {
+    context('as an admin', () => {
       const adminUser = {
         emailAddress: 'mocha.test.admin@example.com',
         password: 'I do what I want.'
       }
 
-      beforeEach(function () {
+      beforeEach(() => {
         return knex.into('users').insert({
           emailAddress: adminUser.emailAddress,
           passwordHash: bcrypt.hashSync(adminUser.password, bcrypt.genSaltSync(8)),
@@ -736,7 +736,7 @@ describe('users', function () {
         })
       })
 
-      it('should be able to search by email address', function () {
+      it('should be able to search by email address', () => {
         return User.read({
           query: {
             emailAddress: searchableUsers[0].emailAddress
@@ -755,7 +755,7 @@ describe('users', function () {
 
   })
 
-  describe('update', function () {
+  describe('update', () => {
     const emailAddress = 'mocha.test.email.address@not.a.real.domain.com'
     const badEmailAddress = 'NotAValidEmailAddress.com'
     const password = 'taco tuesday'
@@ -764,7 +764,7 @@ describe('users', function () {
     const passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8))
     const timeZone = 'Europe/Moscow'
 
-    beforeEach('Create a user to be updated.', function () {
+    beforeEach('Create a user to be updated.', () => {
       return knex.into('users').insert({
         emailAddress: emailAddress,
         passwordHash: passwordHash
@@ -773,7 +773,7 @@ describe('users', function () {
       })
     })
 
-    it('should be able to set a password while authenticated', function () {
+    it('should be able to set a password while authenticated', () => {
       return User.update({
         auth: {
           emailAddress: emailAddress,
@@ -785,7 +785,7 @@ describe('users', function () {
         body: {
           password: password + 'a'
         }
-      }).then(function () {
+      }).then(() => {
         return User.update({
           auth: {
             emailAddress: emailAddress,
@@ -801,7 +801,7 @@ describe('users', function () {
       })
     })
 
-    it('should fail to set a too short password', function () {
+    it('should fail to set a too short password', () => {
       return User.update({
         auth: {
           emailAddress: emailAddress,
@@ -814,7 +814,7 @@ describe('users', function () {
           password: '1234567'
         }
       })
-      .then(function () {
+      .then(() => {
         assert(false, 'The update succeeded.')
       })
       .catch(err => {
@@ -830,7 +830,7 @@ describe('users', function () {
       })
     })
 
-    it('should fail to set a too long password', function () {
+    it('should fail to set a too long password', () => {
       return User.update({
         auth: {
           emailAddress: emailAddress,
@@ -843,7 +843,7 @@ describe('users', function () {
           password: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcde'
         }
       })
-      .then(function () {
+      .then(() => {
         assert(false, 'The update succeeded.')
       })
       .catch(err => {
@@ -859,7 +859,7 @@ describe('users', function () {
       })
     })
 
-    it('should fail to set a property that users do not have', function () {
+    it('should fail to set a property that users do not have', () => {
       return User.update({
         auth: {
           emailAddress: emailAddress,
@@ -872,7 +872,7 @@ describe('users', function () {
           notARealAttribute: 'hello'
         }
       })
-      .then(function () {
+      .then(() => {
         assert(false, 'The update succeeded.')
       })
       .catch(err => {
@@ -1028,7 +1028,7 @@ describe('users', function () {
         })
     )
 
-    it('should be able to set an email address', function () {
+    it('should be able to set an email address', () => {
       return User.update({
         auth: {
           emailAddress: emailAddress,
@@ -1057,7 +1057,7 @@ describe('users', function () {
       })
     })
 
-    it('should fail to set an improper email address', function () {
+    it('should fail to set an improper email address', () => {
       return User.update({
         auth: {
           emailAddress: emailAddress,
@@ -1087,7 +1087,7 @@ describe('users', function () {
       })
     })
 
-    it('should fail to set an email address without authenticating', function () {
+    it('should fail to set an email address without authenticating', () => {
       return User.update({
         params: {
           userId: createdIds[0]
@@ -1096,7 +1096,7 @@ describe('users', function () {
           emailAddress: emailAddress
         }
       })
-      .then(function () {
+      .then(() => {
         assert(false, 'The update succeeded.')
       })
       .catch(err => {
@@ -1257,7 +1257,7 @@ describe('users', function () {
       })
     )
 
-    it('should be able to set inactive', function () {
+    it('should be able to set inactive', () => {
       return User.update({
         auth: {
           emailAddress: emailAddress,
@@ -1274,7 +1274,7 @@ describe('users', function () {
       })
     })
 
-    it('should be able to set active', function () {
+    it('should be able to set active', () => {
       return User.update({
         auth: {
           emailAddress: emailAddress,
@@ -1291,7 +1291,7 @@ describe('users', function () {
       })
     })
 
-    it('should be able to set a given name and family name', function () {
+    it('should be able to set a given name and family name', () => {
       return User.update({
         auth: {
           emailAddress: emailAddress,
@@ -1307,7 +1307,7 @@ describe('users', function () {
       })
     })
 
-    it('should be able to set a time zone', function () {
+    it('should be able to set a time zone', () => {
       return User.update({
         auth: {
           emailAddress: emailAddress,
@@ -1376,13 +1376,13 @@ describe('users', function () {
     )
 
 
-    context('as an admin', function () {
+    context('as an admin', () => {
       const adminUser = {
         emailAddress: 'mocha.test.admin@example.com',
         password: 'I do what I want.'
       }
 
-      beforeEach(function () {
+      beforeEach(() => {
         return knex.into('users').insert({
           emailAddress: adminUser.emailAddress,
           passwordHash: bcrypt.hashSync(adminUser.password, bcrypt.genSaltSync(8)),
@@ -1393,7 +1393,7 @@ describe('users', function () {
         })
       })
 
-      it('should be able to modify the given name of another user', function () {
+      it('should be able to modify the given name of another user', () => {
         return User.update({
           params: {
             userId: createdIds[0]
@@ -1410,7 +1410,7 @@ describe('users', function () {
         })
       })
 
-      it('should be able to make another user an admin', function () {
+      it('should be able to make another user an admin', () => {
         return User.update({
           params: {
             userId: createdIds[0]
@@ -1427,7 +1427,7 @@ describe('users', function () {
         })
       })
 
-      it('should be able to make another user a blogger', function () {
+      it('should be able to make another user a blogger', () => {
         return User.update({
           params: {
             userId: createdIds[0]
@@ -1446,10 +1446,10 @@ describe('users', function () {
 
     })
 
-    context('while authenticated as someone else', function () {
+    context('while authenticated as someone else', () => {
       const otherEmailAddress = 'somethingElse' + emailAddress
 
-      beforeEach('Create the other user to edit.', function () {
+      beforeEach('Create the other user to edit.', () => {
         return knex.into('users').insert({
           emailAddress: otherEmailAddress
         }).returning('id').then(function (ids) {
@@ -1457,7 +1457,7 @@ describe('users', function () {
         })
       })
 
-      it('should fail to set inactive', function () {
+      it('should fail to set inactive', () => {
         return User.update({
           auth: {
             emailAddress: emailAddress,
@@ -1470,7 +1470,7 @@ describe('users', function () {
             active: false
           }
         })
-        .then(function () {
+        .then(() => {
           assert(false, 'The update succeeded.')
         })
         .catch(err => {
@@ -1481,7 +1481,7 @@ describe('users', function () {
         })
       })
 
-      it('should fail to set a password', function () {
+      it('should fail to set a password', () => {
         return User.update({
           auth: {
             emailAddress: emailAddress,
@@ -1494,7 +1494,7 @@ describe('users', function () {
             password: password
           }
         })
-        .then(function () {
+        .then(() => {
           assert(false, 'The update succeeded.')
         })
         .catch(err => {
@@ -1507,11 +1507,11 @@ describe('users', function () {
 
     })
 
-    context('when the user does not exist', function () {
+    context('when the user does not exist', () => {
       const otherEmailAddress = 'somethingElse' + emailAddress
       let badId
 
-      beforeEach('Get an unassigned ID.', function () {
+      beforeEach('Get an unassigned ID.', () => {
         //Create a user, store his ID, then delete the user.
         return knex.into('users').insert({
           emailAddress: otherEmailAddress
@@ -1523,7 +1523,7 @@ describe('users', function () {
         })
       })
 
-      it('should fail to set an email address', function () {
+      it('should fail to set an email address', () => {
         return User.update({
           auth: {
             emailAddress: emailAddress,
@@ -1536,7 +1536,7 @@ describe('users', function () {
             emailAddress: 'different' + emailAddress
           }
         })
-        .then(function () {
+        .then(() => {
           assert(false, 'The update did not fail.')
         })
         .catch(err => {
@@ -1577,7 +1577,7 @@ describe('users', function () {
       })
     )
 
-    it('should be able to send a password reset email with an all-caps email address', function () {
+    it('should be able to send a password reset email with an all-caps email address', () => {
       return User.setPassword({
         body: {
           emailAddress: emailAddress.toUpperCase(),
@@ -1749,7 +1749,7 @@ describe('users', function () {
     const password = 'taco tuesday'
     const passwordHash = bcrypt.hashSync(password, bcrypt.genSaltSync(8))
 
-    beforeEach('Create a user with an avatar.', function () {
+    beforeEach('Create a user with an avatar.', () => {
       return knex.into('users').insert({
         emailAddress: emailAddress,
         passwordHash: passwordHash,

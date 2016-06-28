@@ -14,7 +14,7 @@ forever.list(false, (listError, instances) => {
 
     // Find the process that is the previously run instance of the app.
     let previousAppInstance
-    for (let i in instances) {
+    for (const i in instances) {
       const instance = instances[i]
       if (instance.uid.match(new RegExp('^' + appName + '_[' + possible + ']{' + length + '}$'))) {
         previousAppInstance = instance.uid
@@ -26,7 +26,7 @@ forever.list(false, (listError, instances) => {
     // Generate a random alphanumeric id of length 30 for the new instance.
     let currentAppInstance
     do {
-      let key = []
+      const key = []
       for (let i = 0; i < length; ++i) {
         key.push(possible.charAt(Math.floor(Math.random() * possible.length)))
       }
@@ -40,7 +40,7 @@ forever.list(false, (listError, instances) => {
     }
     forever.startDaemon('index.js', {
       uid: currentAppInstance,
-      args: args
+      args
     }).on('error', startError => {
       console.error(startError)
       process.exit(1)

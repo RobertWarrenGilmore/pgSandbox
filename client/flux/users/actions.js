@@ -65,7 +65,7 @@ const creators = {
               emailAddress: user.emailAddress || authCredentials.emailAddress,
               password: user.password || authCredentials.password
             },
-            id: id
+            id
           }))
         }
       })
@@ -114,8 +114,8 @@ const creators = {
         qs: query
       })
       .then(response => {
-        let userMap = {}
-        let idList = []
+        const userMap = {}
+        const idList = []
         response.forEach(user => {
           userMap[user.id] = user
           idList.push(user.id)
