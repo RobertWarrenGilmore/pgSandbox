@@ -112,24 +112,30 @@ Promise.all([clientScriptPromise, clientStylePromise])
     app.use('/api', api)
 
     console.info('Routing the client.')
-    app.get('/main.js', function (req, res) {
+    app.get('/main.js', (req, res) => {
       res.type('application/javascript')
+      res.set('cache-control', `public, max-age=${24 * 60 * 60}`)
       res.send(clientScript)
     })
-    app.get('/main.css', function (req, res) {
+    app.get('/main.css', (req, res) => {
       res.type('text/css')
+      res.set('cache-control', `public, max-age=${24 * 60 * 60}`)
       res.send(clientStyle.css.toString())
     })
-    app.use('/assets', express.static(path.join(__dirname, 'client', 'assets')))
-    app.use('/assets/*', function (req, res) {
+    app.use('/assets', express.static(path.join(__dirname, 'client', 'assets'), {
+      maxAge: 24 * 60 * 60 * 1000
+    }))
+    app.use('/assets/*', (req, res) => {
       res.status(404).send('There is no such asset.')
     })
-    app.get('/*', function (req, res) {
-      res.sendFile((path.join(__dirname, 'client', 'index.html')))
+    app.get('/*', (req, res) => {
+      res.sendFile((path.join(__dirname, 'client', 'index.html')), {
+        maxAge: 24 * 60 * 60 * 1000
+      })
     })
 
     // Handle uncaught errors.
-    app.use(function (err, req, res, next) {
+    app.use((err, req, res, next) => {
       console.error(err.stack)
       res.status(500).send('Something broke!')
     })

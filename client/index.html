@@ -4,7 +4,6 @@
 <head>
   <meta content='width=device-width, initial-scale=1' name='viewport'/>
   <script src='/main.js' charset='utf-8'></script>
-  <link href='/main.css' rel='stylesheet' />
 </head>
 
 <body>
@@ -13,6 +12,25 @@
       The app is loading.
     </p>
   </div>
+
+  <!-- Defer loading of the style sheet. -->
+  <noscript id='deferred-styles'>
+    <link href='/main.css' rel='stylesheet' type='text/css' />
+  </noscript>
+  <script>
+    var loadDeferredStyles = function() {
+      var addStylesNode = document.getElementById('deferred-styles');
+      var replacement = document.createElement('div');
+      replacement.innerHTML = addStylesNode.textContent;
+      document.body.appendChild(replacement)
+      addStylesNode.parentElement.removeChild(addStylesNode);
+    };
+    var raf = requestAnimationFrame || mozRequestAnimationFrame ||
+        webkitRequestAnimationFrame || msRequestAnimationFrame;
+    if (raf) raf(function() { window.setTimeout(loadDeferredStyles, 0); });
+    else window.addEventListener('load', loadDeferredStyles);
+  </script>
+
 </body>
 
 </html>
