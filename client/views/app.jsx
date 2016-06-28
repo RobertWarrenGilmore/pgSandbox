@@ -8,17 +8,20 @@ const Helmet = require('react-helmet')
 const Avatar = require('./users/avatar.jsx')
 const TimeZonePicker = require('./timeZonePicker.jsx')
 const { setTimeZone: setTimeZoneAction } = require('../flux/timeZone/actions')
+const { logOut: logOutAction } = require('../flux/auth/actions')
 
 class App extends React.Component {
   static propTypes = {
     authUser: React.PropTypes.object,
     timeZone: React.PropTypes.string.isRequired,
-    setTimeZone: React.PropTypes.func.isRequired
+    setTimeZone: React.PropTypes.func.isRequired,
+    logOut: React.PropTypes.func.isRequired
   };
   static defaultProps = {
     authUser: undefined,
     timeZone: undefined,
-    setTimeZone: undefined
+    setTimeZone: undefined,
+    logOut: undefined
   };
   state = {
     hamburgerExpanded: false
@@ -27,6 +30,7 @@ class App extends React.Component {
     super(props)
     this._onHamburgerClick = this._onHamburgerClick.bind(this)
     this._onNavClick = this._onNavClick.bind(this)
+    this._onLogOutClick = this._onLogOutClick.bind(this)
   }
   _onHamburgerClick() {
     this.setState({
@@ -37,6 +41,16 @@ class App extends React.Component {
     this.setState({
       hamburgerExpanded: false
     })
+  }
+  _onLogOutClick() {
+    const {
+      props: {
+        logOut
+      },
+      _onNavClick
+    } = this
+    _onNavClick()
+    return logOut()
   }
   render() {
     const {
@@ -50,50 +64,81 @@ class App extends React.Component {
         hamburgerExpanded
       },
       _onHamburgerClick,
-      _onNavClick
+      _onNavClick,
+      _onLogOutClick
     } = this
-    let headerNavClasses = classnames({
+    const headerNavClasses = classnames({
       hamburgerExpanded
     })
-    let result = (
+    const result = (
       <div>
         <Helmet
           title='home'
           titleTemplate={appInfo.name + ' - %s'}
           />
         <header>
-          <Link to='/'>
+          <Link
+            to='/'
+            >
             <h1>
               {appInfo.name}
             </h1>
           </Link>
           <nav className={headerNavClasses}>
-            <div className='hamburgerButton' onClick={_onHamburgerClick}>
+            <div
+              className='hamburgerButton'
+              onClick={_onHamburgerClick}
+              >
               ≡
             </div>
-            <IndexLink activeClassName='active' to='/' onClick={_onNavClick}>
+            <IndexLink
+              activeClassName='active'
+              to='/'
+              onClick={_onNavClick}
+              >
               home
             </IndexLink>
             {this.props.authUser ? (
-              <Link activeClassName='active' to='/users' onClick={_onNavClick}>
+              <Link
+                activeClassName='active'
+                to='/users'
+                onClick={_onNavClick}
+                >
                 users
               </Link>
             ) : (
               null
             )}
-            <Link activeClassName='active' to='/blog' onClick={_onNavClick}>
+            <Link
+              activeClassName='active'
+              to='/blog'
+              onClick={_onNavClick}
+              >
               blog
             </Link>
             <div className='spacer'></div>
             {this.props.authUser ? (
-              <Link activeClassName='active' to='/logOut' onClick={_onNavClick}>
+              <Link
+                to='/'
+                onClick={_onLogOutClick}
+                >
                 log out
               </Link>
             ) : ([
-              <Link activeClassName='active' key='navLogIn' to='/logIn' onClick={this._onNavClick}>
+              <Link
+                activeClassName='active'
+                key='navLogIn'
+                to='/logIn'
+                onClick={this._onNavClick}
+                >
                 log in
               </Link>,
-              <Link activeClassName='active' key='navRegister' to='/register' onClick={this._onNavClick}>
+              <Link
+                activeClassName='active'
+                key='navRegister'
+                to='/register'
+                onClick={this._onNavClick}
+                >
                 register
               </Link>
             ])}
@@ -101,7 +146,9 @@ class App extends React.Component {
         </header>
         <main>
           {authUser ? (
-            <div id='authIndicator'>
+            <div
+              id='authIndicator'
+              >
               {(authUser && authUser.admin) ? (
                 <TimeZonePicker
                   value={timeZone}
@@ -109,7 +156,9 @@ class App extends React.Component {
                   title='admin time zone view'
                   />
               ) : null}
-              <Link to={'/users/' + authUser.id}>
+              <Link
+                to={'/users/' + authUser.id}
+                >
                 <Avatar id={authUser.id}/>
                 &nbsp;
                 {authUser.givenName} {authUser.familyName}
@@ -127,7 +176,7 @@ class App extends React.Component {
 }
 
 const wrapped = connect(
-  function mapStateToProps(state) {
+  (state) => {
     state = state.asMutable({deep: true})
     let authUser
     if (state.auth.id && state.users.cache) {
@@ -138,9 +187,10 @@ const wrapped = connect(
       timeZone: state.timeZone
     }
   },
-  function mapDispatchToProps(dispatch) {
+  (dispatch) => {
     return {
-      setTimeZone: (timeZone) => dispatch(setTimeZoneAction(timeZone))
+      setTimeZone: (timeZone) => dispatch(setTimeZoneAction(timeZone)),
+      logOut: () => dispatch(logOutAction())
     }
   }
 )(App)

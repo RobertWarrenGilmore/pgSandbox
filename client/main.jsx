@@ -45,10 +45,6 @@ document.addEventListener('DOMContentLoaded', () => {
           return replace('/')
       }
 
-      function logOut(nextState, replace) {
-        return flux.dispatch(authActions.logOut())
-      }
-
       const history = useRouterHistory(createHistory)({
         parseQueryString: qs.parse,
         stringifyQuery: qs.stringify
@@ -77,18 +73,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 <Route component={LogIn} path='logIn'/>
                 <Route component={Register} path='register'/>
                 <Route component={ForgotPassword} path='forgotPassword'/>
+                <Route component={SetPassword} path='setPassword'/>
               </Route>
 
               <Route onEnter={requireAuth}>
                 <Route path='users'>
                   <IndexRoute component={UserSearch}/>
-                  <Route component={UserPage} path=':userId'/>
+                  <Route path=':userId'>
+                    <IndexRoute component={UserPage}/>
+                  </Route>
                 </Route>
-              </Route>
-
-              <Route onEnter={logOut}>
-                <Route component={SetPassword} path='setPassword'/>
-                <Redirect from='/logOut' to='/'/>
               </Route>
 
               <Route component={NotFound} path='*'/>
