@@ -6,7 +6,7 @@ if (!window.location.origin)
 
 const React = require('react')
 const ReactDom = require('react-dom')
-const { Router, Route, IndexRoute, Redirect, useRouterHistory } = require('react-router')
+const { Router, Route, IndexRoute, useRouterHistory } = require('react-router')
 const { createHistory } = require('history')
 const qs = require('qs')
 const { Provider } = require('react-redux')
