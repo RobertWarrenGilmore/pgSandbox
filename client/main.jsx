@@ -27,7 +27,6 @@ const DragTest = require('./views/dragTest.jsx')
 
 document.addEventListener('DOMContentLoaded', () => {
   flux.dispatch(authActions.resume())
-    .catch(err => {})
     .then(() => {
 
       function requireAuth(nextState, replace) {

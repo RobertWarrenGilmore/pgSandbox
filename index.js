@@ -73,7 +73,13 @@ b.transform('babelify', {
     'stage-0',
     'react'
   ],
-  sourceMaps: (process.env.NODE_ENV !== 'production')
+  sourceMaps: (process.env.NODE_ENV !== 'production'),
+  plugins: [
+    ['babel-plugin-transform-builtin-extend', {
+      globals: ['Error', 'Array'],
+      approximate: true
+    }]
+  ]
 })
 if (isProductionMode) {
   b.transform('uglifyify', {

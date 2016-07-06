@@ -9,6 +9,7 @@ const setAuthBusy = createActionCreator(types.SET_AUTH_BUSY, (arg) => arg !== fa
 const setAuthCredentials = createActionCreator(types.SET_AUTH_CREDENTIALS)
 const { load: loadUser } = require('../users/actions')
 const { setTimeZone } = require('../timeZone/actions')
+const AuthenticationError = require('../../../errors/authenticationError')
 
 // public action creators
 const creators = {
@@ -18,6 +19,10 @@ const creators = {
         if (localStorage.auth) {
           const credentials = JSON.parse(localStorage.auth)
           return dispatch(creators.logIn(credentials))
+            .catch(err => {
+              if (!(err instanceof AuthenticationError))
+                throw err
+            })
         } else {
           dispatch(setAuthCredentials({
             credentials: null,

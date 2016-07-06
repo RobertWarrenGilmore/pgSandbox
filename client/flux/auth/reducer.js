@@ -17,7 +17,10 @@ const reducer = handleActions({
       credentials: action.payload.credentials,
       id: action.payload.id
     })
-    localStorage.auth = JSON.stringify(newState.credentials)
+    if (newState.credentials)
+      localStorage.auth = JSON.stringify(newState.credentials)
+    else
+      delete localStorage.auth
     return newState
   }
 }, initialState)
