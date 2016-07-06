@@ -1,6 +1,7 @@
 'use strict'
 const React = require('react')
 const BusyIndicator = require('../busyIndicator.jsx')
+const ErrorMessage = require('../errorMessage.jsx')
 
 class InfoPageEditor extends React.Component {
   constructor(props) {
@@ -42,9 +43,7 @@ class InfoPageEditor extends React.Component {
         </label>
         {this.props.error
           ? (
-            <p className='error'>
-              {this.props.error}
-            </p>
+            <ErrorMessage error={this.props.error}/>
           ) : null}
         {this.props.busy
           ? (

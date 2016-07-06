@@ -5,6 +5,7 @@ const BusyIndicator = require('../busyIndicator.jsx')
 const appInfo = require('../../../appInfo.json')
 const update = require('react-addons-update')
 const DateTimePicker = require('../dateTimePicker.jsx')
+const ErrorMessage = require('../errorMessage.jsx')
 
 class BlogEditor extends React.Component {
   static defaultProps = {
@@ -187,9 +188,7 @@ class BlogEditor extends React.Component {
         </label>
         {error
           ? (
-            <p className='error'>
-              {error}
-            </p>
+            <ErrorMessage error={error}/>
           ) : null}
         {busy
           ? (

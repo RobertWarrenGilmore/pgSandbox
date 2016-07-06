@@ -8,6 +8,7 @@ const appInfo = require('../../../appInfo.json')
 const Helmet = require('react-helmet')
 const { connect } = require('react-redux')
 const infoPageActions = require('../../flux/infoPages/actions')
+const ErrorMessage = require('../errorMessage.jsx')
 
 const getPageId = (props) => {
   let pageId = props.location.pathname.slice(1)
@@ -177,9 +178,7 @@ class InfoPage extends React.Component {
       result = (
         <div id='infoPage' className='message'>
           <Helmet title='error'/>
-          <p className='error'>
-            {this.state.error}
-          </p>
+          <ErrorMessage error={this.state.error}/>
         </div>
       )
 

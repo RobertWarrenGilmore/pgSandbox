@@ -9,6 +9,7 @@ const processUserHtml = require('../../utilities/processUserHtml')
 const { connect } = require('react-redux')
 const blogActions = require('../../flux/blog/actions')
 const Helmet = require('react-helmet')
+const ErrorMessage = require('../errorMessage.jsx')
 
 class BlogPost extends React.Component {
   static propTypes = {
@@ -287,9 +288,7 @@ class BlogPost extends React.Component {
         <div id='blogPost' className='message'>
           <Helmet title='blog'/>
           {editButton ||
-            <p className='error'>
-              {this.state.error || 'This post is not published.'}
-            </p>
+            <ErrorMessage error={this.state.error || 'This post is not published.'}/>
           }
         </div>
       )

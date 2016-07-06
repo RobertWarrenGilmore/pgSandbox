@@ -3,6 +3,7 @@ const React = require('react')
 const { create: createUser } = require('../flux/users/actions')
 const { connect } = require('react-redux')
 const Helmet = require('react-helmet')
+const ErrorMessage = require('./errorMessage.jsx')
 
 class Register extends React.Component {
   constructor(props) {
@@ -38,9 +39,7 @@ class Register extends React.Component {
             <input type='text' ref='givenName' name='givenName' placeholder='first name' disabled={this.state.busy} required/>
             <input type='text' ref='familyName' name='familyName' placeholder='last name' disabled={this.state.busy} required/>
             {this.state.error
-              ? <p className='error'>
-                  {this.state.error}
-                </p>
+              ? <ErrorMessage error={this.state.error}/>
               : null}
             <div className='actions'>
               <button disabled={this.state.busy} className='highlighted'>register</button>
