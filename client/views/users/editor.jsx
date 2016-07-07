@@ -7,7 +7,6 @@ const ErrorMessage = require('../errorMessage.jsx')
 const Avatar = require('./avatar.jsx')
 const FileInput = require('../fileInput.jsx')
 const TimeZonePicker = require('../timeZonePicker.jsx')
-const ErrorMessage = require('../errorMessage.jsx')
 
 const UserEditor = props => {
 
