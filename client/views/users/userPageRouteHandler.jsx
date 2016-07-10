@@ -297,7 +297,7 @@ class UserPage extends React.Component {
           <UserEditor
             user={editingUser}
             dirty={!_.isEqual(editingUser, user)}
-            disabled={busy || !!fieldErrors}
+            disabled={busy}
             adminMode={authUser.admin}
             onChange={_onEditorChange}
             onSave={_onEditorSave}

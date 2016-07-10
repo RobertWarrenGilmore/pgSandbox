@@ -140,7 +140,7 @@ const UserEditor = props => {
         {fieldErrorMessage('timeZone')}
       </label>
       {adminMode ? (
-          <div>
+        <div>
           <label>
             <input
               type='checkbox'
