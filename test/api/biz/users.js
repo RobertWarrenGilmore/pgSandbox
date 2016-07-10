@@ -76,8 +76,9 @@ describe('users', () => {
       })
   )
   let tooLargeAvatar = 'data:image/jpeg;base64,'
-  before('Create a too large avatar.', () =>
-    new Promise((resolve, reject) => {
+  before('Create a too large avatar.', function (done) {
+    this.timeout(5000)
+    return new Promise((resolve, reject) => {
       new Jimp(3000, 3000).getBuffer(Jimp.MIME_JPEG, (err, buffer) => {
         if (err)
           reject(err)
@@ -87,8 +88,9 @@ describe('users', () => {
     })
     .then(buffer => {
       tooLargeAvatar += buffer.toString('base64')
+      done()
     })
-  )
+  })
   const notAnImageAvatar = 'data:image/jpeg;base64,VGhpcyBmaWxlIGlzIG5vdCBhbiBpbWFnZS4K'
 
 
