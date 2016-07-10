@@ -4,6 +4,8 @@ oldHEAD=$(git rev-parse --verify HEAD^{commit}) && (
   # Upgrade to the new version of the app.
   (
     git pull origin master &&
+    nvm install &&
+    nvm use &&
     npm install &&
     npm prune &&
     npm test &&
@@ -15,6 +17,7 @@ oldHEAD=$(git rev-parse --verify HEAD^{commit}) && (
     git checkout $oldHEAD &&
     git branch -f master $oldHEAD &&
     git checkout master &&
+    nvm use &&
     npm install &&
     npm prune &&
     npm test &&
